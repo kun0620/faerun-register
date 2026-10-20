@@ -1,0 +1,1604 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ทะเบียนวิญญาณแห่งแฟรูน</title>
+<meta name="description" content="เกมจำลองชีวิตในแฟรูน สุ่มเกิดตามสัดส่วนประชากร แล้วใช้ชีวิตนั้นจนสุดทางครั้งเดียว">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Trirong:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<style>
+/* Layout: a Doomguide's register — left plate (the soul's record), right ledger (the living log). One column under 880px. */
+:root{
+  --vellum:#e4e2d7; --vellum-2:#d7d4c6; --ink:#1b2024; --ink-soft:#4d555c;
+  --verdigris:#2f6f62; --verdigris-lit:#3d8e7d; --candle:#9a6b22; --blood:#8c3a34;
+  --rule:#bdb9a8; --plate:#eeece3; --shadow:rgba(27,32,36,.14);
+  --f-display:'Cinzel','Trirong',Georgia,serif;
+  --f-body:'Trirong',Georgia,'Times New Roman',serif;
+  --f-mono:'IBM Plex Mono','Trirong',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --vellum:#14181c; --vellum-2:#1b2127; --ink:#ddd9cc; --ink-soft:#9aa3a9;
+  --verdigris:#58b39e; --verdigris-lit:#7fcfbb; --candle:#d1a157; --blood:#d2706a;
+  --rule:#2e363d; --plate:#1a2026; --shadow:rgba(0,0,0,.5); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --vellum:#14181c; --vellum-2:#1b2127; --ink:#ddd9cc; --ink-soft:#9aa3a9;
+  --verdigris:#58b39e; --verdigris-lit:#7fcfbb; --candle:#d1a157; --blood:#d2706a;
+  --rule:#2e363d; --plate:#1a2026; --shadow:rgba(0,0,0,.5); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--vellum);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:26px 60px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(27px,5vw,44px)} h2{font-size:clamp(19px,2.6vw,25px)} h3{font-size:16px}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:var(--verdigris)}
+.muted{color:var(--ink-soft)} .sm{font-size:13.5px} .xs{font-size:12px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--verdigris-lit);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.plate{background:var(--plate);border:1px solid var(--rule);border-radius:3px;padding:19px}
+.chip{background:transparent;border:1px solid var(--rule);border-radius:2px;padding:6px 12px;font-size:13.5px;color:var(--ink-soft);transition:.14s}
+.chip:hover{border-color:var(--verdigris);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--verdigris);border-color:var(--verdigris);color:var(--vellum);font-weight:600}
+.big{font-family:var(--f-display);font-size:19px;font-weight:700;letter-spacing:.05em;background:var(--ink);color:var(--vellum);border:0;border-radius:2px;padding:14px 38px;align-self:flex-start;transition:.16s}
+.big:hover{background:var(--verdigris)}
+select{font:inherit;font-size:13.5px;background:var(--vellum);color:var(--ink);border:1px solid var(--rule);border-radius:2px;padding:6px 9px;max-width:100%}
+
+.hero{display:flex;flex-direction:column;gap:16px;max-width:62ch}
+.hero .lead{font-size:clamp(16px,2.1vw,19px);color:var(--ink-soft)}
+.setgrid{display:grid;gap:18px;margin-top:26px}
+.set{display:grid;gap:8px}
+.set>.lbl{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.set .row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.set .hint{font-size:12px;color:var(--ink-soft);max-width:66ch}
+.dist{display:grid;gap:4px;max-width:470px}
+.dist .d{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;font-size:13px}
+.bar{height:7px;background:var(--rule);border-radius:1px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--verdigris)}
+
+.cols{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}
+@media (max-width:880px){.cols{grid-template-columns:1fr}}
+.col{min-width:0;display:grid;gap:18px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--ink-soft);white-space:nowrap}
+.kv dd{margin:0;text-align:right;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.sigil{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-soft);word-break:break-all;line-height:1.5;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0;margin:13px 0}
+.abil{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:13px}
+.abil div{text-align:center;border:1px solid var(--rule);border-radius:2px;padding:6px 2px}
+.abil b{display:block;font-family:var(--f-mono);font-size:18px;font-weight:500;line-height:1.1}
+.abil span{font-size:10px;color:var(--ink-soft)}
+.abil .hi{border-color:var(--verdigris);color:var(--verdigris)}
+table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+table.cmp th,table.cmp td{text-align:right;padding:5px 4px;border-bottom:1px solid var(--rule)}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left;color:var(--ink-soft)}
+table.cmp thead th{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;color:var(--ink-soft)}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--vellum);border-bottom:1px solid var(--rule);margin-bottom:18px}
+.topbar .in{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:9px;display:flex;flex-wrap:wrap;gap:8px 13px;align-items:baseline}
+.age{font-family:var(--f-display);font-size:29px;font-weight:700;line-height:1}
+.ctrls{display:flex;flex-wrap:wrap;gap:5px;margin-left:auto}
+.ctrls .chip{padding:4px 9px;font-size:12.5px}
+
+.stat{display:grid;grid-template-columns:72px 1fr 32px;gap:9px;align-items:center;font-size:13.5px}
+.stat .bar{height:9px}
+.stat.low .bar i{background:var(--blood)}
+.money{border-top:1px solid var(--rule);margin-top:12px;padding-top:11px;display:grid;gap:5px;font-size:13.5px}
+.money .r{display:flex;justify-content:space-between;gap:10px}
+.money .r b{font-family:var(--f-mono);font-weight:500}
+.money .neg b{color:var(--blood)}
+.openspend{width:100%;margin-top:13px;border:1px solid var(--verdigris);background:transparent;color:var(--verdigris);border-radius:2px;padding:9px;font-weight:600;font-size:14px;transition:.14s}
+.openspend:hover{background:var(--verdigris);color:var(--vellum)}
+
+.focus{display:flex;flex-wrap:wrap;gap:7px}
+.focus button{text-align:left;background:transparent;border:1px solid var(--rule);border-radius:2px;padding:7px 11px;transition:.14s;min-width:0}
+.focus button:hover{border-color:var(--verdigris)}
+.focus button[aria-pressed="true"]{background:var(--verdigris);border-color:var(--verdigris);color:var(--vellum)}
+.focus b{display:block;font-size:13.5px}
+.focus em{display:block;font-style:normal;font-size:11px;opacity:.75}
+
+.log{max-height:430px;overflow-y:auto;border:1px solid var(--rule);border-radius:3px}
+.ev{display:grid;grid-template-columns:46px 1fr 22px;gap:10px;padding:10px 12px;border-bottom:1px solid var(--rule);font-size:14.5px}
+.ev:last-child{border-bottom:0}
+.ev .yr{font-family:var(--f-mono);font-size:12px;color:var(--ink-soft);padding-top:3px}
+.ev .note{display:block;font-size:12px;color:var(--ink-soft);border-left:2px solid var(--verdigris);padding-left:9px;margin-top:6px}
+.ev.big-ev{background:var(--vellum-2)}
+.ev.bad .yr{color:var(--blood)}
+.star{background:transparent;border:0;padding:0;color:var(--rule);font-size:15px;line-height:1}
+.star[aria-pressed="true"]{color:var(--candle)}
+
+.grid{display:flex;flex-wrap:wrap;gap:2px}
+.grid i{display:block;border-radius:1px;background:var(--rule)}
+.grid i.now{outline:1px solid var(--candle);outline-offset:1px}
+.grid i.exp{outline:1px dashed var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--ink-soft);margin-top:10px;align-items:center}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:1px;display:block}
+
+.souls{display:grid;gap:7px}
+.soul{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;font-size:13.5px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.soul:last-child{border-bottom:0}
+.soul .st{font-size:11.5px;color:var(--ink-soft);text-align:right}
+.soul.dead{opacity:.5} .soul.dead .st{color:var(--blood)}
+.kin{display:grid;gap:6px;font-size:13.5px}
+.kin .k{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;padding-bottom:5px;border-bottom:1px solid var(--rule)}
+.kin .k:last-child{border-bottom:0}
+.kin .rel{font-size:11.5px;color:var(--ink-soft)}
+.kin .rel.warm{color:var(--verdigris)} .kin .rel.cold{color:var(--blood)}
+.ind{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px;margin:0}
+.ind dt{color:var(--ink-soft)} .ind dd{margin:0;text-align:right;font-family:var(--f-mono);font-size:12.5px}
+
+.scrim{position:fixed;inset:0;background:rgba(10,13,15,.62);display:grid;place-items:center;z-index:60;padding:max(14px,env(safe-area-inset-left,0px))}
+.modal{background:var(--plate);border:1px solid var(--rule);border-radius:3px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:23px;box-shadow:0 8px 40px var(--shadow)}
+.modal.wide{max-width:720px}
+.modal h2{margin:8px 0 10px}
+.choices{display:grid;gap:8px;margin-top:17px}
+.choices button{display:grid;grid-template-columns:24px 1fr;gap:10px;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:2px;padding:12px 14px;transition:.14s}
+.choices button:hover{border-color:var(--verdigris);background:var(--vellum-2)}
+.choices .n{font-family:var(--f-mono);font-size:12.5px;color:var(--ink-soft);padding-top:2px}
+.choices b{display:block;font-size:15px}
+.choices em{display:block;font-style:normal;font-size:12px;color:var(--ink-soft);margin-top:2px}
+.lore{font-size:12.5px;color:var(--ink-soft);background:var(--vellum-2);border-left:2px solid var(--verdigris);padding:9px 12px;margin-top:12px}
+textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);border:1px solid var(--rule);border-radius:2px;padding:10px;font:inherit;font-size:14px;margin-top:13px;resize:vertical}
+.modal .foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:flex-end}
+
+/* spending panel */
+.purse{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:12px;margin-bottom:4px}
+.purse .n{font-family:var(--f-mono);font-size:23px;font-weight:500}
+.sect{margin-top:18px}
+.sect>h3{margin-bottom:9px}
+.items{display:grid;gap:7px}
+.item{border:1px solid var(--rule);border-radius:2px;padding:11px 13px}
+.item .hd{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline}
+.item .ttl{font-weight:600;font-size:14.5px}
+.item .px{font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+.item .px.no{color:var(--blood)}
+.item .fx{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.item .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.item .opts button{border:1px solid var(--rule);background:transparent;border-radius:2px;padding:5px 10px;font-size:12.5px;transition:.14s}
+.item .opts button:hover:not(:disabled){border-color:var(--verdigris);color:var(--verdigris)}
+.item .opts button:disabled{opacity:.42;cursor:default}
+.item .opts .px2{font-family:var(--f-mono);color:var(--ink-soft)}
+.item.done{border-color:var(--verdigris);opacity:.65}
+.ls{display:grid;gap:13px;margin-top:4px}
+.ls .g>.t{font-size:13.5px;font-weight:600;margin-bottom:5px}
+.ls .g>.d{font-size:12px;color:var(--ink-soft);margin-top:5px}
+.ls .row{display:flex;flex-wrap:wrap;gap:6px}
+.ls .row button{border:1px solid var(--rule);background:transparent;border-radius:2px;padding:5px 10px;font-size:12.5px}
+.ls .row button[aria-pressed="true"]{background:var(--verdigris);border-color:var(--verdigris);color:var(--vellum)}
+.autolist{display:flex;flex-wrap:wrap;gap:6px}
+.autolist button{border:1px solid var(--rule);background:transparent;border-radius:2px;padding:5px 10px;font-size:12.5px}
+.autolist button[aria-pressed="true"]{background:var(--verdigris);border-color:var(--verdigris);color:var(--vellum)}
+
+.prog{height:5px;background:var(--rule);position:relative}
+.prog i{display:block;height:100%;background:var(--candle);width:0}
+.prog b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-soft)}
+.phead{display:flex;gap:13px;align-items:flex-start;margin-bottom:14px}
+.phead .who{min-width:0;padding-top:2px}
+.phead .nm{font-family:var(--f-display);font-weight:700;font-size:18px;line-height:1.2;overflow-wrap:anywhere}
+.portrait{display:block;width:92px;height:92px;flex:0 0 auto;image-rendering:pixelated;border:1px solid var(--rule);border-radius:2px;background:var(--vellum-2)}
+.scene{display:block;width:100%;height:auto;aspect-ratio:140/46;image-rendering:pixelated;border:1px solid var(--rule);border-radius:3px;background:var(--vellum-2)}
+.scenecap{font-size:13px;color:var(--ink-soft);margin-top:10px}
+.reveal{position:fixed;inset:0;background:var(--vellum);z-index:70;display:grid;place-items:center;text-align:center;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));cursor:pointer}
+.reveal .cap{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--verdigris);margin-bottom:20px}
+.reveal .rbig{font-family:var(--f-display);font-size:clamp(26px,6.5vw,58px);font-weight:700;line-height:1.18;min-height:1.3em;text-wrap:balance}
+.reveal .rsub{font-family:var(--f-mono);font-size:14px;color:var(--ink-soft);margin-top:16px;min-height:1.5em;opacity:0;transition:opacity .45s}
+.reveal .rsub.on{opacity:1}
+.reveal .skip{font-size:12px;color:var(--ink-soft);margin-top:30px;opacity:.7}
+.epitaph{text-align:center;border:1px solid var(--rule);border-radius:3px;background:var(--plate);padding:32px 20px;display:grid;gap:11px}
+.epitaph .name{font-family:var(--f-display);font-size:clamp(25px,5vw,39px);font-weight:700}
+.epitaph .dates{font-family:var(--f-mono);font-size:15px;color:var(--ink-soft)}
+.epitaph .quote{font-size:17px;font-style:italic;max-width:46ch;margin:5px auto 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:13px}
+.card{border:1px solid var(--rule);border-radius:3px;padding:14px;background:var(--plate)}
+.card .big-n{font-family:var(--f-mono);font-size:26px;font-weight:500;line-height:1.15;display:block}
+.never{display:grid;gap:6px}
+.never div{display:grid;grid-template-columns:13px 1fr;gap:9px;font-size:14px;color:var(--ink-soft)}
+.never span:first-child{color:var(--blood)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="s-title">
+  <div class="hero">
+    <p class="eyebrow">ทะเบียนของเคเลมวอร์ · เทพแห่งความตาย</p>
+    <h1>ทุกวิญญาณถูกจดไว้</h1>
+    <p class="lead">ในแฟรูนไม่มีใครเลือกได้ว่าจะเกิดเป็นเผ่าใด ในแคว้นไหน ใต้หลังคาของใคร คุณจะถูกสุ่มให้เกิดตามสัดส่วนประชากรจริง แล้วใช้ชีวิตนั้นไปจนสุดทาง — ครั้งเดียว</p>
+  </div>
+  <div class="setgrid">
+    <div class="set"><span class="lbl">เกณฑ์การสุ่มเผ่า</span>
+      <div class="row">
+        <button class="chip" data-opt="basis" data-v="born" aria-pressed="true">ตามเด็กที่เกิดปีนี้</button>
+        <button class="chip" data-opt="basis" data-v="living">ตามผู้ที่มีชีวิตอยู่ตอนนี้</button>
+      </div>
+      <p class="hint" id="basisHint"></p>
+    </div>
+    <div class="set"><span class="lbl">ยุคที่จะไปเกิด</span>
+      <div class="row" id="eraRow"></div><p class="hint" id="eraHint"></p>
+    </div>
+    <div class="set"><span class="lbl">ความยาวของหนึ่งชีวิต</span>
+      <div class="row">
+        <button class="chip" data-opt="pace" data-v="5">ราว 5 นาที</button>
+        <button class="chip" data-opt="pace" data-v="12" aria-pressed="true">ราว 12 นาที</button>
+        <button class="chip" data-opt="pace" data-v="25">ราว 25 นาที</button>
+      </div>
+      <p class="hint">ใช้เวลาจริงเท่ากันทุกเผ่า เอลฟ์ที่มีอายุขัย 720 ปีจึงผ่านหนึ่งปีเร็วกว่าครึ่งออร์คที่มี 62 ปีราวสิบเท่า</p>
+    </div>
+    <div class="set"><span class="lbl">เผ่าที่อยากใช้เทียบ (ไม่บังคับ)</span>
+      <div class="row"><select id="cmpRace"></select></div>
+    </div>
+    <div class="set"><span class="lbl">เนื้อหาและจังหวะ</span>
+      <div class="row">
+        <button class="chip" data-opt="pauses" data-v="1" aria-pressed="true">ช่วงหยุดให้เขียนความคิด</button>
+        <button class="chip" data-opt="soften" data-v="1">เลี่ยงรายละเอียดที่หนัก</button>
+        <button class="chip" id="themeBtn">โหมดหน้าจอ: ตามอุปกรณ์</button>
+      </div>
+    </div>
+    <div class="set"><span class="lbl">โอกาสที่คุณจะเกิดเป็นเผ่าใด</span>
+      <div class="dist" id="raceDist"></div>
+    </div>
+    <button class="big" id="btnBirth">เกิด</button>
+    <p class="xs muted">มีความตาย โรคระบาด สงคราม และความยากจนตามสัดส่วนของโลกนั้น ไม่มีการบรรยายภาพความรุนแรง · เหมาะกับอายุ 13 ปีขึ้นไป</p>
+  </div>
+</section>
+
+<section id="s-record" hidden>
+  <p class="eyebrow">บันทึกการเกิด</p>
+  <h1 id="recName">—</h1>
+  <p class="lead sm muted" id="recLine" style="max-width:60ch;margin-top:10px"></p>
+  <div class="cols" style="margin-top:20px">
+    <div class="col">
+      <div class="plate">
+        <div class="phead">
+          <canvas class="portrait" id="recPortrait" width="184" height="184"></canvas>
+          <div class="who"><p class="eyebrow">ทะเบียนประวัติ</p><div class="nm" id="recPName"></div><p class="xs muted" id="recPSub"></p></div>
+        </div>
+        <dl class="kv" id="recKv"></dl>
+        <div class="sigil" id="recSigil"></div>
+        <div class="abil" id="recAbil"></div>
+        <p class="xs muted" style="margin-top:11px">ทอยด้วย 4d6 ตัดลูกต่ำสุด เหมือนที่สร้างตัวละคร ต่างกันแค่ว่าชาวนาส่วนใหญ่ไม่เคยได้ใช้มันเลย</p>
+      </div>
+      <div class="plate" id="recCmpBox">
+        <p class="eyebrow" style="margin-bottom:4px">ถ้าเกิดวันเดียวกัน</p>
+        <div style="overflow-x:auto"><table class="cmp" id="recCmp"></table></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="plate">
+        <p class="eyebrow">เกิดในวินาทีเดียวกัน</p>
+        <p class="sm muted" style="margin:7px 0 13px">อีกสี่ดวงวิญญาณที่ถูกจดลงทะเบียนพร้อมคุณ</p>
+        <div class="souls" id="recSouls"></div>
+      </div>
+      <div class="plate">
+        <p class="eyebrow">แคว้นที่คุณเกิด</p>
+        <p class="sm muted" style="margin:7px 0 13px" id="recRegionLine"></p>
+        <dl class="ind" id="recInd"></dl>
+      </div>
+      <div class="plate">
+        <p class="eyebrow">แผนที่ชีวิต</p>
+        <p class="sm muted" style="margin:7px 0 13px">หนึ่งช่องคือหนึ่งปี ช่องเส้นประคืออายุขัยของเผ่าคุณ — <b id="recSpan"></b></p>
+        <div class="grid" id="recGrid"></div>
+      </div>
+      <button class="big" id="btnLive">เริ่มชีวิตนี้</button>
+    </div>
+  </div>
+</section>
+
+<section id="s-life" hidden>
+  <div class="topbar"><div class="in">
+    <span class="age"><span id="lAge">0</span> <span style="font-size:14px;font-weight:400">ปี</span></span>
+    <span class="sm muted mono" id="lMeta"></span>
+    <span class="ctrls">
+      <button class="chip" data-sp="0">❚❚</button>
+      <button class="chip" data-sp="1" aria-pressed="true">1×</button>
+      <button class="chip" data-sp="4">4×</button>
+      <button class="chip" data-sp="16">16×</button>
+      <button class="chip" id="btnSkip">ข้ามไปจุดตัดสินใจ »</button>
+      <button class="chip" id="btnAuto">โหมดอัตโนมัติ</button>
+      <button class="chip" id="btnTheme2">ธีม</button>
+      <button class="chip" id="btnQuit">ออก</button>
+    </span>
+  </div><div class="prog"><i id="progFill"></i><b id="progMark"></b></div></div>
+  <div class="cols">
+    <div class="col">
+      <div class="plate">
+        <div class="phead">
+          <canvas class="portrait" id="lPortrait" width="184" height="184"></canvas>
+          <div class="who"><p class="eyebrow">ทะเบียนประวัติ</p><div class="nm" id="lPName"></div><p class="xs muted" id="lPSub"></p></div>
+        </div>
+        <dl class="kv" id="lKv"></dl>
+        <div class="sigil" id="lSigil"></div>
+        <div id="lStats" style="display:grid;gap:7px"></div>
+        <div class="money" id="lMoney"></div>
+        <button class="openspend" id="btnSpend">ใช้เงิน · ลงทุน</button>
+      </div>
+      <div class="plate">
+        <p class="eyebrow" style="margin-bottom:10px">ครอบครัวและมิตร</p>
+        <div class="kin" id="lKin"></div>
+      </div>
+      <div class="plate">
+        <p class="eyebrow" style="margin-bottom:10px">เกิดพร้อมกัน</p>
+        <div class="souls" id="lSouls"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="plate">
+        <canvas class="scene" id="lScene" width="700" height="230"></canvas>
+        <p class="scenecap" id="lSceneCap"></p>
+      </div>
+      <div class="plate">
+        <p class="eyebrow" style="margin-bottom:3px">จุดเน้นของปีนี้</p>
+        <p class="xs muted" id="lFocusCtx" style="margin-bottom:11px"></p>
+        <div class="focus" id="lFocus"></div>
+      </div>
+      <div>
+        <p class="eyebrow" style="margin-bottom:9px">บันทึกชีวิต <span class="muted" style="letter-spacing:0;text-transform:none">· แตะดาวเพื่อติดไว้</span></p>
+        <div class="log" id="lLog"></div>
+      </div>
+      <div class="plate">
+        <p class="eyebrow" style="margin-bottom:11px">แผนที่ชีวิต</p>
+        <div class="grid" id="lGrid"></div>
+        <div class="legend" id="lLegend"></div>
+      </div>
+      <div class="plate">
+        <p class="eyebrow" style="margin-bottom:11px">รายได้ไปอยู่ที่ไหนบ้าง (ต่อปี)</p>
+        <dl class="ind" id="lBudget"></dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s-death" hidden>
+  <div class="epitaph">
+    <p class="eyebrow">ทะเบียนปิดแล้ว</p>
+    <div class="name" id="dName"></div>
+    <div class="dates" id="dDates"></div>
+    <p class="quote" id="dQuote"></p>
+    <p class="sm muted" id="dCause"></p>
+  </div>
+  <div class="cards" style="margin-top:20px">
+    <div class="card"><span class="eyebrow">ชีวิตแบบนี้เกิดขึ้นได้</span><span class="big-n" id="dOdds"></span><span class="sm muted" id="dOddsSub"></span></div>
+    <div class="card"><span class="eyebrow">อายุเทียบเผ่าเดียวกัน</span><span class="big-n" id="dAgeCmp"></span><span class="sm muted" id="dAgeSub"></span></div>
+    <div class="card"><span class="eyebrow">ทิ้งไว้ข้างหลัง</span><span class="big-n" id="dLeft"></span><span class="sm muted" id="dLeftSub"></span></div>
+  </div>
+  <div class="plate" style="margin-top:18px">
+    <p class="eyebrow" style="margin-bottom:11px">แผนที่ชีวิต</p>
+    <div class="grid" id="dGrid"></div><div class="legend" id="dLegend"></div>
+  </div>
+  <div class="cols" style="margin-top:18px">
+    <div class="col">
+      <div class="plate"><p class="eyebrow" style="margin-bottom:11px">สิ่งที่ไม่เคยได้ทำ</p><div class="never" id="dNever"></div></div>
+      <div class="plate"><p class="eyebrow" style="margin-bottom:11px">บรรทัดที่คุณติดดาวไว้</p><div class="souls" id="dStars"></div></div>
+    </div>
+    <div class="col">
+      <div class="plate"><p class="eyebrow" style="margin-bottom:11px">สี่ดวงที่เกิดพร้อมกัน</p><div class="souls" id="dSouls"></div></div>
+      <div class="plate"><p class="eyebrow" style="margin-bottom:11px">ทะเบียนวิญญาณของคุณ</p><div class="souls" id="dPast"></div></div>
+    </div>
+  </div>
+  <button class="big" id="btnAgain" style="margin-top:20px">เกิดใหม่อีกครั้ง</button>
+</section>
+</div>
+<div id="modalHost"></div>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s), ce=t=>document.createElement(t);
+const rnd=n=>Math.floor(Math.random()*n), pick=a=>a[rnd(a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const d6=()=>1+rnd(6);
+const roll4d6=()=>{const r=[d6(),d6(),d6(),d6()].sort((a,b)=>b-a);return r[0]+r[1]+r[2];};
+function wpick(l){const t=l.reduce((s,x)=>s+x.w,0);let n=Math.random()*t;for(const x of l){if((n-=x.w)<=0)return x;}return l[l.length-1];}
+const fmt=n=>Math.round(n).toLocaleString('th-TH');
+const gp=n=>fmt(n)+' gp';
+
+/* ---------------- world ---------------- */
+const RACES=[
+ {id:'human',w:72,th:'มนุษย์',span:72,mature:16,var:.18},
+ {id:'halfling',w:6,th:'ฮาล์ฟลิง',span:145,mature:20,var:.14},
+ {id:'dwarf',w:5,th:'คนแคระ',span:340,mature:50,var:.12},
+ {id:'halfelf',w:4,th:'ครึ่งเอลฟ์',span:175,mature:20,var:.15},
+ {id:'elf',w:4,th:'เอลฟ์',span:720,mature:100,var:.1},
+ {id:'gnome',w:3,th:'โนม',span:420,mature:40,var:.12},
+ {id:'halforc',w:3,th:'ครึ่งออร์ค',span:62,mature:14,var:.22},
+ {id:'tiefling',w:2,th:'ทีฟลิง',span:96,mature:18,var:.17},
+ {id:'dragonborn',w:1,th:'ดราก้อนบอร์น',span:78,mature:15,var:.16}
+];
+const REGIONS=[
+ {id:'wd',w:9,th:'วอเตอร์ดีพ',kind:'นครรัฐ',danger:.7,wealth:1.5,lore:1.6,lit:.55,temple:1.6},
+ {id:'bg',w:9,th:'บัลดูร์สเกต',kind:'นครท่า',danger:1.1,wealth:1.3,lore:1.2,lit:.42,temple:1.2},
+ {id:'nw',w:6,th:'เนเวอร์วินเทอร์',kind:'เมืองที่กำลังสร้างใหม่',danger:1.2,wealth:1,lore:1,lit:.35,temple:1},
+ {id:'sc',w:20,th:'ชายฝั่งดาบ',kind:'หมู่บ้านชายทุ่ง',danger:1,wealth:.7,lore:.5,lit:.12,temple:.5},
+ {id:'cor',w:11,th:'คอร์เมียร์',kind:'ราชอาณาจักร',danger:.8,wealth:1.1,lore:1.1,lit:.33,temple:1.3},
+ {id:'sem',w:7,th:'เซมเบีย',kind:'แคว้นพ่อค้า',danger:.9,wealth:1.4,lore:1,lit:.38,temple:.9},
+ {id:'amn',w:8,th:'อัมน์',kind:'แคว้นของสมาคมการค้า',danger:1.1,wealth:1.2,lore:.9,lit:.3,temple:.8},
+ {id:'cal',w:9,th:'คาลิมชาน',kind:'แคว้นทะเลทราย',danger:1.2,wealth:1.1,lore:.9,lit:.22,temple:.9},
+ {id:'lus',w:4,th:'ลัสคาน',kind:'เมืองโจรสลัด',danger:1.9,wealth:.8,lore:.6,lit:.15,temple:.4},
+ {id:'icd',w:4,th:'ไอซ์วินด์เดล',kind:'สิบเมืองในความหนาว',danger:1.6,wealth:.5,lore:.5,lit:.1,temple:.4},
+ {id:'thay',w:5,th:'เท',kind:'แคว้นของจอมเวทแดง',danger:1.5,wealth:.9,lore:1.5,lit:.28,temple:.7},
+ {id:'chu',w:4,th:'ชูลท์',kind:'ป่าดิบ',danger:2.1,wealth:.6,lore:.6,lit:.09,temple:.5},
+ {id:'rash',w:3,th:'ราเชเมน',kind:'ดินแดนแม่มด',danger:1.3,wealth:.7,lore:1.2,lit:.18,temple:1.1},
+ {id:'und',w:1,th:'อันเดอร์ดาร์ก',kind:'โพรงลึกใต้พิภพ',danger:2.6,wealth:.7,lore:1.1,lit:.2,temple:.2}
+];
+const ERAS=[
+ {id:'war',th:'ยุคสงครามเวท · 1360 DR',year:1360,danger:1.45,wealth:.8,lore:.85,hint:'สงครามระหว่างแคว้นและเวทมนตร์ที่ยังไม่มีใครควบคุมได้ ชีวิตสั้นลงและของแพงขึ้น'},
+ {id:'now',th:'ยุคปัจจุบัน · 1492 DR',year:1492,danger:1,wealth:1,lore:1,hint:'เวลาที่เล่าขานกันมากที่สุดในแฟรูน การค้ากลับมาเฟื่องฟูแต่ชายแดนยังไม่สงบ'},
+ {id:'rise',th:'ยุคฟื้นฟู · 1600 DR',year:1600,danger:.78,wealth:1.25,lore:1.2,hint:'ถนนปลอดภัยขึ้น วิหารและโรงเรียนกระจายออกไปถึงชนบท คนธรรมดาอยู่ได้นานขึ้น'}
+];
+const TIERS=[
+ {w:2,th:'ตระกูลขุนนาง',lvl:5,gold:380,lore:2.2},{w:8,th:'ครอบครัวพ่อค้า',lvl:4,gold:90,lore:1.6},
+ {w:16,th:'ครอบครัวช่างฝีมือ',lvl:3,gold:26,lore:1.1},{w:56,th:'ครอบครัวชาวนา',lvl:2,gold:5,lore:.45},
+ {w:18,th:'ครอบครัวไร้ที่ดิน',lvl:1,gold:0,lore:.2}
+];
+const TRADES=['ชาวนา','ช่างตีเหล็ก','คนทอผ้า','คนเลี้ยงแกะ','คนหาบน้ำ','ลูกจ้างโรงเตี๊ยม','คนขับเกวียน','ชาวประมง','ช่างไม้','คนขุดเหมือง','เสมียนรับจ้างเขียน','คนเฝ้าประตูเมือง'];
+const CLASSES=[
+ {id:'fighter',th:'นักรบ',key:'STR',risk:1.5,pay:1.2},{id:'rogue',th:'โจร',key:'DEX',risk:1.4,pay:1.5},
+ {id:'cleric',th:'นักบวช',key:'WIS',risk:1.1,pay:1},{id:'wizard',th:'จอมเวท',key:'INT',risk:1.2,pay:1.3},
+ {id:'ranger',th:'พรานป่า',key:'DEX',risk:1.3,pay:1.1},{id:'bard',th:'กวี',key:'CHA',risk:1,pay:1.2},
+ {id:'barbarian',th:'คนเถื่อน',key:'STR',risk:1.7,pay:1.1},{id:'druid',th:'ดรูอิด',key:'WIS',risk:1.1,pay:.9}
+];
+const ABIL=['STR','DEX','CON','INT','WIS','CHA'];
+const ABIL_TH={STR:'พละ',DEX:'คล่อง',CON:'ทน',INT:'ปัญญา',WIS:'หยั่งรู้',CHA:'เสน่ห์'};
+const HOBBY_POOL=['ดาบไม้','เป่าขลุ่ย','แกะสลักไม้','ตกปลา','ปลูกสมุนไพร','เล่าเรื่องในโรงเตี๊ยม','ทอยเต๋า','วาดบนหนังสัตว์','ร้องเพลงประสานในวิหาร','ตีเหล็กเล่น'];
+const PETS=[['สุนัข','เจ้าด่าง'],['แมว','ขี้เถ้า'],['เหยี่ยว','ลมเหนือ'],['ลา','ตาโต'],['อีกา','ถ่าน']];
+const NAMES={
+ human:[['อาเรน','โทมัส','เคเดน','มิรา','เซลีน','โรวาน','กาเร็ธ','ไอวี่','ฮาร์เปอร์'],['สโตนเวล','แบล็กวอเตอร์','ธอร์น','อัลเวอร์','เรดมอร์','ฟิลด์ส']],
+ elf:[['ไอลันเดอร์','ธาเรียล','ซิลวานา','เอลาริน','ไฟเวน','ลูเธียน'],['มูนวิสเปอร์','สตาร์กลีม','ไนท์บรีซ','ซิลเวอร์โบว์']],
+ dwarf:[['บรูเนอร์','ธอร์กริม','ดากนา','เฮลกา','ดูริน'],['ไอรอนฟิสต์','สโตนแฮมเมอร์','ดีปเดลฟ์','โกลด์เบียร์ด']],
+ halfling:[['ไพพ์พิน','โรซี่','มิโล','เนลลี่','แซม'],['กู๊ดบาร์เรล','ทีเลฟ','อันเดอร์บัฟ','กรีนบอตเทิล']],
+ halfelf:[['เคย์เลน','เซเรน','อาเดรีย','ฟินน์','เวกซ์'],['ฮาล์ฟมูน','เวลธอร์น','แอชเวล']],
+ gnome:[['ฟิซบัน','วิมเบิล','ทินเคอร์','นิกซ์','บอดโด'],['คอกสปริง','เกียร์โลว์','ไฟน์วิค']],
+ halforc:[['กรุมช์','ทอร์ก','ชากา','เรนน่า','มอก'],['บรอดแบ็ก','ไอรอนจอว์','สการ์']],
+ tiefling:[['เมฟิสโต','คาร์เมน','ซาริเอล','เลไว','เอมเบอร์'],['แอชเฮิร์ธ','ดัสก์เบิร์น','เวลเวต']],
+ dragonborn:[['อาร์จานน์','บาลาสซาร์','ไครัน','โซรา','เรกซ์'],['เคลเธเลซ','เดรเจียน','เมดราช']]
+};
+const nameFor=r=>{const n=NAMES[r]||NAMES.human;return pick(n[0])+' '+pick(n[1]);};
+
+const FOCUS_CHILD=[
+ {id:'help',th:'ช่วยงานบ้าน',hint:'สายสัมพันธ์↑ ความรู้↓',fx:{r:2,l:-1.2}},
+ {id:'play',th:'เล่นกับเพื่อน',hint:'จิตใจ↑ สายสัมพันธ์↑',fx:{s:2,r:1.6}},
+ {id:'learn',th:'เรียนหนังสือ',hint:'ความรู้↑',fx:{l:2.6,s:-.4}},
+ {id:'work',th:'ออกแรงทำงาน',hint:'ร่างกาย↑ ทอง↑',fx:{b:1.4,g:3}},
+ {id:'hobby',th:'งานอดิเรก',hint:'จิตใจ↑ ฝีมือ↑',fx:{s:2.2},hob:1}
+];
+const FOCUS_ADULT=[
+ {id:'trade',th:'ทุ่มให้อาชีพ',hint:'รายได้ +35% · จิตใจ↓',fx:{s:-1.1,b:-.5},mul:1.35},
+ {id:'balance',th:'สมดุล',hint:'รายได้ +12% · ทุกอย่างพอประมาณ',fx:{s:.5,b:.3,r:.5},mul:1.12},
+ {id:'kin',th:'ครอบครัวและมิตร',hint:'สายสัมพันธ์↑ จิตใจ↑',fx:{r:2.2,s:1.6},mul:1},
+ {id:'body',th:'ดูแลร่างกาย',hint:'ร่างกาย↑ รายได้ −5%',fx:{b:2.4},mul:.95},
+ {id:'study',th:'ศึกษาตำรา',hint:'ความรู้↑ รายได้ +5%',fx:{l:2.4},mul:1.05},
+ {id:'hobby',th:'งานอดิเรก',hint:'จิตใจ↑ ฝีมือ↑ รายได้ −5%',fx:{s:2.6},mul:.95,hob:1}
+];
+const FOCUS_ADV=[
+ {id:'delve',th:'ลงดันเจี้ยน',hint:'รายได้ +60% · เสี่ยงตาย',fx:{b:-1.6,s:.6},mul:1.6,risk:1.9},
+ {id:'guard',th:'รับจ้างคุ้มกัน',hint:'รายได้ +20% · ปลอดภัยกว่า',fx:{b:-.4},mul:1.2,risk:1.15},
+ {id:'train',th:'ฝึกฝน',hint:'ร่างกาย↑ ความรู้↑ รายได้ −10%',fx:{b:2,l:1.6},mul:.9,risk:.8},
+ {id:'kin',th:'ครอบครัวและมิตร',hint:'สายสัมพันธ์↑ รายได้ −15%',fx:{r:2.2,s:1.8},mul:.85,risk:.6},
+ {id:'rest',th:'พักที่โรงเตี๊ยม',hint:'จิตใจ↑ ร่างกาย↑ รายได้ −20%',fx:{s:2,b:1.4},mul:.8,risk:.5}
+];
+
+/* ---------------- spending ----------------
+   Prices are in gp against a commoner's ~45 gp a year, so the ladder from
+   a shared meal to a house to a 500 gp resurrection stays brutal on purpose. */
+const ITEMS=[
+ {id:'feast',th:'เลี้ยงข้าวญาติมิตรที่โรงเตี๊ยม',cost:1,fx:'สายสัมพันธ์ +4 · จิตใจ +2',rep:1,
+  apply:x=>{x.r=clamp(x.r+4,0,100);x.s=clamp(x.s+2,0,100);},log:'เลี้ยงข้าวญาติมิตรที่โรงเตี๊ยมทั้งโต๊ะ'},
+ {id:'checkup',th:'ให้นักบวชตรวจร่างกาย',cost:3,fx:'ร่างกาย +6 · ลดโอกาสเป็นโรคเรื้อรัง',rep:1,
+  apply:x=>{x.b=clamp(x.b+6,0,100);x.checked=(x.checked||0)+1;},log:'ไปให้นักบวชตรวจร่างกายและรับยาบำรุง',
+  note:'วิหารในแฟรูนทำหน้าที่เป็นทั้งที่รักษาโรคและที่ฝากเงิน'},
+ {id:'kinmoney',th:'ส่งเงินและยาให้พ่อแม่',cost:5,fx:'สายสัมพันธ์ +5 · สุขภาพพ่อแม่ ↑',rep:1,need:x=>x.age<x.race.span*.6,
+  apply:x=>{x.r=clamp(x.r+5,0,100);},log:'ส่งเงินและยากลับไปให้พ่อแม่'},
+ {id:'alms',th:'บริจาคให้วิหาร',cost:4,fx:'จิตใจ +4 · สายสัมพันธ์ +2',rep:1,
+  apply:x=>{x.s=clamp(x.s+4,0,100);x.r=clamp(x.r+2,0,100);x.donated=1;},log:'บริจาคให้วิหารประจำแคว้น'},
+ {id:'festival',th:'ไปงานฉลองในเมืองใกล้ ๆ',fx:'จิตใจ +5 · ความรู้ +1',rep:1,
+  opts:[{th:'กับคนรัก',cost:5,bond:6},{th:'กับเพื่อน ๆ',cost:3,bond:3},{th:'กับพ่อแม่',cost:6,bond:5},{th:'คนเดียว',cost:3,bond:0}],
+  apply:(x,o)=>{x.s=clamp(x.s+5,0,100);x.l=clamp(x.l+1,0,100);x.r=clamp(x.r+o.bond,0,100);},log:'ไปงานฉลองในเมืองใกล้ ๆ'},
+ {id:'journey',th:'เดินทางไกลข้ามแคว้น',fx:'จิตใจ +8 · ความรู้ +3',rep:1,credit:1,
+  opts:[{th:'กับคนรัก',cost:22,bond:8},{th:'กับเพื่อน ๆ',cost:15,bond:5},{th:'คนเดียว',cost:14,bond:0}],
+  apply:(x,o)=>{x.s=clamp(x.s+8,0,100);x.l=clamp(x.l+3,0,100);x.r=clamp(x.r+o.bond,0,100);x.travelled=1;},
+  log:'ออกเดินทางข้ามแคว้นไปจนสุดถนน',note:'คนในแฟรูนไม่ถึงหนึ่งในห้าที่เคยออกจากแคว้นบ้านเกิดเกินสิบไมล์'},
+ {id:'craft',th:'เรียนวิชากับช่างฝีมือ',cost:7,fx:'ความรู้ +6 · รายได้ ↑ สามปี',rep:1,
+  apply:x=>{x.l=clamp(x.l+6,0,100);x.boost=3;},log:'ฝากตัวเรียนวิชากับช่างฝีมือในเมืองหนึ่งฤดู'},
+ {id:'hobbygear',th:'อุปกรณ์และครูสอนงานอดิเรก',cost:4,fx:'ฝีมือ ↑ · จิตใจ +3',rep:1,need:x=>x.hobbies.length>0,
+  apply:x=>{if(x.hobbies.length){const h=x.hobbies[rnd(x.hobbies.length)];h.lv=Math.min(20,h.lv+2);}x.s=clamp(x.s+3,0,100);},log:'ซื้ออุปกรณ์ดี ๆ และจ้างครูมาสอนงานอดิเรก'},
+ {id:'newhobby',th:'หางานอดิเรกใหม่',cost:2,fx:'มีได้สูงสุดสามอย่าง',rep:1,need:x=>x.hobbies.length<3,
+  apply:x=>{const left=HOBBY_POOL.filter(h=>!x.hobbies.find(y=>y.th===h));if(left.length)x.hobbies.push({th:pick(left),lv:1});},log:'เริ่มงานอดิเรกใหม่'},
+ {id:'mule',th:'ลาหนึ่งตัว',cost:6,fx:'จิตใจ +3 · รายได้ +5%',once:1,log:'ซื้อลามาหนึ่งตัว บรรทุกของได้มากกว่าแบกเอง'},
+ {id:'armor',th:'เสื้อเกราะหนัง',cost:10,fx:'ลดความเสี่ยงตาย 15%',once:1,log:'ซื้อเสื้อเกราะหนังมาใส่เวลาออกนอกกำแพง'},
+ {id:'weapon',th:'ดาบและโล่',cost:15,fx:'ลดความเสี่ยง 12%',once:1,log:'ซื้อดาบกับโล่มาเก็บไว้ข้างประตู'},
+ {id:'horse',th:'ม้าและอาน',cost:30,fx:'จิตใจ +7 · รายได้ +15% · เสี่ยงอุบัติเหตุ ↑',once:1,log:'ซื้อม้ามาตัวหนึ่ง เดินทางได้ไกลกว่าเดิมมาก'},
+ {id:'moveout',th:'ย้ายออกจากบ้านพ่อแม่',cost:12,fx:'มัดจำและของใช้ · หลังจากนั้นดูแลค่ากินเอง',once:1,need:x=>x.home==='parents'&&x.age>=x.race.mature,
+  apply:x=>{x.home='own';},log:'ย้ายออกจากบ้านพ่อแม่ไปเช่าห้องของตัวเอง'},
+ {id:'cart',th:'เกวียนและม้าเทียม',cost:90,fx:'รายได้ +30% · ขนของไปขายเองได้',once:1,log:'ซื้อเกวียนกับม้าเทียมมาไว้ขนของไปขายเอง'},
+ {id:'land',th:'ที่ดินทำกิน',cost:110,fx:'รายได้ประจำปี +12 gp',once:1,log:'ซื้อที่ดินผืนหนึ่งไว้ทำกิน',
+  note:'การถือครองที่ดินคือเส้นแบ่งระหว่างชาวนากับผู้เช่านาในแทบทุกแคว้น'},
+ {id:'house',th:'บ้านเป็นของตัวเอง',cost:320,fx:'จิตใจ +12 · ไม่ต้องจ่ายค่าที่อยู่อีก',once:1,
+  apply:x=>{x.s=clamp(x.s+12,0,100);x.home='owned';},log:'ซื้อบ้านเป็นของตัวเองได้สักหลัง'},
+ /* free actions that plant a decision next year */
+ {id:'jobhunt',th:'ออกหางานใหม่',cost:0,fx:'ส่งข่าวและถามคนรู้จัก · ปีหน้ามีโอกาสได้ข้อเสนองาน',free:1,plant:'job',
+  need:x=>x.age>=x.race.mature&&!x.adv,log:'ออกเดินถามหางานใหม่ไปทั่วเมือง'},
+ {id:'business',th:'ศึกษาเรื่องเปิดร้านของตัวเอง',cost:0,fx:'ปีหน้าจะได้เลือกว่าจะเปิดหรือไม่',free:1,plant:'biz',
+  need:x=>x.age>=x.race.mature,log:'ไปนั่งถามพ่อค้าในตลาดว่าเปิดร้านต้องใช้อะไรบ้าง'},
+ {id:'council',th:'เตรียมตัวลงสมัครสภาเมือง',cost:2,fx:'ปีหน้าจะได้เลือกว่าจะลงสมัครหรือไม่',plant:'council',
+  need:x=>x.age>=x.race.mature&&x.region.lore>=.9,log:'เริ่มเดินสายทำความรู้จักกับผู้คนในเขต',
+  note:'สภาเมืองในแฟรูนส่วนใหญ่เป็นที่ของสมาคมการค้า คนนอกเข้ายาก'},
+ {id:'apply',th:'ลองสมัครสำนักที่อยากเข้ามานาน',cost:0,fx:'ปีหน้าจะได้ลองสมัครหนึ่งในสามที่ (ส่วนใหญ่เข้ายาก)',free:1,plant:'apply',
+  need:x=>x.age>=x.race.mature,log:'ไปสืบว่าสำนักที่อยากเข้ารับคนแบบไหน'},
+ {id:'migrate',th:'ศึกษาทางย้ายไปแคว้นอื่น',cost:2,fx:'ปีหน้าจะได้เลือกว่าจะย้ายหรือไม่',plant:'migrate',
+  need:x=>x.age>=x.race.mature,log:'ไปถามคนขับเกวียนว่าแคว้นอื่นเป็นอย่างไร'}
+];
+
+const LIFESTYLE=[
+ {id:'invest',th:'เก็บทรัพย์ไว้ที่ไหน',
+  d:'ผลตอบแทนเป็นตัวเลขต่อปีหลังหักค่าเสื่อมของเหรียญแล้ว การลงขันกองคาราวานทีละกองเองมักได้น้อยกว่าฝากรวมกับสมาคม เพราะกองที่หายไปกองเดียวกินกำไรหลายปี',
+  o:[{id:'floor',th:'ฝังใต้พื้นบ้าน · 0% และมีโอกาสถูกขโมย',ret:0,vol:0,theft:.015},
+     {id:'temple',th:'ฝากไว้กับวิหาร · ราว 1% ปลอดภัย',ret:.01,vol:.003},
+     {id:'guild',th:'ลงหุ้นกับสมาคมพ่อค้า · เฉลี่ย 3% ผันผวนปานกลาง',ret:.03,vol:.035},
+     {id:'caravan',th:'ลงขันกองคาราวานประจำ · เฉลี่ย 5% ผันผวนมาก',ret:.05,vol:.1},
+     {id:'lend',th:'ปล่อยกู้เอง · เฉลี่ย 6% แต่ลูกหนี้หายได้',ret:.06,vol:.16}]},
+ {id:'gifts',th:'ค่าช่วยงานแต่งและงานศพ',
+  d:'เงินที่ใส่ซองให้งานของเพื่อนบ้านและญาติ ให้น้อยลงก็ประหยัด แต่ความสัมพันธ์จะห่างไปทีละนิด',
+  o:[{id:'full',th:'ให้อย่างเต็มที่',pct:.04,bond:.5},{id:'half',th:'ให้ครึ่งเดียวตามกำลัง',pct:.02,bond:0},
+     {id:'none',th:'แค่ไปร่วมงาน',pct:.005,bond:-.6}]},
+ {id:'ward',th:'การคุ้มครองจากวิหาร',
+  d:'จ่ายค่าบำรุงวิหารทุกปี แล้ววิหารจะรับรักษายามเจ็บป่วยและรับคำขอพิธีชุบชีวิตให้ โดยทั่วไปเงินที่จ่ายไปจะมากกว่าที่ได้คืน แต่ปีที่ต้องใช้จริงคือปีที่มันสำคัญที่สุด',
+  o:[{id:'none',th:'พึ่งตัวเอง',fee:0},{id:'full',th:'จ่ายค่าบำรุงวิหารทุกปี',fee:3,raise:1}]},
+ {id:'diet',th:'การกิน',
+  d:'กินอย่างใส่ใจจะเสียเงินมากขึ้นนิดหน่อย แต่โรคเรื้อรังจะเกิดน้อยลง กินที่โรงเตี๊ยมบ่อย ๆ สบายกว่าแต่แพงกว่าและเสี่ยงกว่า',
+  o:[{id:'same',th:'กินเหมือนคนรอบข้าง',cost:0,chronic:1,s:0},
+     {id:'care',th:'กินอย่างใส่ใจ เน้นผักและธัญพืช',cost:2,chronic:.6,s:0},
+     {id:'tavern',th:'กินที่โรงเตี๊ยมบ่อย ๆ',cost:5,chronic:1.4,s:.5}]}
+];
+const AUTO=[
+ {id:'checkup',th:'ให้นักบวชตรวจร่างกาย · ทุกปี',every:1},
+ {id:'feast',th:'เลี้ยงข้าวญาติมิตร · ทุกปี',every:1},
+ {id:'craft',th:'เรียนวิชากับช่างฝีมือ · ทุก 2 ปี',every:2},
+ {id:'kinmoney',th:'ส่งเงินให้พ่อแม่ · ทุก 2 ปี',every:2},
+ {id:'festival',th:'ไปงานฉลอง · ทุกปี',every:1},
+ {id:'journey',th:'เดินทางข้ามแคว้น · ทุก 3 ปี',every:3},
+ {id:'alms',th:'บริจาคให้วิหาร · ทุกปี',every:1},
+ {id:'hobbygear',th:'อุปกรณ์งานอดิเรก · ทุกปี',every:1}
+];
+
+const EVENTS=[
+ {st:'c',w:9,t:'ไข้ป่าเล่นงานอยู่หลายคืน รอดมาได้ด้วยน้ำต้มสมุนไพรของยาย',n:'ในแฟรูนที่ไม่มีนักบวชประจำหมู่บ้าน เด็กจำนวนมากไม่ผ่านฤดูหนาวแรก',fx:{b:-3}},
+ {st:'c',w:8,t:'ได้กินขนมปังอุ่น ๆ ทั้งก้อนเป็นครั้งแรกในรอบหลายเดือน',fx:{s:3}},
+ {st:'c',w:7,t:'แม่สอนให้จำชื่อเทพประจำบ้านให้ครบ',fx:{l:1.5,r:1}},
+ {st:'c',w:7,t:'ขบวนพ่อค้าผ่านหมู่บ้าน ได้ยืนมองล้อเกวียนจนลับตา',fx:{s:2}},
+ {st:'c',w:6,t:'พ่อให้ถือมีดเป็นครั้งแรก มือยังสั่นอยู่',fx:{b:1.5}},
+ {st:'c',w:5,t:'เพื่อนบ้านหายไปกลางฤดูเกี่ยว ไม่มีใครพูดถึงอีกเลย',n:'สัตว์ร้ายและโจรเป็นสาเหตุการหายตัวที่พบบ่อยที่สุดนอกกำแพงเมือง',fx:{s:-3,r:-1},hard:1},
+ {st:'c',w:6,t:'นักบวชเร่ร่อนแวะพัก สอนให้เขียนชื่อตัวเองได้',n:'คนในแฟรูนที่อ่านออกเขียนได้มีไม่ถึงหนึ่งในห้า นอกกำแพงเมืองใหญ่ยิ่งน้อยกว่านั้น',fx:{l:4}},
+ {st:'c',w:5,t:'เก็บหินสีประหลาดได้ก้อนหนึ่ง พกติดตัวไว้ตั้งแต่นั้น',fx:{s:2}},
+ {st:'cy',w:6,t:'ฤดูเก็บเกี่ยวล้มเหลว ทั้งบ้านกินข้าวต้มใสมาทั้งฤดูหนาว',fx:{b:-2.5,g:-4}},
+ {st:'cy',w:5,t:'เห็นอัศวินขี่ม้าผ่าน เกราะสะท้อนแดดจนต้องหรี่ตา',fx:{s:2.5}},
+ {st:'y',w:8,t:'เริ่มออกแรงเต็มวันเหมือนผู้ใหญ่ ฝ่ามือด้านขึ้นทั้งสองข้าง',fx:{b:1.6,g:4}},
+ {st:'y',w:7,t:'มีคนหนึ่งที่พอเดินผ่านแล้วหัวใจเต้นผิดจังหวะ',fx:{s:3,r:2}},
+ {st:'y',w:6,t:'ทะเลาะกับพ่อเรื่องอนาคต แล้วไม่พูดกันไปสามวัน',fx:{s:-2,r:-2}},
+ {st:'y',w:6,t:'ได้ยินข่าวว่ามีคนจากหมู่บ้านข้าง ๆ ไปตายในดันเจี้ยนเพราะหวังสมบัติ',n:'คนที่ออกผจญภัยในวัยหนุ่มสาวราวครึ่งหนึ่งไม่ได้กลับมาถึงปีที่สาม',fx:{s:-1.5},hard:1},
+ {st:'y',w:5,t:'ชนะพนันแข่งวิ่งในงานฉลองกลางฤดูร้อน ได้เหรียญทองแดงมาหนึ่งกำมือ',fx:{s:2.5,g:5,r:1}},
+ {st:'ya',w:6,t:'ทหารเกณฑ์ผ่านมา เรียกชายฉกรรจ์ไปขึ้นทะเบียน',fx:{s:-2,b:-1}},
+ {st:'a',w:8,t:'ปีนี้ทำงานได้ดี มีเงินเหลือเก็บเป็นครั้งแรก',fx:{g:12,s:2}},
+ {st:'a',w:7,t:'เพื่อนร่วมงานล้มป่วย ต้องแบ่งค่าหมอให้',fx:{g:-7,r:2}},
+ {st:'a',w:6,t:'ภาษีขึ้นอีกรอบ เจ้าเมืองอ้างว่าต้องซ่อมกำแพง',fx:{g:-9,s:-1.5}},
+ {st:'a',w:6,t:'ช่วยคนแปลกหน้าที่ล้มอยู่ข้างทาง ภายหลังเขากลับมาขอบคุณพร้อมของฝาก',fx:{r:3,s:2,g:4}},
+ {st:'a',w:5,t:'ฝันถึงที่ที่ไม่เคยไป ตื่นมาแล้วจำกลิ่นได้',fx:{s:1.5,l:1}},
+ {st:'a',w:5,t:'หัวหน้างานเห็นฝีมือ ค่าแรงรายวันจึงขึ้น',fx:{g:14,s:2}},
+ {st:'am',w:7,t:'ไข้ระบาดเข้าเมือง วิหารเปิดประตูรับคนไข้จนล้น',n:'โรคระบาดคร่าชีวิตชาวแฟรูนมากกว่าสัตว์ร้ายทุกชนิดรวมกันหลายเท่า',fx:{b:-4,s:-2}},
+ {st:'am',w:6,t:'สงครามชายแดนปะทุ ราคาข้าวขึ้นเท่าตัว',fx:{g:-10,s:-2},hard:1},
+ {st:'am',w:6,t:'ได้เป็นคนที่คนอื่นในละแวกเดินมาปรึกษาเวลามีเรื่อง',fx:{r:3,s:2}},
+ {st:'m',w:7,t:'หลังเริ่มมีเสียงเวลาลุกตอนเช้า',fx:{b:-2}},
+ {st:'m',w:6,t:'คนรุ่นก่อนในบ้านจากไป งานศพจัดตามธรรมเนียมของเผ่า',fx:{s:-4,r:-2},hard:1},
+ {st:'m',w:6,t:'สอนงานให้เด็กรุ่นใหม่ เขาเรียนได้เร็วกว่าที่เคยคิด',fx:{r:2.5,s:2,l:1}},
+ {st:'m',w:5,t:'ซ่อมหลังคาบ้านใหม่ทั้งหลัง ปีนี้ฝนไม่รั่วแล้ว',fx:{g:-11,s:2.5}},
+ {st:'mo',w:6,t:'เริ่มจำชื่อคนที่เพิ่งเจอไม่ค่อยได้',fx:{l:-1.5}},
+ {st:'o',w:8,t:'นั่งอยู่หน้าประตูบ้านแล้วมีคนเดินผ่านมาทัก ทุกคนรู้จักชื่อ',fx:{s:3,r:2}},
+ {st:'o',w:7,t:'ฤดูหนาวปีนี้ยาวกว่าทุกปี',fx:{b:-3}},
+ {st:'o',w:6,t:'เล่าเรื่องเก่าให้เด็ก ๆ ฟัง บางเรื่องก็เติมเอาเองบ้าง',fx:{s:3,r:1.5}},
+ {st:'a',adv:1,w:9,t:'ลงไปในซากปราสาทเก่า ได้เหรียญเก่ามาหนึ่งถุงกับแผลเป็นที่แขน',fx:{g:45,b:-2.5}},
+ {st:'a',adv:1,w:7,t:'เจอกับอาวล์แบร์กลางทางป่า วิ่งหนีได้ทันแค่เส้นยาแดง',n:'สัตว์ร้ายในป่าเหนือฆ่าคนเดินทางมากกว่ามังกรหลายร้อยเท่า เพราะมังกรนั้นหายาก',fx:{b:-5,s:-2}},
+ {st:'a',adv:1,w:6,t:'แบ่งสมบัติกับเพื่อนร่วมทางอย่างยุติธรรม ไม่มีใครบ่นสักคน',fx:{r:3,g:20}},
+ {st:'am',adv:1,w:6,t:'เพื่อนร่วมทางคนหนึ่งไม่ได้กลับขึ้นมาจากชั้นล่าง',fx:{s:-6,r:-3},hard:1},
+ {st:'am',adv:1,w:5,t:'ชื่อเริ่มถูกเอ่ยถึงในโรงเตี๊ยมที่ไม่เคยไป',fx:{s:2.5,r:2,g:12}},
+ {st:'mo',adv:1,w:6,t:'แขวนดาบไว้เหนือเตาผิง แล้วไม่หยิบลงมาอีกเลย',fx:{s:2,b:1}}
+];
+
+const DECS=[
+ {id:'first_friend',at:'c',cond:x=>x.age>=x.race.mature*.4,h:'จะเป็นเพื่อนกันไหม?',
+  b:()=>'เด็กรุ่นราวคราวเดียวกันย้ายมาอยู่ใกล้ ๆ ทำงานกองเดียวกันทุกเช้า',
+  ch:[{t:'เข้าไปทักก่อน',s:'สายสัมพันธ์ +9 · จิตใจ +6',fx:{r:9,s:6},friend:1},
+      {t:'ทักแล้วรักษาระยะไว้',s:'ไม่เสี่ยง ไม่ได้อะไร',fx:{r:1}}]},
+ {id:'temple',at:'c',cond:x=>x.age>=x.race.mature*.55,h:'วิหารรับเด็กฝึก',
+  b:()=>'นักบวชประจำแคว้นเปิดรับเด็กเข้าเรียนอ่านเขียนแลกกับแรงงานในวิหาร',
+  lore:'วิหารคือระบบการศึกษาที่ใกล้เคียงที่สุดที่คนธรรมดาในแฟรูนเข้าถึงได้',
+  ch:[{t:'เข้าวิหาร',s:'ความรู้ +16 · ร่างกาย −3',fx:{l:16,b:-3,g:-2}},
+      {t:'อยู่ช่วยที่บ้านต่อ',s:'สายสัมพันธ์ +6 · ทอง +8',fx:{r:6,g:8}}]},
+ {id:'hobby',at:'c',cond:x=>x.age>=x.race.mature*.45,h:'ได้เจอสิ่งที่ชอบ',
+  b:x=>`มีอยู่อย่างหนึ่งที่ทำแล้วลืมเวลา — ${x.hobbyOffer}`,
+  ch:[{t:'ทำต่อไปเรื่อย ๆ',s:'จิตใจ +7 · ฝีมือจะสะสมไปทั้งชีวิต',fx:{s:7},takehobby:1},
+      {t:'เก็บไว้ก่อน ยังมีงานต้องทำ',s:'ทอง +8',fx:{g:8}}]},
+ {id:'call',at:'mature',h:'เสียงเรียก',
+  b:x=>`มีคนมาชวน${x.callWho} บอกว่าค่าจ้างดี และคนอย่างคุณน่าจะไปได้ไกล`,
+  lore:'ในแฟรูนมีคนไม่ถึงหนึ่งในห้าที่เคยออกจากแคว้นบ้านเกิดเกินสิบไมล์',
+  ch:[{t:'ไป',s:'รายได้สูงขึ้นมาก · เสี่ยงตายสูงขึ้นมาก',adv:1,fx:{s:5,b:2}},
+      {t:'ไม่ไป อยู่ทำมาหากินที่นี่',s:'ปลอดภัย ชีวิตเดิม',fx:{r:4,g:6}}]},
+ {id:'trade_pick',at:'mature',h:'ถึงเวลาเลือกทางทำกิน',
+  b:()=>'ไม่มีใครมาชวนไปไหน ก็ต้องหาทางเลี้ยงตัวเองในแคว้นนี้',
+  ch:[{t:'สืบทอดงานของพ่อแม่',s:'มั่นคง · สายสัมพันธ์ +6',fx:{g:12,r:6}},
+      {t:'เข้าเมืองไปหางานใหม่',s:'ทอง +24 · สายสัมพันธ์ −6',fx:{g:24,r:-6,s:-2}},
+      {t:'ขอเป็นลูกมือช่างฝีมือ',s:'ความรู้ +9 · ทอง +16',fx:{l:9,g:16,s:-2}}]},
+ {id:'marry',at:'adult',h:'มีคนมาสู่ขอ',
+  b:x=>`${x.partnerName} อยู่ในแคว้นเดียวกันมาตั้งแต่เด็ก ครอบครัวทั้งสองฝ่ายเห็นดีด้วย`,
+  ch:[{t:'แต่งงาน',s:'สายสัมพันธ์ +14 · และมีอีกคนช่วยหาเลี้ยง',fx:{r:14,s:9,g:-8},marry:1},
+      {t:'ขอเวลาอีกสักพัก',s:'ยังคบกันอยู่ · ค่อยตัดสินใจในแผงใช้เงิน',fx:{s:-1},court:1},
+      {t:'ปฏิเสธ',s:'อิสระ แต่เหงา',fx:{s:-4,r:-5}}]},
+ {id:'child',at:'adult',need:'married',h:'จะมีลูกไหม?',
+  b:()=>'บ้านยังพอมีที่ว่าง และในแคว้นนี้แทบทุกบ้านมีเด็กวิ่งอยู่',
+  lore:'ครอบครัวชาวนาในแฟรูนมักมีลูกหลายคน เพราะมือที่ช่วยทำงานได้คือทรัพย์สินอย่างหนึ่ง',
+  ch:[{t:'มีลูก',s:'สายสัมพันธ์ +13 · ค่าเลี้ยงดูทุกปี',fx:{r:13,s:7},kids:2},
+      {t:'ยังก่อน',s:'ทอง +8',fx:{g:8}}]},
+ {id:'pet',at:'adult',h:'รับสัตว์เลี้ยงมาไหม?',
+  b:x=>`มี${x.petOffer[0]}ตัวหนึ่งมาวนเวียนอยู่แถวบ้านหลายวันแล้ว`,
+  ch:[{t:'รับมาเลี้ยง',s:'จิตใจ +8 · ค่าอาหารปีละเล็กน้อย',fx:{s:8},pet:1},
+      {t:'ไล่ไป',s:'ไม่มีภาระเพิ่ม',fx:{s:-1}}]},
+ {id:'sick_kin',at:'adult',need:'married',h:'คนในบ้านป่วยหนัก',
+  b:x=>`อาการเกินกว่าหมอชาวบ้านจะรับไหว นักบวชรักษาได้ แต่คิดค่าบูชา ${x.life.ward==='full'?'12':'30'} gp`,
+  lore:'คาถารักษาโรคมีอยู่จริงในแฟรูน แต่ต้องจ่าย — ซึ่งเป็นเหตุผลที่คนจนยังตายด้วยโรคที่รักษาได้',
+  ch:[{t:'จ่าย แม้ต้องกู้',s:'ทอง ↓↓ แต่เขารอด',heal:1,fx:{r:8,s:3}},
+      {t:'รักษาตามมีตามเกิดที่บ้าน',s:'ประหยัด แต่เสี่ยง',fx:{s:-7,r:-6},risky:1}]},
+ {id:'drink',at:'adult',h:'วงเหล้าที่โรงเตี๊ยมถี่ขึ้น',
+  b:()=>'ทุกเย็นมีคนชวน และมันก็ทำให้ลืมเรื่องทั้งวันได้จริง ๆ',
+  ch:[{t:'ลดลง หาทางอื่นรับมือ',s:'ร่างกาย +4 · จิตใจ +3',fx:{b:4,s:3}},
+      {t:'ดื่มต่อ',s:'จิตใจ +4 · ร่างกาย −9',fx:{s:4,b:-9}}]},
+ {id:'debt',at:'any',cond:x=>x.gold<-40,h:'เจ้าหนี้มาถึงหน้าประตู',
+  b:x=>`ยอดค้างรวมแล้ว ${gp(-x.gold)} เขาให้เวลาถึงสิ้นฤดู`,
+  lore:'ดอกเบี้ยเดินทุกปี หนี้ที่ปล่อยไว้จึงโตเร็วกว่ารายได้ของคนส่วนใหญ่',
+  ch:[{t:'ขอให้ญาติช่วย',s:'หนี้หายครึ่งหนึ่ง · สายสัมพันธ์ −9',fx:{r:-9},half:1},
+      {t:'กู้จากคนของสมาคม',s:'ได้เวลา แต่ดอกทบ',fx:{g:-22,s:-4}}]},
+ {id:'school_kid',at:'middle',need:'kids',h:'จะส่งลูกเรียนไหม?',
+  b:()=>'วิหารรับสอนอ่านเขียน ปีละ 3 gp ต่อคน ส่วนที่บ้านก็ขาดมือทำงานไปเท่านั้น',
+  ch:[{t:'ส่งเรียน',s:'จ่ายทุกปี · แต่เขาจะมีทางเลือก',fx:{s:5,r:4},school:1},
+      {t:'ให้ช่วยงานที่บ้าน',s:'ทอง +26 · วงจรเดิมวนต่อ',fx:{g:26,r:2}}]},
+ {id:'pause_mid',at:'middle',kind:'reflect',h:'หยุดพักสักครู่',q:'ถึงตรงนี้ ชีวิตนี้ได้อะไรที่ไม่คาดคิดมาก่อนบ้าง?'},
+ {id:'legacy',at:'old',h:'สิ่งที่จะเหลือไว้',
+  b:()=>'เริ่มมีคนถามว่าของในบ้านจะยกให้ใคร',
+  ch:[{t:'ยกให้ลูกหลานและญาติ',s:'สายสัมพันธ์ +9',fx:{r:9,s:4}},
+      {t:'บริจาคให้วิหารประจำแคว้น',s:'จิตใจ +8 · คนจดจำ',fx:{s:8,g:-35},donate:1},
+      {t:'เก็บไว้จนวันสุดท้าย',s:'ทอง +18',fx:{g:18,s:-2}}]},
+ {id:'pause_end',at:'old',kind:'reflect',h:'ใกล้ถึงตอนท้ายแล้ว',q:'ถ้าได้ฝากไว้หนึ่งประโยคกับคนที่จะมาอ่านทะเบียนนี้ จะเขียนว่าอะไร?'}
+];
+
+/* decisions planted by free actions — these can fire more than once */
+const PLANTS={
+ job:{h:'มีข้อเสนองานเข้ามา',b:()=>'คนที่คุณฝากข่าวไว้ส่งคนมาบอกว่ามีที่หนึ่งกำลังรับคน',
+  ch:[{t:'รับงานใหม่',s:'รายได้ +25% · ต้องเริ่มนับหนึ่งใหม่',fx:{s:-2},job:1.25},
+      {t:'อยู่ที่เดิม',s:'สายสัมพันธ์ +3',fx:{r:3}}]},
+ biz:{h:'จะเปิดร้านของตัวเองไหม?',b:()=>'ที่ว่างหน้าตลาดยังพอมี ต้องลงทุนก่อน 40 gp',
+  lore:'ร้านเล็กในแฟรูนส่วนใหญ่ปิดตัวภายในสามปีแรก ที่รอดมักเป็นร้านของคนที่มีญาติในสมาคมการค้า',
+  ch:[{t:'เปิดร้าน',s:'ลงทุน 40 gp · รายได้อาจสูงขึ้นมากหรือเจ๊ง',biz:1},
+      {t:'ยังไม่เปิด',s:'เก็บเงินไว้ก่อน',fx:{g:3}}]},
+ council:{h:'จะลงสมัครสภาเมืองไหม?',b:()=>'เพื่อนบ้านบอกว่าถ้าลงก็พอมีคนหนุน แต่สมาคมการค้าหนุนอีกคนอยู่',
+  ch:[{t:'ลงสมัคร',s:'ถ้าได้ สายสัมพันธ์และรายได้ขึ้นมาก',council:1},
+      {t:'ไม่ลง',s:'จิตใจ +2',fx:{s:2}}]},
+ apply:{h:'สำนักที่อยากเข้ามานาน',b:()=>'เลือกได้ที่เดียว และส่วนใหญ่เขาไม่รับ',
+  ch:[{t:'สำนักเวทในเมือง',s:'ถ้ารับ ความรู้และรายได้ขึ้นมาก',apply:'wizard'},
+      {t:'วิหารประจำแคว้น',s:'ถ้ารับ ได้การคุ้มครองตลอดชีพ',apply:'temple'},
+      {t:'สมาคมนักผจญภัย',s:'ถ้ารับ ได้ออกผจญภัย',apply:'guild'}]},
+ migrate:{h:'จะย้ายไปแคว้นอื่นไหม?',b:()=>'คนขับเกวียนบอกว่าที่โน่นค่าแรงดีกว่า แต่ไม่มีใครรู้จักคุณเลยสักคน',
+  ch:[{t:'ย้าย',s:'เปลี่ยนแคว้น · สายสัมพันธ์ −12',fx:{r:-12,s:-3},migrate:1},
+      {t:'อยู่ที่เดิม',s:'สายสัมพันธ์ +3',fx:{r:3}}]}
+};
+
+/* ---------------- faces and scenes ----------------
+   Everything is drawn from the soul's own record, so the picture changes
+   when the household does, and the hair greys when the years do. */
+const LOOK={
+ human:{skin:['#e8b996','#c68642','#8d5524','#f1c27d','#a9714b'],hair:['#2b1d12','#55381f','#a0522d','#101010','#d8c08a']},
+ elf:{skin:['#f3dfc8','#e7d2b8','#d8c6a8','#cdbfae'],hair:['#f0e6c8','#c9b27a','#8d7a52','#2b2b2b','#b8c4c0']},
+ dwarf:{skin:['#d9a06b','#c68642','#b5744a'],hair:['#8b3a1a','#5a3016','#8d8d8d','#2b1d12','#c05a2a']},
+ halfling:{skin:['#e8b996','#d9a06b','#c68642'],hair:['#6b4423','#a0522d','#2b1d12','#c98a3a']},
+ halfelf:{skin:['#eccfb0','#dfc0a0','#c68642'],hair:['#55381f','#c9b27a','#2b1d12','#8d7a52']},
+ gnome:{skin:['#e8c3a0','#d9a06b'],hair:['#c45c2a','#6b4423','#d8d8d8','#a04a8a']},
+ halforc:{skin:['#8fa37a','#7d9168','#6f8a5e','#9aa98a'],hair:['#1b1b1b','#3a2d1f','#2a2a2a']},
+ tiefling:{skin:['#b4504a','#8e3b4a','#a0455c','#6e3550'],hair:['#1b1b1b','#5a1f2a','#3a1f3a','#7a2a3a']},
+ dragonborn:{skin:['#8c7a4a','#5a7a6a','#7a5a4a','#6a6a8a','#7a3a3a'],hair:['#2a2a2a']}
+};
+const CLOTH=['#6b6257','#7a6a52','#4f6a5a','#3f5a7a','#6a3f6a'];
+function makeLook(race,tier){
+  const p=LOOK[race.id]||LOOK.human;
+  return {skin:pick(p.skin),hair:pick(p.hair),cloth:CLOTH[tier.lvl-1]||CLOTH[0],beard:Math.random()<.45};
+}
+function cssVar(n){try{return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';}catch(e){return '#888';}}
+function isDark(){try{return String(cssVar('--vellum')).toLowerCase().indexOf('#1')===0;}catch(e){return false;}}
+
+function drawPortrait(cv,soul){
+  if(!cv||!cv.getContext||!soul||!soul.look)return;
+  try{
+    const G=23,g=cv.getContext('2d'),sc=cv.width/G;
+    if(!sc||!isFinite(sc))return;
+    g.imageSmoothingEnabled=false;g.clearRect(0,0,cv.width,cv.height);
+    const P=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x*sc),Math.round(y*sc),Math.ceil(w*sc),Math.ceil(h*sc));};
+    const L=soul.look,id=soul.race.id;
+    const old=soul.age>soul.span*.66,veryOld=soul.age>soul.span*.85;
+    const hair=veryOld?'#e2e2e2':(old?'#b9b9b9':L.hair),skin=L.skin;
+    P(0,0,G,G,isDark()?'#1b2127':'#d7d4c6');
+    P(2,19,19,4,L.cloth);
+    P(7,16,9,4,L.cloth);
+    P(9,15,5,2,skin);
+    if(id==='elf'||id==='halfelf'){P(3,8,3,4,skin);P(17,8,3,4,skin);P(3,7,2,2,skin);P(18,7,2,2,skin);}
+    else{P(4,10,2,4,skin);P(17,10,2,4,skin);}
+    P(6,4,11,12,skin);
+    if(id==='tiefling'){P(5,0,2,4,'#ded5c4');P(16,0,2,4,'#ded5c4');}
+    if(id==='dragonborn'){P(7,2,9,3,skin);P(9,13,5,3,skin);P(9,15,5,1,'rgba(0,0,0,.28)');}
+    else{P(5,2,13,4,hair);P(5,5,2,4,hair);P(16,5,2,4,hair);}
+    P(8,9,2,2,'#17191c');P(13,9,2,2,'#17191c');
+    if(old){P(7,8,1,1,'rgba(0,0,0,.2)');P(15,8,1,1,'rgba(0,0,0,.2)');}
+    if(id==='halforc'){P(8,13,1,3,'#f2ecd9');P(14,13,1,3,'#f2ecd9');}
+    const bearded=(id==='dwarf'||L.beard)&&soul.age>=soul.race.mature&&id!=='dragonborn';
+    if(bearded){P(6,12,11,5,hair);P(7,17,9,2,hair);}
+    else if(id!=='dragonborn')P(10,12,3,1,'rgba(0,0,0,.35)');
+  }catch(e){}
+}
+
+function drawScene(cv){
+  if(!cv||!cv.getContext||!S||!S.look)return;
+  try{
+    const W=140,H=46,g=cv.getContext('2d'),sc=cv.width/W;
+    if(!sc||!isFinite(sc))return;
+    g.imageSmoothingEnabled=false;g.clearRect(0,0,cv.width,cv.height);
+    const P=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x*sc),Math.round(y*sc),Math.ceil(w*sc),Math.ceil(h*sc));};
+    const dark=isDark();
+    const cold=['icd','und','rash'].indexOf(S.region.id)>=0,hot=['cal','chu'].indexOf(S.region.id)>=0;
+    const sky1=dark?'#161d27':(cold?'#b9c9d6':hot?'#e4c9a0':'#aecbd8');
+    const sky2=dark?'#232d3b':(cold?'#d2dde4':hot?'#f0ddbc':'#cfe0e4');
+    const grass=dark?'#26332b':(cold?'#cdd6d2':hot?'#c6b184':'#9fb277');
+    const soil=dark?'#1d2620':(cold?'#b3bcba':hot?'#ab9263':'#8a9a66');
+    P(0,0,W,26,sky1);P(0,26,W,8,sky2);
+    P(116,5,5,5,dark?'#e6e0c6':'#f6ecb8');
+    if(dark){P(20,7,1,1,'#cfd6dd');P(44,4,1,1,'#cfd6dd');P(78,9,1,1,'#cfd6dd');P(100,6,1,1,'#cfd6dd');}
+    P(0,32,W,4,grass);P(0,36,W,10,soil);
+    const lvl=S.tier.lvl;
+    const urban=['wd','bg','nw','sem','lus','cal','thay','und'].indexOf(S.region.id)>=0;
+    const wall=lvl>=4?'#c3b394':(lvl>=3?'#a08a6a':'#8a7558'),roof=lvl>=4?'#6d4c39':'#5a4432';
+    const lit=dark?'#e8b45a':'#6e5c38';
+    if(urban||lvl>=4){
+      P(10,12,28,24,lvl>=4?'#c3b394':'#a08a6a');P(8,8,32,5,roof);
+      for(let r=0;r<3;r++)for(let c=0;c<3;c++)P(13+c*9,16+r*6,5,4,(r+c)%3?lit:'rgba(0,0,0,.25)');
+    }else{
+      P(12,22,26,14,wall);P(9,16,32,7,roof);
+      P(19,27,6,5,lit);P(29,28,5,8,'#5a4432');
+      if(S.own.land)P(44,30,10,6,dark?'#2c3a2b':'#7f9455');
+    }
+    if(S.own.horse||S.own.mule){P(48,28,8,5,'#6b513a');P(55,26,3,3,'#6b513a');P(48,33,1,3,'#4a3728');P(54,33,1,3,'#4a3728');}
+    const base=36,L=S.look;
+    const person=(x,cloth,skin,hair,small)=>{
+      const h=small?8:11,hd=small?3:4;
+      P(x+1,base-h-1,3,1,hair);
+      P(x+1,base-h,3,hd,skin);
+      P(x,base-h+hd,5,h-hd-2,cloth);
+      P(x+1,base-2,1,2,'#33383c');P(x+3,base-2,1,2,'#33383c');
+    };
+    let x=66;
+    person(x,L.cloth,L.skin,S.age>S.span*.66?'#c9c9c9':L.hair,S.age<S.race.mature);x+=9;
+    if(S.home==='parents'&&S.age<S.race.mature*2){person(x,'#6a6257',L.skin,'#9a9a9a');x+=9;person(x,'#6f5f66',L.skin,'#9a9a9a');x+=9;}
+    if(S.spouse){person(x,'#7b5f6d',L.skin,'#3b2b1b');x+=9;}
+    S.kids.slice(0,3).forEach(function(){person(x,'#5a6a7a',L.skin,L.hair,true);x+=8;});
+    if(S.pet){P(x,base-4,5,3,'#6b5a46');P(x+4,base-6,2,3,'#6b5a46');P(x,base-1,1,1,'#6b5a46');P(x+3,base-1,1,1,'#6b5a46');P(x-1,base-5,1,2,'#6b5a46');}
+    P(127,27,2,9,'#5a4432');P(123,19,10,9,dark?'#2b4433':'#5d8449');
+  }catch(e){}
+}
+function dwellingTh(){
+  if(S.home==='parents')return 'บ้านของพ่อแม่';
+  if(S.home==='owned')return S.tier.lvl>=4?'บ้านหินของตัวเอง':'บ้านไม้ของตัวเอง';
+  return S.tier.lvl>=4?'ห้องเช่าในย่านดี':'ห้องเช่าเล็ก ๆ';
+}
+/* Thai runs words together, so a gap only goes in front of a Latin name. */
+const thaiGap=w=>/^[฀-๿]/.test(w||'')?'':' ';
+function joinTh(a){
+  if(a.length<=1)return a[0]||'';
+  const last=a[a.length-1];
+  return a.slice(0,-1).join(' ')+' และ'+thaiGap(last)+last;
+}
+function sceneCaption(){
+  const who=[];
+  if(S.home==='parents'&&S.age<S.race.mature*2)who.push('พ่อแม่');
+  if(S.spouse)who.push(S.spouse.name);
+  if(S.kids.length)who.push('ลูก '+S.kids.length+' คน');
+  if(S.pet)who.push(S.pet.kind+'ชื่อ '+S.pet.name);
+  const with_=who.length?'อยู่กับ'+thaiGap(who[0])+joinTh(who):'อยู่คนเดียว';
+  return S.region.kind+'แห่ง'+S.region.th+' · '+dwellingTh()+' · '+with_;
+}
+
+/* ---------------- state ---------------- */
+const opt={pace:12,basis:'born',era:'now',cmp:'',pauses:1,soften:0,auto:0,theme:'system'};
+let S=null,timer=null,speed=1,_callRoll=null;
+const raceList=()=>opt.basis==='living'?RACES.map(r=>({...r,w:r.w*r.span/72})):RACES;
+const era=()=>ERAS.find(e=>e.id===opt.era)||ERAS[1];
+const lsOpt=(gid,id)=>LIFESTYLE.find(g=>g.id===gid).o.find(o=>o.id===id);
+
+function regionWith(){
+  const E=era(),r=wpick(REGIONS);
+  return {...r,danger:r.danger*E.danger,wealth:r.wealth*E.wealth,lore:r.lore*E.lore,lit:clamp(r.lit*E.lore,.02,.95)};
+}
+function makeSoul(){
+  const race=wpick(raceList()),region=regionWith(),tier=wpick(TIERS);
+  const span=Math.round(race.span*(1+(Math.random()*2-1)*race.var));
+  const ab={};ABIL.forEach(a=>ab[a]=roll4d6());
+  return {race,region,tier,span,ab,name:nameFor(race.id),age:0,alive:true,look:makeLook(race,tier)};
+}
+function birth(){
+  const s=makeSoul(),E=era();
+  const best=ABIL.reduce((m,a)=>s.ab[a]>s.ab[m]?a:m,'STR');
+  S={...s,year:E.year,born:E.year,
+    b:clamp(44+s.ab.CON*1.6,20,92),s:58,l:clamp(14*s.tier.lore*s.region.lore,2,60),r:52,
+    gold:s.tier.gold,adv:false,cls:null,married:0,courting:0,donated:0,raised:0,chronic:0,
+    boost:0,jobMul:1,bizYears:0,home:'parents',travelled:0,
+    look:makeLook(s.race,s.tier),
+    trade:pick(TRADES),best,hobbies:[],hobbyOffer:pick(HOBBY_POOL),
+    own:{},spouse:null,kids:[],friends:[],pet:null,
+    life:{invest:'temple',gifts:'half',ward:'none',diet:'same'},autoOn:{},lastAuto:{},
+    plant:{},log:[],done:{},notes:[],stars:[],happy:[],peers:[],dead:false,cause:'',
+    partnerName:nameFor(s.race.id),petOffer:pick(PETS)};
+  S.callWho=S.region.danger>1.4?'ไปเป็นคนคุ้มกันกองคาราวาน':(best==='INT'||best==='WIS'?'ไปเป็นลูกศิษย์ของผู้วิเศษในเมือง':'ไปลองเสี่ยงในซากเมืองเก่า');
+  for(let i=0;i<4;i++)S.peers.push(makeSoul());
+  addLog(0,`เกิดเป็น${S.race.th}ใน${S.region.kind}แห่ง${S.region.th} ใน${S.tier.th}`,null,true);
+  reveal(()=>{renderRecord();show('s-record');});
+}
+/* The draw itself, shown rather than skipped: names tumble, slow, and settle on one. */
+function reveal(done){
+  const ov=ce('div');ov.className='reveal';
+  const box=ce('div');
+  const cap=ce('p');cap.className='cap';cap.textContent='ถ้าคุณเป็นทารกที่กำลังเกิดตอนนี้';
+  const big=ce('div');big.className='rbig';
+  const sub=ce('div');sub.className='rsub';
+  const skip=ce('p');skip.className='skip';skip.textContent='แตะเพื่อข้าม';
+  box.append(cap,big,sub,skip);ov.appendChild(box);$('#modalHost').appendChild(ov);
+  const o=oddsPct();
+  let timer=null,ended=false;
+  const land=()=>{
+    if(ended)return;ended=true;clearTimeout(timer);
+    big.textContent=`${S.race.th}แห่ง${S.region.th}`;
+    sub.textContent=`โอกาส ${o.toFixed(2)}% · ราว 1 ใน ${fmt(100/o)}`;
+    sub.classList.add('on');skip.textContent='';
+    setTimeout(()=>{ov.remove();done();},1250);
+  };
+  ov.onclick=land;
+  let reduce=false;try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
+  if(reduce){land();return;}
+  let delay=45;
+  const step=()=>{
+    const r=pick(RACES),g=pick(REGIONS);
+    big.textContent=`${r.th}แห่ง${g.th}`;
+    delay*=1.17;
+    if(delay<300)timer=setTimeout(step,delay);else land();
+  };
+  step();
+}
+function oddsPct(){
+  const rl=raceList(),tr=rl.reduce((a,x)=>a+x.w,0);
+  const tg=REGIONS.reduce((a,x)=>a+x.w,0),tt=TIERS.reduce((a,x)=>a+x.w,0);
+  return (rl.find(x=>x.id===S.race.id).w/tr)*(REGIONS.find(x=>x.id===S.region.id).w/tg)*(TIERS.find(x=>x.th===S.tier.th).w/tt)*100;
+}
+function show(id){['s-title','s-record','s-life','s-death'].forEach(x=>{$('#'+x).hidden=(x!==id);});window.scrollTo(0,0);}
+
+/* ---------------- economy ---------------- */
+/* One human year is the economic unit. A race that lives ten times longer does not
+   get ten times the lifetime earnings, so savings and returns are normalised to it. */
+const yearScale=()=>72/S.span;
+function baseIncome(){
+  if(S.age<S.race.mature)return 0;
+  if(S.age>S.span*.82)return 7;
+  let v=S.adv?70:30;
+  v*=(focusSet().find(x=>x.id===S.focus)||focusSet()[0]).mul||1;
+  v*=S.region.wealth*(1+S.l/160)*S.jobMul;
+  if(S.own.mule)v*=1.05;
+  if(S.own.horse)v*=1.15;
+  if(S.own.cart)v*=1.3;
+  if(S.boost>0)v*=1.12;
+  if(S.adv&&S.cls)v*=S.cls.pay;
+  if(S.bizYears>0)v*=1.35;
+  return v;
+}
+const spouseIncome=()=>S.spouse?baseIncome()*.72:0;
+const kidCost=()=>S.kids.reduce((a,k)=>a+(k.school?3:0)+2,0);
+function upkeep(){
+  let v=(S.pet?2:0)+(S.own.horse?4:0)+(S.own.mule?1.5:0)+(S.own.cart?5:0)+S.hobbies.length*1.2;
+  v+=lsOpt('diet',S.life.diet).cost;
+  v+=lsOpt('ward',S.life.ward).fee;
+  return v;
+}
+const interest=()=>S.gold<0?-S.gold*.08:0;
+function budgetRows(){
+  const inc=baseIncome()+spouseIncome();
+  const home=S.home==='parents'?.45:(S.home==='owned'?.06:1);
+  const tax=inc*.08,food=inc*.50*(S.home==='parents'?.62:1),house=inc*.24*home,care=inc*.06*(S.life.ward==='full'?.5:1);
+  const gifts=inc*lsOpt('gifts',S.life.gifts).pct;
+  const kids=kidCost(),up=upkeep(),int=interest();
+  const save=inc-tax-food-house-care-gifts-kids-up-int;
+  return {inc,tax,food,house,care,gifts,kids,up,int,save};
+}
+function investReturn(){
+  if(S.gold<=0)return 0;
+  const o=lsOpt('invest',S.life.invest);
+  if(o.theft&&Math.random()<o.theft){const lost=S.gold*(.25+Math.random()*.4);addLog(S.age,`เงินที่ฝังไว้ใต้พื้นบ้านถูกขโมยไป ${gp(lost)}`,null,true,true);return -lost;}
+  const r=(o.ret+(Math.random()*2-1)*o.vol)*yearScale();
+  return S.gold*r;
+}
+
+/* ---------------- render ---------------- */
+const happyColor=h=>`color-mix(in oklab, var(--verdigris) ${Math.round(18+clamp(h,0,100)/100*82)}%, var(--rule))`;
+function gridInto(el,legendEl){
+  el.textContent='';
+  const span=S.span,total=Math.max(span+Math.round(span*.25),S.age+2);
+  const cell=total>400?4:total>160?6:total>90?9:12;
+  for(let i=0;i<total;i++){
+    const c=ce('i');c.style.width=cell+'px';c.style.height=cell+'px';
+    if(i<S.happy.length)c.style.background=happyColor(S.happy[i]);
+    if(i===S.age&&!S.dead)c.className='now';
+    if(i===span)c.classList.add('exp');
+    el.appendChild(c);
+  }
+  if(legendEl){
+    legendEl.textContent='';
+    [['ปีที่หม่นที่สุด',8],['กลาง ๆ',50],['ปีที่สว่างที่สุด',95]].forEach(([t,v])=>{
+      const s=ce('span'),i=ce('i');i.style.background=happyColor(v);
+      const x=ce('span');x.textContent=t;s.append(i,x);legendEl.appendChild(s);});
+    const s=ce('span');s.textContent='เส้นประ = อายุขัยของเผ่า';legendEl.appendChild(s);
+  }
+}
+function kvInto(el,rows){el.textContent='';rows.forEach(([k,v])=>{const dt=ce('dt');dt.textContent=k;const dd=ce('dd');dd.textContent=v;el.append(dt,dd);});}
+function soulsInto(el,arr,empty){
+  el.textContent='';
+  if(!arr.length){const p=ce('p');p.className='sm muted';p.textContent=empty||'ยังไม่มี';el.appendChild(p);return;}
+  arr.forEach(p=>{
+    const d=ce('div');d.className='soul'+(p.alive===false?' dead':'');
+    const a=ce('span');a.textContent=p.name;
+    const b=ce('span');b.className='st';b.textContent=p.alive===false?`${p.race.th} · จากไปเมื่อ ${p.age} ปี`:`${p.race.th} · ${p.region.th} · ${p.age} ปี`;
+    d.append(a,b);el.appendChild(d);});
+}
+function pctOf(r){const rl=raceList(),t=rl.reduce((a,x)=>a+x.w,0);return (rl.find(x=>x.id===r.id).w/t*100).toFixed(1);}
+const regionRows=()=>[['ความอันตรายของถนน',S.region.danger.toFixed(2)+'×'],['ความมั่งคั่ง',S.region.wealth.toFixed(2)+'×'],
+  ['คนที่อ่านออกเขียนได้',Math.round(S.region.lit*100)+'%'],['วิหารที่ประกอบพิธีได้',S.region.temple>=1?'มีทั่วถึง':'หายาก'],['ยุค',era().th]];
+function renderRecord(){
+  $('#recName').textContent=S.name;
+  const o=oddsPct();
+  $('#recLine').textContent=`ปี ${S.born} DR — เกิดเป็น${S.race.th}ใน${S.region.kind}แห่ง${S.region.th} เป็นลูกของ${S.tier.th} โอกาสที่ดวงวิญญาณหนึ่งจะได้ชีวิตแบบนี้คือ ${o.toFixed(3)}% หรือราว 1 ใน ${fmt(100/o)}`;
+  kvInto($('#recKv'),[['ยุค',era().th],['เผ่า',S.race.th],['แคว้น',S.region.th],['ฐานะ',S.tier.th],
+    ['อายุขัยของเผ่า',S.race.span+' ปี'],['อายุขัยที่ทอยได้',S.span+' ปี'],['บรรลุนิติภาวะ',S.race.mature+' ปี'],['ทรัพย์ติดตัว',gp(S.gold)]]);
+  $('#recSigil').textContent=`KELEMVOR<${S.region.id.toUpperCase()}<${S.race.id.toUpperCase()}<<${S.name.replace(/ /g,'<')}<<<<<<<<<<`.slice(0,74);
+  const ab=$('#recAbil');ab.textContent='';
+  ABIL.forEach(a=>{const d=ce('div');if(a===S.best)d.className='hi';const b=ce('b');b.textContent=S.ab[a];const s=ce('span');s.textContent=ABIL_TH[a];d.append(b,s);ab.appendChild(d);});
+  const cmp=RACES.find(r=>r.id===opt.cmp);
+  $('#recCmpBox').hidden=!cmp;
+  if(cmp){
+    const t=$('#recCmp');t.textContent='';
+    const th=ce('thead'),tr=ce('tr');
+    ['',cmp.th,S.race.th].forEach(a=>{const h=ce('th');h.textContent=a;tr.appendChild(h);});
+    th.appendChild(tr);t.appendChild(th);
+    const tb=ce('tbody');
+    [['อายุขัย',cmp.span+' ปี',S.race.span+' ปี'],['บรรลุนิติภาวะ',cmp.mature+' ปี',S.race.mature+' ปี'],
+     ['สัดส่วนการเกิด',pctOf(cmp)+'%',pctOf(S.race)+'%']].forEach(row=>{
+      const r=ce('tr');row.forEach(c=>{const d=ce('td');d.textContent=c;r.appendChild(d);});tb.appendChild(r);});
+    t.appendChild(tb);
+  }
+  $('#recPName').textContent=S.name;
+  $('#recPSub').textContent=`${S.race.th} · ${S.region.th} · แรกเกิด`;
+  drawPortrait($('#recPortrait'),S);
+  $('#recRegionLine').textContent=`${S.region.kind} · ${era().th}`;
+  kvIndInto($('#recInd'),regionRows());
+  $('#recSpan').textContent=`${S.race.th} ราว ${S.race.span} ปี`;
+  gridInto($('#recGrid'),null);
+  soulsInto($('#recSouls'),S.peers);
+}
+function kvIndInto(el,rows){el.textContent='';rows.forEach(([k,v])=>{const dt=ce('dt');dt.textContent=k;const dd=ce('dd');dd.textContent=v;el.append(dt,dd);});}
+function addLog(age,t,note,big,bad){S.log.unshift({id:Math.random().toString(36).slice(2,9),age,t,note,big,bad});if(S.log.length>220)S.log.pop();}
+function renderLog(){
+  const el=$('#lLog');el.textContent='';
+  S.log.slice(0,70).forEach(e=>{
+    const d=ce('div');d.className='ev'+(e.big?' big-ev':'')+(e.bad?' bad':'');
+    const y=ce('div');y.className='yr';y.textContent=e.age+' ปี';
+    const c=ce('div');c.textContent=e.t;
+    if(e.note){const n=ce('span');n.className='note';n.textContent=e.note;c.appendChild(n);}
+    const st=ce('button');st.className='star';st.type='button';
+    const on=S.stars.includes(e.id);st.setAttribute('aria-pressed',String(on));st.textContent=on?'★':'☆';
+    st.onclick=()=>{const i=S.stars.indexOf(e.id);if(i<0)S.stars.push(e.id);else S.stars.splice(i,1);renderLog();};
+    d.append(y,c,st);el.appendChild(d);});
+}
+function renderLife(){
+  $('#lAge').textContent=S.age;
+  $('#lMeta').textContent=`ปี ${S.year} DR · ${S.name} · 1 ปี ≈ ${(msPerYear()/1000).toFixed(1)} วินาที`;
+  const job=S.adv?`${S.cls.th} (นักผจญภัย)`:(S.age<S.race.mature?'ยังไม่ถึงวัยทำงาน':(S.bizYears>0?S.trade+' (มีร้านของตัวเอง)':S.trade));
+  const hob=S.hobbies.length?S.hobbies.map(h=>`${h.th} Lv.${h.lv}`).join(' · '):'ยังไม่มี';
+  kvInto($('#lKv'),[['เผ่า',S.race.th],['แคว้น',S.region.th],['ทางทำกิน',job],
+    ['ที่อยู่',S.home==='parents'?'บ้านพ่อแม่':(S.home==='owned'?'บ้านของตัวเอง':'เช่าอยู่เอง')],
+    ['งานอดิเรก',hob],['อายุขัยที่ทอยได้',S.span+' ปี']]);
+  $('#lSigil').textContent=`KELEMVOR<${S.region.id.toUpperCase()}<${String(S.age).padStart(3,'0')}<<${S.name.replace(/ /g,'<')}<<<<<<<<`.slice(0,74);
+  const st=$('#lStats');st.textContent='';
+  [['ร่างกาย','b'],['จิตใจ','s'],['ความรู้','l'],['สายสัมพันธ์','r']].forEach(([th,k])=>{
+    const v=Math.round(S[k]);const d=ce('div');d.className='stat'+(v<25?' low':'');
+    const a=ce('span');a.textContent=th;
+    const bar=ce('div');bar.className='bar';const i=ce('i');i.style.width=clamp(v,0,100)+'%';bar.appendChild(i);
+    const n=ce('span');n.className='mono';n.style.textAlign='right';n.textContent=v;
+    d.append(a,bar,n);st.appendChild(d);});
+  const B=budgetRows(),m=$('#lMoney');m.textContent='';
+  const rows=[['เงินเก็บ',(S.gold<0?'−':'')+gp(Math.abs(S.gold)),S.gold<0]];
+  if(S.gold<0)rows.push(['ดอกเบี้ยปีละ','−'+gp(B.int),true]);
+  rows.push(['รายได้ของคุณ',gp(baseIncome())+'/ปี',false]);
+  if(S.spouse)rows.push([`รายได้ของ ${S.spouse.name}`,gp(spouseIncome())+'/ปี',false]);
+  rows.forEach(([k,v,neg])=>{const r=ce('div');r.className='r'+(neg?' neg':'');const a=ce('span');a.className='muted';a.textContent=k;const b=ce('b');b.textContent=v;r.append(a,b);m.appendChild(r);});
+  $('#lPName').textContent=S.name;
+  $('#lPSub').textContent=`${S.race.th} · ${S.age} ปี · ${S.tier.th}`;
+  drawPortrait($('#lPortrait'),S);
+  drawScene($('#lScene'));
+  $('#lSceneCap').textContent=sceneCaption();
+  const tot=S.span+Math.round(S.span*.25);
+  $('#progFill').style.width=clamp(S.age/tot*100,0,100)+'%';
+  $('#progMark').style.left=clamp(S.span/tot*100,0,100)+'%';
+  renderKin();renderFocus();renderLog();
+  gridInto($('#lGrid'),$('#lLegend'));
+  soulsInto($('#lSouls'),S.peers);
+  kvIndInto($('#lBudget'),[['ภาษีและส่วย',gp(B.tax)],['ค่าอาหาร',gp(B.food)],['ที่อยู่อาศัย',gp(B.house)],
+    ['ยาและหมอ',gp(B.care)],['ค่าซองงานแต่งงานศพ',gp(B.gifts)],['เลี้ยงดูลูก',gp(B.kids)],
+    ['สัตว์เลี้ยง งานอดิเรก และอื่น ๆ',gp(B.up)],['ดอกเบี้ยหนี้',gp(B.int)],['เหลือเก็บ',gp(B.save)]]);
+}
+function renderKin(){
+  const el=$('#lKin');el.textContent='';
+  const rows=[];
+  if(S.spouse)rows.push([S.spouse.name,'คู่สมรส · '+bondTh(S.spouse.bond),S.spouse.bond]);
+  else if(S.courting)rows.push([S.partnerName,'คบหาอยู่ '+S.courting+' ปี',60]);
+  S.kids.forEach(k=>rows.push([k.name,`ลูก · ${k.age} ปี${k.school?' · ได้เรียน':''} · ${bondTh(k.bond)}`,k.bond]));
+  S.friends.forEach(f=>rows.push([f.name,'เพื่อน · '+bondTh(f.bond),f.bond]));
+  if(S.pet)rows.push([S.pet.name,S.pet.kind,70]);
+  if(!rows.length){const p=ce('p');p.className='sm muted';p.textContent='ยังอยู่กับพ่อแม่';el.appendChild(p);return;}
+  rows.forEach(([n,d,bond])=>{
+    const k=ce('div');k.className='k';
+    const a=ce('span');a.textContent=n;
+    const b=ce('span');b.className='rel'+(bond>=65?' warm':bond<35?' cold':'');b.textContent=d;
+    k.append(a,b);el.appendChild(k);});
+}
+const bondTh=b=>b>=75?'สนิทกันมาก':b>=50?'เข้ากันได้ดี':b>=30?'ห่าง ๆ กัน':'ห่างเหินกัน';
+const focusSet=()=>S.age<S.race.mature?FOCUS_CHILD:(S.adv?FOCUS_ADV:FOCUS_ADULT);
+function renderFocus(){
+  const el=$('#lFocus');el.textContent='';
+  const set=focusSet();
+  if(!set.find(f=>f.id===S.focus))S.focus=set[0].id;
+  $('#lFocusCtx').textContent=S.adv?`${S.cls.th} · ${S.region.th} · ${era().th}`:(S.age<S.race.mature?`วัยเด็กของ${S.race.th} · ${S.region.th}`:`${S.trade} · ${S.region.th}`);
+  set.forEach(f=>{
+    const b=ce('button');b.type='button';b.setAttribute('aria-pressed',String(S.focus===f.id));
+    const n=ce('b');n.textContent=f.th;const e=ce('em');e.textContent=f.hint;
+    b.append(n,e);b.onclick=()=>{S.focus=f.id;renderFocus();};el.appendChild(b);});
+}
+
+/* ---------------- spending panel ---------------- */
+function itemAvailable(it){
+  if(it.once&&S.own[it.id])return false;
+  if(it.need&&!it.need(S))return false;
+  if(it.plant&&S.plant[it.plant])return false;
+  if(S.age<S.race.mature&&!['feast','newhobby','hobbygear'].includes(it.id))return false;
+  return true;
+}
+function suggested(){
+  const list=ITEMS.filter(itemAvailable);
+  const score=it=>{
+    let v=0;
+    if(it.free)v+=3;
+    if(it.id==='checkup'&&S.b<60)v+=5;
+    if(it.id==='craft'&&S.l<45)v+=4;
+    if(it.id==='feast'&&S.r<55)v+=4;
+    if(it.id==='moveout')v+=4;
+    if(it.id==='newhobby'&&!S.hobbies.length)v+=3;
+    if(it.cost<=affordable())v+=2;
+    return v;
+  };
+  return list.sort((a,b)=>score(b)-score(a)).slice(0,6);
+}
+const affordable=()=>S.gold;
+function openSpend(){
+  stop();
+  const scrim=ce('div');scrim.className='scrim';
+  const m=ce('div');m.className='modal wide';
+  const eb=ce('p');eb.className='eyebrow';eb.textContent=`ใช้เงิน · ลงทุน · อายุ ${S.age} ปี · ปี ${S.year} DR`;
+  const purse=ce('div');purse.className='purse';
+  const p1=ce('div');const a=ce('span');a.className='muted sm';a.textContent='เงินเก็บ ';
+  const n=ce('span');n.className='n';n.textContent=(S.gold<0?'−':'')+gp(Math.abs(S.gold));p1.append(a,n);
+  const p2=ce('div');p2.className='sm muted';p2.textContent=`รายได้ต่อปี ${gp(baseIncome()+spouseIncome())} · ระหว่างที่เลือก เวลาจะหยุดนิ่ง`;
+  purse.append(p1,p2);
+  m.append(eb,purse);
+
+  const body=ce('div');
+  const rebuild=()=>{
+    body.textContent='';
+    // relationship milestone
+    if(S.courting||S.spouse){
+      const s=ce('div');s.className='sect';
+      const h=ce('h3');h.textContent=S.spouse?`ชีวิตคู่กับ ${S.spouse.name}`:`อนาคตกับ ${S.partnerName}`;
+      const d=ce('p');d.className='xs muted';d.textContent='ขึ้นอยู่กับว่าคบกันมานานแค่ไหนและสนิทกันเพียงใด';
+      const row=ce('div');row.className='items';
+      const mk=(label,sub,fn,warn)=>{
+        const it=ce('div');it.className='item';
+        const hd=ce('div');hd.className='hd';
+        const t=ce('span');t.className='ttl';t.textContent=label;
+        const px=ce('span');px.className='px';px.textContent='0 gp';
+        hd.append(t,px);
+        const fx=ce('div');fx.className='fx';fx.textContent=sub;
+        const o=ce('div');o.className='opts';
+        const b=ce('button');b.type='button';b.textContent=warn?'ยืนยัน':'ทำเลย';
+        b.onclick=()=>{fn();rebuild();renderLife();};
+        o.appendChild(b);it.append(hd,fx,o);row.appendChild(it);
+      };
+      if(S.spouse) mk('แยกทางกัน','สายสัมพันธ์ −18 · จิตใจ −8',()=>{
+        addLog(S.age,`แยกทางกับ ${S.spouse.name}`,null,true,true);S.spouse=null;S.married=0;
+        S.r=clamp(S.r-18,0,100);S.s=clamp(S.s-8,0,100);},1);
+      else{
+        mk('พูดเรื่องแต่งงาน',S.courting>=2?'มีโอกาสสูงที่จะตกลง':'ยังคบกันไม่นาน อาจถูกขอเวลา',()=>{
+          const ok=Math.random()<clamp(.3+S.courting*.18+S.r/300,0,.95);
+          if(ok){S.married=1;S.spouse={name:S.partnerName,age:S.age-1+rnd(4),bond:72};S.courting=0;
+            S.r=clamp(S.r+14,0,100);S.s=clamp(S.s+9,0,100);S.gold-=8;
+            addLog(S.age,`แต่งงานกับ ${S.partnerName}`,null,true);}
+          else{S.s=clamp(S.s-3,0,100);addLog(S.age,`พูดเรื่องแต่งงานแล้ว ${S.partnerName} ขอเวลาอีกหน่อย`,null,true);}});
+        mk('บอกว่าอยากเลิกกัน','จิตใจ −6 · สายสัมพันธ์ −8',()=>{
+          addLog(S.age,`เลิกกับ ${S.partnerName}`,null,true,true);S.courting=0;
+          S.s=clamp(S.s-6,0,100);S.r=clamp(S.r-8,0,100);},1);
+      }
+      s.append(h,d,row);body.appendChild(s);
+    }
+    const sug=suggested(),rest=ITEMS.filter(it=>itemAvailable(it)&&!sug.includes(it));
+    body.appendChild(itemSection('สิ่งที่น่าทำตอนนี้',sug,rebuild));
+    if(rest.length){
+      const wrap=ce('div');wrap.className='sect';
+      const btn=ce('button');btn.className='chip';btn.type='button';btn.textContent=`ดูอย่างอื่นเพิ่ม (${rest.length})`;
+      const box=ce('div');box.hidden=true;box.appendChild(itemSection('',rest,rebuild));
+      btn.onclick=()=>{box.hidden=!box.hidden;btn.textContent=box.hidden?`ดูอย่างอื่นเพิ่ม (${rest.length})`:'ย่อกลับ';};
+      wrap.append(btn,box);body.appendChild(wrap);
+    }
+    // lifestyle
+    const ls=ce('div');ls.className='sect';
+    const lh=ce('h3');lh.textContent='วิถีชีวิต';
+    const lb=ce('div');lb.className='ls';
+    LIFESTYLE.forEach(g=>{
+      const gg=ce('div');gg.className='g';
+      const t=ce('div');t.className='t';t.textContent=g.th;
+      const row=ce('div');row.className='row';
+      g.o.forEach(o=>{
+        const b=ce('button');b.type='button';b.textContent=o.th;
+        b.setAttribute('aria-pressed',String(S.life[g.id]===o.id));
+        b.onclick=()=>{S.life[g.id]=o.id;rebuild();renderLife();};
+        row.appendChild(b);});
+      const d=ce('div');d.className='d';d.textContent=g.d;
+      gg.append(t,row,d);lb.appendChild(gg);});
+    ls.append(lh,lb);body.appendChild(ls);
+    // autopilot
+    const au=ce('div');au.className='sect';
+    const ah=ce('h3');ah.textContent='ปล่อยให้จัดการเอง';
+    const ad=ce('p');ad.className='xs muted';ad.style.marginBottom='9px';
+    ad.textContent='แต่ละอย่างจะทำเองเมื่อถึงเวลา และจะทำก็ต่อเมื่อเงินเก็บมากกว่าสามเท่าของค่าใช้จ่าย ยิ่งเปิดไว้มาก เงินที่เก็บได้ก็ยิ่งน้อยลง';
+    const al=ce('div');al.className='autolist';
+    AUTO.forEach(x=>{
+      const b=ce('button');b.type='button';b.textContent=x.th;
+      b.setAttribute('aria-pressed',String(!!S.autoOn[x.id]));
+      b.onclick=()=>{S.autoOn[x.id]=!S.autoOn[x.id];rebuild();};
+      al.appendChild(b);});
+    au.append(ah,ad,al);body.appendChild(au);
+  };
+  rebuild();
+  m.appendChild(body);
+  const foot=ce('div');foot.className='foot';
+  const close=ce('button');close.className='chip';close.type='button';close.textContent='ปิด';
+  close.onclick=()=>{scrim.remove();renderLife();resume();};
+  foot.appendChild(close);m.appendChild(foot);
+  scrim.appendChild(m);$('#modalHost').appendChild(scrim);
+  close.focus();
+}
+function itemSection(title,list,rebuild){
+  const s=ce('div');s.className='sect';
+  if(title){const h=ce('h3');h.textContent=title;s.appendChild(h);}
+  const box=ce('div');box.className='items';
+  list.forEach(it=>{
+    const el=ce('div');el.className='item';
+    const hd=ce('div');hd.className='hd';
+    const t=ce('span');t.className='ttl';t.textContent=it.th;
+    const px=ce('span');px.className='px';
+    if(!it.opts){const can=it.free||S.gold>=it.cost;px.textContent=it.free?'ฟรี':gp(it.cost);if(!can){px.className='px no';px.textContent=gp(it.cost)+' · เงินไม่พอ';}}
+    else px.textContent='เลือกคนที่จะไปด้วย';
+    hd.append(t,px);
+    const fx=ce('div');fx.className='fx';fx.textContent=it.fx;
+    el.append(hd,fx);
+    const o=ce('div');o.className='opts';
+    if(it.opts){
+      it.opts.forEach(op=>{
+        const b=ce('button');b.type='button';
+        const can=S.gold>=op.cost||(it.credit&&S.gold>op.cost-60);
+        b.disabled=!can;
+        b.textContent=op.th+' ';
+        const c=ce('span');c.className='px2';c.textContent=gp(op.cost)+(it.credit&&S.gold<op.cost?' · ใช้เงินกู้':'');
+        b.appendChild(c);
+        b.onclick=()=>{S.gold-=op.cost;it.apply&&it.apply(S,op);addLog(S.age,it.log+' · '+op.th,it.note,true);rebuild();renderLife();};
+        o.appendChild(b);});
+    }else{
+      const b=ce('button');b.type='button';
+      b.disabled=!(it.free||S.gold>=it.cost);
+      b.textContent=it.free?'ทำเลย':'จ่าย '+gp(it.cost);
+      b.onclick=()=>{buy(it);rebuild();renderLife();};
+      o.appendChild(b);
+    }
+    el.appendChild(o);box.appendChild(el);});
+  s.appendChild(box);return s;
+}
+function buy(it){
+  if(!it.free&&S.gold<it.cost)return;
+  S.gold-=it.cost;
+  if(it.once)S.own[it.id]=1;
+  if(it.apply)it.apply(S);
+  if(it.plant){S.plant[it.plant]=S.age+1;}
+  addLog(S.age,it.log,it.note,true);
+}
+
+/* ---------------- sim ---------------- */
+const msPerYear=()=>Math.max(90,(opt.pace*60000)/S.span);
+function stageKey(){
+  const m=S.race.mature,f=S.span;
+  if(S.age<m)return 'c';
+  if(S.age<m+f*.18)return 'y';
+  if(S.age<f*.5)return 'a';
+  if(S.age<f*.78)return 'm';
+  return 'o';
+}
+function hazard(){
+  const f=S.age/S.span,m=S.race.mature;
+  let q;
+  if(S.age<m*.06)q=.045; else if(S.age<m*.3)q=.018; else if(S.age<m*.75)q=.006; else q=.0035;
+  q*=Math.pow(72/S.span,.82);
+  q*=Math.exp(Math.max(0,f-.55)*7.2);
+  q*=S.region.danger;
+  q*=clamp(1.5-S.b/100,.45,1.6);
+  if(S.own.armor)q*=.85;
+  if(S.own.weapon)q*=.88;
+  if(S.own.horse)q*=1.06;
+  if(S.chronic)q*=1.25;
+  if(S.life.ward==='full')q*=.93;
+  if(S.adv)q*=(S.cls?S.cls.risk:1.3)*(focusSet().find(x=>x.id===S.focus)?.risk||1);
+  return clamp(q,0,.9);
+}
+const CAUSES_N=['ไข้ที่ไม่มีใครเรียกชื่อได้','โรคระบาดที่เข้ามากับขบวนเรือ','อุบัติเหตุระหว่างทำงาน','ความหนาวในฤดูที่ยาวเกินไป','บาดแผลที่ติดเชื้อ'];
+const CAUSES_V=['ถูกโจรดักระหว่างทาง','สงครามชายแดน','สัตว์ร้ายในป่านอกกำแพง'];
+const CAUSES_A=['ไม่ได้ขึ้นมาจากชั้นล่างสุดของดันเจี้ยน','กับดักในสุสานเก่า','ถูกซุ่มโจมตีระหว่างคุ้มกันขบวน'];
+function causeOf(){
+  if(S.age>S.span*.82)return 'ชราภาพ';
+  if(S.chronic&&Math.random()<.35)return 'โรคเรื้อรังที่สะสมมานาน';
+  if(S.adv&&Math.random()<.6)return pick(CAUSES_A);
+  if(Math.random()<S.region.danger*.22)return pick(CAUSES_V);
+  return pick(CAUSES_N);
+}
+function runAuto(){
+  AUTO.forEach(a=>{
+    if(!S.autoOn[a.id])return;
+    if((S.lastAuto[a.id]||-99)+a.every>S.age)return;
+    const it=ITEMS.find(i=>i.id===a.id);
+    if(!it||!itemAvailable(it))return;
+    const cost=it.opts?it.opts[it.opts.length-1].cost:it.cost;
+    if(S.gold<cost*3)return;
+    S.lastAuto[a.id]=S.age;
+    if(it.opts){const op=it.opts[it.opts.length-1];S.gold-=op.cost;it.apply&&it.apply(S,op);addLog(S.age,it.log+' · '+op.th,null,false);}
+    else buy(it);
+  });
+}
+function tick(){
+  if(S.dead)return;
+  S.happy[S.age]=S.s;
+  S.age++;S.year++;
+  if(S.home==='parents'&&(S.married||S.age>S.race.mature*2)){S.home='own';addLog(S.age,'พ่อแม่แก่ลงจนดูแลบ้านไม่ไหว ค่ากินค่าอยู่ทั้งหลังตกมาอยู่กับคุณแทน',null,true);}
+  if(S.boost>0)S.boost--;
+  if(S.bizYears>0)S.bizYears--;
+  if(S.courting)S.courting++;
+  const f=focusSet().find(x=>x.id===S.focus)||focusSet()[0],fx=f.fx||{};
+  S.b=clamp(S.b+(fx.b||0)-(S.age>S.span*.6?1.1:0)+.2-(S.chronic?1.2:0),0,100);
+  S.s=clamp(S.s+(fx.s||0)+(S.r>70?.3:0)-(S.gold<0?.9:0)+(S.pet?.3:0)+lsOpt('diet',S.life.diet).s,0,100);
+  S.l=clamp(S.l+(fx.l||0)-(S.age>S.span*.8?.5:0),0,100);
+  S.r=clamp(S.r+(fx.r||0)-.25+lsOpt('gifts',S.life.gifts).bond,0,100);
+  if(f.hob&&S.hobbies.length){const h=S.hobbies[rnd(S.hobbies.length)];if(Math.random()<.5)h.lv=Math.min(20,h.lv+1);}
+  const B=budgetRows();
+  S.gold+=(B.save+(S.age<S.race.mature?(fx.g||0)*.3:0)+(S.own.land?12:0))*yearScale()+investReturn();
+  // chronic illness
+  if(!S.chronic&&S.age>S.race.mature*2){
+    const d=lsOpt('diet',S.life.diet);
+    let p=.004*d.chronic*clamp(1.6-S.b/100,.4,1.6);
+    if(S.checked)p*=.8;
+    if(Math.random()<p){S.chronic=1;addLog(S.age,'หมอบอกว่ามีโรคประจำตัวที่จะอยู่ไปจนวันสุดท้าย','โรคเรื้อรังอย่างความดันและเบาหวานพบมากขึ้นตามอายุ และเกิดเร็วกว่านี้ในคนที่กินไม่ระวัง',true,true);}
+  }
+  if(S.gold<-80&&S.kids.some(k=>k.school)){S.kids.forEach(k=>{k.school=0;});addLog(S.age,'ค่าเล่าเรียนสูงเกินจะแบกไหว จึงให้ลูกออกมาช่วยงานที่บ้าน',null,true,true);}
+  if(S.spouse){S.spouse.age++;S.spouse.bond=clamp(S.spouse.bond+(f.id==='kin'?2:-.7)+(Math.random()<.1?rnd(7)-3:0),0,100);}
+  S.kids.forEach(k=>{k.age++;k.bond=clamp(k.bond+(f.id==='kin'?2:-.9)+(Math.random()<.12?rnd(9)-4:0),0,100);});
+  S.friends.forEach(fr=>{fr.bond=clamp(fr.bond+(f.id==='kin'?1.5:-.6),0,100);});
+  S.peers.forEach(p=>{
+    if(!p.alive)return;p.age++;
+    const pf=p.age/p.span;
+    const pq=(p.age<p.race.mature*.3?.02:.004)*Math.pow(72/p.span,.82)*Math.exp(Math.max(0,pf-.55)*7.2)*p.region.danger;
+    if(Math.random()<pq||p.age>p.span+p.span*.22)p.alive=false;});
+  runAuto();
+  const sk=stageKey();
+  const pool=EVENTS.filter(e=>e.st.includes(sk)&&(!e.adv||S.adv)&&(!opt.soften||!e.hard));
+  if(pool.length&&Math.random()<.55){
+    const e=wpick(pool);
+    ['b','s','l','r'].forEach(k=>{if(e.fx&&e.fx[k]!=null)S[k]=clamp(S[k]+e.fx[k],0,100);});
+    if(e.fx&&e.fx.g)S.gold+=e.fx.g*S.region.wealth*yearScale();
+    addLog(S.age,e.t,e.n,false,(e.fx&&(e.fx.b||0)<-3));
+  }
+  if(S.age===S.race.mature)addLog(S.age,`บรรลุนิติภาวะตามธรรมเนียมของ${S.race.th}`,`${S.race.th}ถือว่าเป็นผู้ใหญ่เมื่ออายุราว ${S.race.mature} ปี`,true);
+  if(Math.random()<hazard()||S.age>=S.span+Math.round(S.span*.22)){die();return;}
+  renderLife();
+  const dec=nextDec();
+  if(dec){openDec(dec);}
+}
+function nextDec(){
+  for(const k in S.plant){
+    if(S.plant[k]<=S.age){const d={...PLANTS[k],id:'plant_'+k+'_'+S.age};delete S.plant[k];return d;}
+  }
+  for(const d of DECS){
+    if(S.done[d.id])continue;
+    if(d.kind==='reflect'&&!opt.pauses)continue;
+    if(d.at==='mature'){ if(S.age<S.race.mature||S.age>S.race.mature+Math.max(6,S.span*.12))continue; }
+    else if(d.at==='c'){ if(stageKey()!=='c')continue; }
+    else if(d.at==='adult'){ if(stageKey()!=='a')continue; }
+    else if(d.at==='middle'){ if(stageKey()!=='m')continue; }
+    else if(d.at==='old'){ if(stageKey()!=='o')continue; }
+    else if(d.at==='any'){ if(S.age<S.race.mature)continue; }
+    if(d.need==='married'&&!S.married)continue;
+    if(d.need==='kids'&&!S.kids.length)continue;
+    if(d.cond&&!d.cond(S))continue;
+    if(d.id==='call'&&!callRolls()){S.done.call=1;continue;}
+    if(d.id==='trade_pick'&&!S.done.call)continue;
+    if(Math.random()<.45&&d.at!=='mature')continue;
+    return d;
+  }
+  return null;
+}
+function callRolls(){
+  if(_callRoll===null){
+    let p=.11;
+    p+=(S.ab[S.best]-12)*.018;
+    p+=(S.region.danger-1)*.05;
+    p+=(S.tier.lvl<=2?.03:0);
+    _callRoll=Math.random()<clamp(p,.04,.5);
+  }
+  return _callRoll;
+}
+
+/* ---------------- decision modal ---------------- */
+function openDec(d){
+  stop();if(d.id)S.done[d.id]=1;
+  if(opt.auto&&d.kind!=='reflect'){applyChoice(d,pick(d.ch));resume();return;}
+  const scrim=ce('div');scrim.className='scrim';
+  const m=ce('div');m.className='modal';
+  const eb=ce('p');eb.className='eyebrow';eb.textContent=(d.kind==='reflect'?'ช่วงหยุดคิด':'การตัดสินใจ')+` · อายุ ${S.age} ปี · ปี ${S.year} DR`;
+  const h=ce('h2');h.textContent=d.h;
+  m.append(eb,h);
+  if(d.kind==='reflect'){
+    const q=ce('p');q.textContent=d.q;m.appendChild(q);
+    const ta=ce('textarea');ta.id='reflect_'+d.id;ta.placeholder='เขียนหรือไม่เขียนก็ได้';m.appendChild(ta);
+    const wrap=ce('div');wrap.className='choices';
+    const b=ce('button');b.type='button';
+    const n=ce('span');n.className='n';n.textContent='→';
+    const inner=ce('span');const t=ce('b');t.textContent='บันทึกแล้วใช้ชีวิตต่อ';inner.appendChild(t);
+    b.append(n,inner);
+    b.onclick=()=>{const v=ta.value.trim();if(v){S.notes.push(v);addLog(S.age,'“'+v+'”',null,true);}scrim.remove();resume();};
+    wrap.appendChild(b);m.appendChild(wrap);
+    const foot=ce('div');foot.className='foot';
+    const off=ce('button');off.className='chip';off.type='button';off.textContent='ไม่ต้องแสดงช่วงหยุดคิดอีก';
+    off.onclick=()=>{opt.pauses=0;scrim.remove();resume();};
+    foot.appendChild(off);m.appendChild(foot);
+  }else{
+    const p=ce('p');p.textContent=typeof d.b==='function'?d.b(S):d.b;m.appendChild(p);
+    if(d.lore){const l=ce('div');l.className='lore';l.textContent=d.lore;m.appendChild(l);}
+    const wrap=ce('div');wrap.className='choices';
+    d.ch.forEach((c,i)=>{
+      const b=ce('button');b.type='button';
+      const n=ce('span');n.className='n';n.textContent=String(i+1);
+      const inner=ce('span');const t=ce('b');t.textContent=c.t;inner.appendChild(t);
+      if(c.s){const e=ce('em');e.textContent=c.s;inner.appendChild(e);}
+      b.append(n,inner);
+      b.onclick=()=>{applyChoice(d,c);scrim.remove();resume();};
+      wrap.appendChild(b);});
+    m.appendChild(wrap);
+    const foot=ce('div');foot.className='foot';
+    const au=ce('button');au.className='chip';au.type='button';au.textContent='ให้ตัดสินใจอัตโนมัติตั้งแต่นี้ไป';
+    au.onclick=()=>{opt.auto=1;applyChoice(d,pick(d.ch));scrim.remove();syncAuto();resume();};
+    foot.appendChild(au);m.appendChild(foot);
+  }
+  scrim.appendChild(m);$('#modalHost').appendChild(scrim);
+  m.querySelector('button')?.focus();
+}
+function applyChoice(d,c){
+  const fx=c.fx||{};
+  ['b','s','l','r'].forEach(k=>{if(fx[k]!=null)S[k]=clamp(S[k]+fx[k],0,100);});
+  if(fx.g)S.gold+=fx.g;
+  if(c.half)S.gold=S.gold<0?S.gold/2:S.gold;
+  if(c.heal)S.gold-=(S.life.ward==='full'?12:30);
+  if(c.takehobby)S.hobbies.push({th:S.hobbyOffer,lv:2});
+  if(c.friend)S.friends.push({name:nameFor(S.race.id),bond:70});
+  if(c.pet)S.pet={kind:S.petOffer[0],name:S.petOffer[1]};
+  if(c.donate)S.donated=1;
+  if(c.court)S.courting=1;
+  if(c.marry){S.married=1;S.courting=0;S.spouse={name:S.partnerName,age:S.age-1+rnd(4),bond:72};}
+  if(c.kids)for(let i=0;i<c.kids;i++)S.kids.push({name:nameFor(S.race.id).split(' ')[0]+' '+S.name.split(' ')[1],age:0,bond:75,school:0});
+  if(c.school)S.kids.forEach(k=>{k.school=1;});
+  if(c.job)S.jobMul*=c.job;
+  if(c.biz){
+    S.gold-=40;
+    if(Math.random()<.4){S.bizYears=999;addLog(S.age,'ร้านไปได้ดีกว่าที่คิด','ร้านเล็กในแฟรูนส่วนใหญ่ปิดตัวภายในสามปีแรก',true);}
+    else addLog(S.age,'ร้านไปไม่รอด ขาดทุนไปทั้งก้อน',null,true,true);
+  }
+  if(c.council){
+    if(Math.random()<clamp(.18+S.r/260+(S.tier.lvl>=4?.15:0),0,.7)){
+      S.jobMul*=1.3;S.r=clamp(S.r+12,0,100);addLog(S.age,'ได้รับเลือกเข้าสภาเมือง',null,true);
+    }else{S.gold-=6;S.s=clamp(S.s-4,0,100);addLog(S.age,'ลงสมัครแล้วแพ้ เสียทั้งเงินและเวลา',null,true,true);}
+  }
+  if(c.apply){
+    const ok=Math.random()<(c.apply==='wizard'?clamp(.05+(S.ab.INT-12)*.03+S.l/400,0,.4):c.apply==='temple'?clamp(.12+(S.ab.WIS-12)*.025,0,.45):clamp(.15+(S.ab.STR-12)*.02,0,.5));
+    if(!ok){S.s=clamp(S.s-4,0,100);addLog(S.age,'สมัครแล้วเขาไม่รับ','คนที่สอบเข้าสำนักเวทในแฟรูนได้มีไม่ถึงหนึ่งในยี่สิบของผู้สมัคร',true,true);}
+    else if(c.apply==='wizard'){S.l=clamp(S.l+22,0,100);S.jobMul*=1.5;addLog(S.age,'ได้เข้าสำนักเวทในเมือง',null,true);}
+    else if(c.apply==='temple'){S.life.ward='full';S.donated=1;S.r=clamp(S.r+8,0,100);addLog(S.age,'ได้เข้าวิหาร และได้การคุ้มครองตลอดชีพ',null,true);}
+    else{S.adv=true;S.cls=CLASSES.filter(x=>x.key===S.best)[0]||pick(CLASSES);S.focus='guard';addLog(S.age,'ได้เข้าสมาคมนักผจญภัย',null,true);}
+  }
+  if(c.migrate){
+    const old=S.region.th;S.region=regionWith();
+    addLog(S.age,`ย้ายจาก${old}ไปอยู่${S.region.th}`,null,true);
+  }
+  if(c.adv){
+    S.adv=true;S.cls=CLASSES.filter(x=>x.key===S.best)[0]||pick(CLASSES);S.focus='guard';
+    addLog(S.age,`ออกจาก${S.region.th}ไปเป็น${S.cls.th}`,'คนที่ออกผจญภัยและรอดมาถึงวัยกลางคนมีไม่มาก แต่คนที่รอดมักไม่ต้องกังวลเรื่องเงินอีกเลย',true);
+  }
+  if(c.risky&&Math.random()<.4){S.r=clamp(S.r-10,0,100);addLog(S.age,'คนในบ้านไม่ผ่านฤดูนั้นไป',null,true,true);}
+  addLog(S.age,`${d.h} — เลือก “${c.t}”`,null,true);
+  renderLife();
+}
+
+/* ---------------- death ---------------- */
+function die(){
+  const cause=causeOf();
+  const canPay=S.gold>=500,access=S.life.ward==='full'||S.donated||S.region.temple>=1||S.adv;
+  if(!S.raised&&cause!=='ชราภาพ'&&S.age<S.span*.8&&canPay&&access){
+    stop();
+    const scrim=ce('div');scrim.className='scrim';
+    const m=ce('div');m.className='modal';
+    const eb=ce('p');eb.className='eyebrow';eb.textContent=`ความตาย · อายุ ${S.age} ปี`;
+    const h=ce('h2');h.textContent='วิหารรับคำขอชุบชีวิต';
+    const p=ce('p');p.textContent=`${S.name} ${cause} นักบวชประกอบพิธี Raise Dead ได้ ค่าบูชาและเพชรสำหรับพิธีรวม 500 gp คุณมี ${gp(S.gold)}`;
+    const l=ce('div');l.className='lore';l.textContent='ในแฟรูนความตายไม่ใช่สิ่งถาวร ถ้าคุณจ่ายไหว 500 gp คือรายได้ทั้งปีของชาวนาสิบเอ็ดปี นี่คือเหตุผลที่ขุนนางตายยากกว่าชาวนา ทั้งที่อยู่ใต้ฟ้าเดียวกัน';
+    const wrap=ce('div');wrap.className='choices';
+    [['จ่ายค่าพิธี 500 gp','ร่างกายไม่เหมือนเดิมอีก แต่ได้อยู่ต่อ',1],['ปล่อยไป','ทะเบียนปิดที่นี่',0]].forEach(([t,s,yes],i)=>{
+      const b=ce('button');b.type='button';const n=ce('span');n.className='n';n.textContent=String(i+1);
+      const inner=ce('span');const bb=ce('b');bb.textContent=t;const e=ce('em');e.textContent=s;inner.append(bb,e);
+      b.append(n,inner);
+      b.onclick=()=>{scrim.remove();
+        if(yes){S.gold-=500;S.b=clamp(S.b-16,5,100);S.raised=1;
+          addLog(S.age,'ถูกชุบชีวิตกลับมาที่วิหาร ร่างกายไม่เหมือนเดิมอีกเลย',null,true);renderLife();resume();}
+        else finish(cause);};
+      wrap.appendChild(b);});
+    m.append(eb,h,p,l,wrap);scrim.appendChild(m);$('#modalHost').appendChild(scrim);
+    return;
+  }
+  finish(cause);
+}
+function finish(cause){
+  stop();S.happy[S.age]=S.s;S.dead=true;S.cause=cause;
+  if(S.life.ward==='full'&&S.age<S.span*.75&&S.kids.length)addLog(S.age,'วิหารจ่ายเงินช่วยเหลือให้ครอบครัวตามที่ตกลงไว้',null,true);
+  addLog(S.age,`จากไปเมื่ออายุ ${S.age} ปี — ${cause}`,null,true,true);
+  renderDeath();show('s-death');savePast();
+}
+function renderDeath(){
+  $('#dName').textContent=S.name;
+  $('#dDates').textContent=`${S.born} – ${S.year} DR · ${S.race.th}แห่ง${S.region.th}`;
+  $('#dQuote').textContent=S.notes.length?'“'+S.notes[S.notes.length-1]+'”':(S.r>65?'“มีคนมาส่งจนถึงหลุม และนั่นก็มากพอแล้ว”':'“เกิดมาแล้วก็ทำไปตามที่ทำได้”');
+  $('#dCause').textContent=`สาเหตุ: ${S.cause}${S.raised?' · เคยถูกชุบชีวิตกลับมาหนึ่งครั้ง':''}`;
+  const o=oddsPct();
+  $('#dOdds').textContent=o.toFixed(3)+'%';
+  $('#dOddsSub').textContent=`ราว 1 ใน ${fmt(100/o)} ดวงวิญญาณ · ${era().th}`;
+  $('#dAgeCmp').textContent=S.age+' ปี';
+  $('#dAgeSub').textContent=`${Math.round(S.age/S.race.span*100)}% ของอายุขัย${S.race.th} (${S.race.span} ปี)`;
+  $('#dLeft').textContent=(S.gold<0?'−':'')+gp(Math.abs(S.gold));
+  $('#dLeftSub').textContent=(S.gold<0?'หนี้ที่ตกถึงครอบครัว':'')+(S.kids.length?` และลูก ${S.kids.length} คน${S.kids.some(k=>k.school)?' ที่ได้เรียนหนังสือ':''}`:(S.gold<0?'':'ไม่มีผู้สืบสกุล'));
+  gridInto($('#dGrid'),$('#dLegend'));
+  const nv=$('#dNever');nv.textContent='';
+  const never=[];
+  if(!S.adv&&!S.travelled)never.push('ไม่เคยออกจากแคว้นบ้านเกิดไปไกลกว่าสิบไมล์');
+  if(S.l<30)never.push('อ่านหนังสือไม่ออกจนวันสุดท้าย');
+  if(!S.married)never.push('ไม่เคยมีใครรออยู่ที่บ้าน');
+  if(!S.kids.length)never.push('ไม่มีใครสืบชื่อสกุลต่อ');
+  if(S.kids.length&&!S.kids.some(k=>k.school))never.push('ลูกไม่ได้เรียนหนังสือ เหมือนที่ตัวเองไม่ได้เรียน');
+  if(S.gold<500)never.push('ไม่เคยมีเงินพอจะซื้อพิธีชุบชีวิตให้ใครได้');
+  if(S.home==='parents')never.push('ไม่เคยได้ออกจากบ้านพ่อแม่');
+  if(!S.hobbies.length)never.push('ไม่เคยมีอะไรที่ทำแล้วลืมเวลา');
+  if(S.age<S.race.span*.6)never.push(`ไม่ได้อยู่ถึงอายุขัยเฉลี่ยของ${S.race.th}`);
+  if(!never.length)never.push('ได้ทำเกือบทุกอย่างที่คนในฐานะนี้พอจะทำได้');
+  never.forEach(t=>{const d=ce('div');const a=ce('span');a.textContent='—';const b=ce('span');b.textContent=t;d.append(a,b);nv.appendChild(d);});
+  const sel=S.log.filter(e=>S.stars.includes(e.id));
+  const se=$('#dStars');se.textContent='';
+  if(!sel.length){const p=ce('p');p.className='sm muted';p.textContent='ไม่ได้ติดดาวบรรทัดไหนไว้';se.appendChild(p);}
+  else sel.forEach(e=>{const d=ce('div');d.className='soul';const a=ce('span');a.textContent=e.t;const b=ce('span');b.className='st';b.textContent=e.age+' ปี';d.append(a,b);se.appendChild(d);});
+  soulsInto($('#dSouls'),S.peers);renderPast();
+}
+function savePast(){
+  try{
+    const k='faerun_register_v3',arr=JSON.parse(localStorage.getItem(k)||'[]');
+    arr.unshift({name:S.name,race:S.race.th,region:S.region.th,age:S.age,adv:S.adv});
+    localStorage.setItem(k,JSON.stringify(arr.slice(0,12)));
+  }catch(e){}
+}
+function renderPast(){
+  const el=$('#dPast');el.textContent='';
+  let arr=[];try{arr=JSON.parse(localStorage.getItem('faerun_register_v3')||'[]');}catch(e){}
+  if(!arr.length){const p=ce('p');p.className='sm muted';p.textContent='ยังไม่มีชีวิตอื่นในทะเบียนนี้';el.appendChild(p);return;}
+  arr.forEach(x=>{const d=ce('div');d.className='soul';const a=ce('span');a.textContent=x.name+(x.adv?' · นักผจญภัย':'');
+    const b=ce('span');b.className='st';b.textContent=`${x.race} · ${x.region} · ${x.age} ปี`;d.append(a,b);el.appendChild(d);});
+}
+
+/* ---------------- loop + options ---------------- */
+function stop(){if(timer){clearInterval(timer);timer=null;}}
+function resume(){stop();if(S&&!S.dead&&speed>0)timer=setInterval(tick,Math.max(40,msPerYear()/speed));}
+function setSpeed(v){speed=v;document.querySelectorAll('[data-sp]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.sp===v)));if(v===0)stop();else resume();}
+function syncAuto(){$('#btnAuto').setAttribute('aria-pressed',String(!!opt.auto));}
+function applyTheme(){
+  const r=document.documentElement;
+  if(opt.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',opt.theme);
+  $('#themeBtn').textContent='โหมดหน้าจอ: '+({system:'ตามอุปกรณ์',light:'สว่าง',dark:'มืด'}[opt.theme]);
+}
+const cycleTheme=()=>{opt.theme=opt.theme==='system'?'light':opt.theme==='light'?'dark':'system';applyTheme();};
+function renderDist(){
+  const el=$('#raceDist'),rl=raceList(),t=rl.reduce((a,x)=>a+x.w,0);
+  el.textContent='';
+  [...rl].sort((a,b)=>b.w-a.w).forEach(r=>{
+    const row=ce('div');row.className='d';
+    const left=ce('span');left.textContent=`${r.th} · อายุขัย ${r.span} ปี`;
+    const right=ce('span');right.className='mono sm';right.textContent=(r.w/t*100).toFixed(1)+'%';
+    const bar=ce('div');bar.className='bar';bar.style.gridColumn='1 / -1';
+    const i=ce('i');i.style.width=clamp(r.w/t*100*2.2,1,100)+'%';bar.appendChild(i);
+    row.append(left,right,bar);el.appendChild(row);});
+  $('#basisHint').textContent=opt.basis==='living'
+    ?'นับจากผู้ที่ยังมีชีวิตอยู่ เอลฟ์ที่อยู่ได้ 720 ปีจึงพบได้บ่อยกว่าตอนแรกเกิดถึงสิบเท่า ทั้งที่เกิดน้อยกว่ามนุษย์มาก'
+    :'นับจากเด็กที่เกิดในปีนี้ มนุษย์เกิดมากที่สุดอย่างท่วมท้น เหมือนที่เป็นในแฟรูนจริง';
+}
+(function init(){
+  const er=$('#eraRow');
+  ERAS.forEach(e=>{const b=ce('button');b.className='chip';b.type='button';b.dataset.opt='era';b.dataset.v=e.id;
+    b.textContent=e.th;b.setAttribute('aria-pressed',String(e.id===opt.era));er.appendChild(b);});
+  $('#eraHint').textContent=era().hint;
+  const sel=$('#cmpRace');
+  const none=ce('option');none.value='';none.textContent='ไม่ต้องเทียบ';sel.appendChild(none);
+  RACES.forEach(r=>{const o=ce('option');o.value=r.id;o.textContent=`${r.th} · อายุขัย ${r.span} ปี`;sel.appendChild(o);});
+  sel.onchange=()=>{opt.cmp=sel.value;};
+  document.addEventListener('click',ev=>{
+    const b=ev.target.closest&&ev.target.closest('[data-opt]');if(!b)return;
+    const k=b.dataset.opt,v=b.dataset.v;
+    if(k==='pauses'||k==='soften'){opt[k]=opt[k]?0:1;b.setAttribute('aria-pressed',String(!!opt[k]));return;}
+    opt[k]=(k==='pace')?+v:v;
+    document.querySelectorAll(`[data-opt="${k}"]`).forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===v)));
+    if(k==='basis')renderDist();
+    if(k==='era')$('#eraHint').textContent=era().hint;
+  });
+  $('#themeBtn').onclick=cycleTheme;
+  $('#btnTheme2').onclick=cycleTheme;
+  $('#btnBirth').onclick=()=>{_callRoll=null;birth();};
+  $('#btnLive').onclick=()=>{show('s-life');renderLife();syncAuto();setSpeed(1);};
+  $('#btnAgain').onclick=()=>{_callRoll=null;stop();show('s-title');};
+  $('#btnQuit').onclick=()=>{stop();if(S&&!S.dead)finish('ปิดทะเบียนกลางคัน');};
+  $('#btnSkip').onclick=()=>setSpeed(16);
+  $('#btnAuto').onclick=()=>{opt.auto=opt.auto?0:1;syncAuto();};
+  $('#btnSpend').onclick=openSpend;
+  document.querySelectorAll('[data-sp]').forEach(b=>{b.onclick=()=>setSpeed(+b.dataset.sp);});
+  applyTheme();renderDist();
+})();
+try{
+  const boot=d=>{if(d&&d.S){S=d.S;Object.assign(opt,d.opt||{});applyTheme();
+    if(S.dead){renderDeath();show('s-death');}else{show('s-life');renderLife();syncAuto();setSpeed(1);}}};
+  window.claude?.hot?.snapshot?.(()=>({S,opt}));
+  if(window.claude?.hot?.ready)window.claude.hot.ready(boot);
+}catch(e){}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+const {load}=require('./harness');
+const T=load(require('path').join(__dirname,'..','index.html'),'birth,check,reveal,mod,hpMaxFor,lvlFromXp,profFor');
+T.set('reveal',()=>{});T.birth();const S=T.S;
+S.race={...S.race,id:'human'};S.exh=0;S.deity=null;S.raisePen=0;S.ab.STR=10;
+const N=100000;
+const run=o=>{const h=Array(21).fill(0);let sum=0;for(let i=0;i<N;i++){const r=T.check('STR',10,{...o,imp:false});h[r.d]++;sum+=r.d;}return {mean:(sum/N).toFixed(3),h};};
+const n=run({}),a=run({adv:1}),d=run({dis:1});
+const exp=N/20;const chi=n.h.slice(1).reduce((s,x)=>s+(x-exp)**2/exp,0);
+console.log('plain mean',n.mean,'(expect 10.5) chi2(19df)=',chi.toFixed(1),'(critical 30.1 at p=.05; expect ~19)');
+console.log('min/max face count',Math.min(...n.h.slice(1)),Math.max(...n.h.slice(1)));
+console.log('adv mean',a.mean,'(expect 13.825)  dis mean',d.mean,'(expect 7.175)');
+S.race={...S.race,id:'halfling'};const hl=run({});console.log('halfling P(1)=',(hl.h[1]/N*100).toFixed(2)+'% (expect 0.25%)');
+console.log('mod 3..20',[3,8,9,10,11,12,18,20].map(v=>T.mod(v)).join(','),' prof lv0,1,5,9,17:',[0,1,5,9,17].map(T.profFor).join(','),' lvl@300,899,355000:',[300,899,355000].map(T.lvlFromXp).join(','));

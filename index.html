@@ -71,7 +71,7 @@ select{font:inherit;font-size:13.5px;background:var(--vellum);color:var(--ink);b
 .abil{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:13px}
 .abil div{text-align:center;border:1px solid var(--rule);border-radius:2px;padding:6px 2px}
 .abil b{display:block;font-family:var(--f-mono);font-size:18px;font-weight:500;line-height:1.1}
-.abil span{font-size:10px;color:var(--ink-soft)}
+.abil span{display:block;font-size:10px;color:var(--ink-soft)}
 .abil .hi{border-color:var(--verdigris);color:var(--verdigris)}
 table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
 table.cmp th,table.cmp td{text-align:right;padding:5px 4px;border-bottom:1px solid var(--rule)}
@@ -200,6 +200,51 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 .never{display:grid;gap:6px}
 .never div{display:grid;grid-template-columns:13px 1fr;gap:9px;font-size:14px;color:var(--ink-soft)}
 .never span:first-child{color:var(--blood)}
+
+/* character sheet */
+.sheet{display:grid;gap:12px}
+.sab{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.sab div{text-align:center;border:1px solid var(--rule);border-radius:2px;padding:5px 1px 4px;min-width:0}
+.sab .k{font-family:var(--f-mono);font-size:10px;color:var(--ink-soft);display:block;white-space:nowrap;overflow:hidden}
+.sab b{display:block;font-family:var(--f-mono);font-size:19px;font-weight:500;line-height:1.15}
+.sab .m{font-family:var(--f-mono);font-size:12px;display:block}
+.sab .sv{font-size:9.5px;color:var(--ink-soft);display:block;white-space:nowrap}
+.sab .sv.p{color:var(--verdigris);font-weight:600}
+.vit{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:4px}
+.vit>div{border:1px solid var(--rule);border-radius:2px;padding:6px 8px;min-width:0}
+.vit span{display:block;font-size:11px;color:var(--ink-soft)}
+.vit b{font-family:var(--f-mono);font-size:16px;font-weight:500}
+.vit .wide{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.hpbar{height:7px;background:var(--rule);border-radius:1px;overflow:hidden;margin-top:4px}
+.hpbar i{display:block;height:100%;background:var(--blood)}
+.shrow{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;font-size:13px}
+.shrow .muted{font-size:12px}
+.pips{display:flex;gap:4px}
+.pips i{width:12px;height:12px;border:1px solid var(--ink-soft);border-radius:50%;display:block}
+.pips i.on{background:var(--blood);border-color:var(--blood)}
+.pips i.fl{background:var(--ink-soft);border-color:var(--ink-soft)}
+.algrid{display:grid;grid-template-columns:repeat(3,22px);grid-auto-rows:22px;gap:2px}
+.algrid i{border:1px solid var(--rule);border-radius:1px;display:grid;place-items:center;font-style:normal;font-family:var(--f-mono);font-size:8.5px;color:var(--ink-soft)}
+.algrid i.on{background:var(--verdigris);color:var(--vellum);border-color:var(--verdigris)}
+.sklist{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;font-size:12.5px}
+.sklist div{display:flex;justify-content:space-between;gap:6px;min-width:0}
+.sklist span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sklist b{font-family:var(--f-mono);font-weight:500}
+.sklist .p{color:var(--verdigris);font-weight:600}
+.sklist .n{color:var(--ink-soft)}
+.shh{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+/* dice on the table */
+.dice .top{display:flex;gap:13px;align-items:center}
+.d20{width:56px;height:62px;flex:0 0 auto;display:grid;place-items:center;font-family:var(--f-mono);font-size:22px;font-weight:500;
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--ink);color:var(--vellum)}
+.d20.no{background:var(--blood)} .d20.crit{background:var(--candle)}
+.dice .nm{font-size:14px;font-weight:600;line-height:1.35}
+.dice .line{font-family:var(--f-mono);font-size:12px;color:var(--ink-soft);margin-top:3px;overflow-wrap:anywhere}
+.dice .hist{margin-top:11px;display:grid;gap:3px;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:9px}
+.dice .hist .no{color:var(--blood)}
+.rollist{display:grid;gap:4px;margin-top:12px;font-family:var(--f-mono);font-size:12.5px;border-left:2px solid var(--rule);padding-left:10px}
+.rollist .no{color:var(--blood)} .rollist .ok{color:var(--verdigris)}
+.verdict h2{margin:6px 0 8px}
 </style>
 </head>
 <body>
@@ -314,7 +359,8 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
         </div>
         <dl class="kv" id="lKv"></dl>
         <div class="sigil" id="lSigil"></div>
-        <div id="lStats" style="display:grid;gap:7px"></div>
+        <div id="lSheet"></div>
+        <div id="lStats" style="display:grid;gap:7px;margin-top:14px"></div>
         <div class="money" id="lMoney"></div>
         <button class="openspend" id="btnSpend">ใช้เงิน · ลงทุน</button>
       </div>
@@ -331,6 +377,10 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
       <div class="plate">
         <canvas class="scene" id="lScene" width="700" height="230"></canvas>
         <p class="scenecap" id="lSceneCap"></p>
+      </div>
+      <div class="plate">
+        <p class="eyebrow" style="margin-bottom:10px">ลูกเต๋าบนโต๊ะ</p>
+        <div class="dice" id="lRoll"></div>
       </div>
       <div class="plate">
         <p class="eyebrow" style="margin-bottom:3px">จุดเน้นของปีนี้</p>
@@ -362,10 +412,22 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
     <p class="quote" id="dQuote"></p>
     <p class="sm muted" id="dCause"></p>
   </div>
+  <div class="plate verdict" style="margin-top:18px">
+    <p class="eyebrow">ฟิวก์เพลน · คำตัดสินของเคเลมวอร์</p>
+    <h2 id="dVerdictT"></h2><p id="dVerdict"></p>
+  </div>
+  <div class="plate" style="margin-top:18px">
+    <div class="phead">
+      <canvas class="portrait" id="dPortrait" width="184" height="184"></canvas>
+      <div class="who"><p class="eyebrow">แผ่นตัวละคร</p><div class="nm" id="dPName"></div><p class="xs muted" id="dPSub"></p></div>
+    </div>
+    <div id="dSheet"></div>
+  </div>
   <div class="cards" style="margin-top:20px">
     <div class="card"><span class="eyebrow">ชีวิตแบบนี้เกิดขึ้นได้</span><span class="big-n" id="dOdds"></span><span class="sm muted" id="dOddsSub"></span></div>
     <div class="card"><span class="eyebrow">อายุเทียบเผ่าเดียวกัน</span><span class="big-n" id="dAgeCmp"></span><span class="sm muted" id="dAgeSub"></span></div>
     <div class="card"><span class="eyebrow">ทิ้งไว้ข้างหลัง</span><span class="big-n" id="dLeft"></span><span class="sm muted" id="dLeftSub"></span></div>
+    <div class="card"><span class="eyebrow">ลูกเต๋าทั้งชีวิต</span><span class="big-n" id="dDice"></span><span class="sm muted" id="dDiceSub"></span></div>
   </div>
   <div class="plate" style="margin-top:18px">
     <p class="eyebrow" style="margin-bottom:11px">แผนที่ชีวิต</p>
@@ -373,6 +435,7 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
   </div>
   <div class="cols" style="margin-top:18px">
     <div class="col">
+      <div class="plate"><p class="eyebrow" style="margin-bottom:11px">ความสามารถที่ไม่เคยได้ใช้</p><div class="never" id="dUnused"></div></div>
       <div class="plate"><p class="eyebrow" style="margin-bottom:11px">สิ่งที่ไม่เคยได้ทำ</p><div class="never" id="dNever"></div></div>
       <div class="plate"><p class="eyebrow" style="margin-bottom:11px">บรรทัดที่คุณติดดาวไว้</p><div class="souls" id="dStars"></div></div>
     </div>
@@ -550,10 +613,10 @@ function check(ab,dc,o){
   if(o.save||o.death||o.attack){if(S.exh>=3)dis=true;}
   else if(S.exh>=1)dis=true;
   const g=faithBoon();
-  if(g&&((o.save&&g.boon.save===A)||(o.skill&&g.boon.skill===o.skill))){adv=true;boon=g.id;}
+  if(g&&((o.save&&g.boon.save===A)||(o.skill&&g.boon.skill===o.skill))){adv=true;boon=g.id;S.boonUsed=(S.boonUsed||0)+1;}
   const a=d20(),b=d20(),mode=adv&&!dis?'adv':dis&&!adv?'dis':'';
   let d=mode==='adv'?Math.max(a,b):mode==='dis'?Math.min(a,b):a,lucky=0;
-  if(d===1&&(S.race.id==='halfling'||(g&&g.boon.lucky))){lucky=d;d=d20();if(S.race.id!=='halfling')boon=g.id;S.luckyUsed=(S.luckyUsed||0)+1;}
+  if(d===1&&(S.race.id==='halfling'||(g&&g.boon.lucky))){lucky=d;d=d20();if(S.race.id!=='halfling'){boon=g.id;S.boonUsed=(S.boonUsed||0)+1;}else S.luckyUsed=(S.luckyUsed||0)+1;}
   const pr=o.death?0:(isProf(A,o)?S.prof:0);
   const bonus=o.death?0:mod(S.ab[A])+pr+(o.bonus||0)-(S.raisePen||0);
   const total=d+bonus,ok=o.death?d>=10:total>=dc;
@@ -586,8 +649,10 @@ function rollTh(r){
 }
 /* the ledger only keeps rolls worth remembering, so it never drowns */
 function logRoll(r,t,force){if(force||!r.ok||r.d===20||r.d===1)addLog(S.age,t||rollName(r),rollTh(r),false,!r.ok);}
-function gainExh(n,why){
-  const was=S.exh;S.exh=clamp(S.exh+n,S.exhFloor,6);
+/* Everyday hardship tops out at level 2; only falling (5) and old age (6) go further,
+   otherwise a 720-year elf would grind itself down ten times as often as a human. */
+function gainExh(n,why,cap){
+  const was=S.exh;S.exh=clamp(S.exh+n,S.exhFloor,Math.max(S.exh,cap||2));
   if(S.exh!==was){S.hpMax=hpMaxFor();S.hp=Math.min(S.hp,S.hpMax);
     if(why&&S.exh>=2)addLog(S.age,`${why} — ความอ่อนล้าระดับ ${S.exh}`,EXH_TH[S.exh],false,true);}
 }
@@ -843,7 +908,7 @@ const DECS=[
   ch:[{t:'ยกให้ลูกหลานและญาติ',s:'สายสัมพันธ์ +9',fx:{r:9,s:4}},
       {t:'บริจาคให้วิหารประจำแคว้น',s:'จิตใจ +8 · คนจดจำ',fx:{s:8,g:-35},donate:1,faith:15,al:[0,.1]},
       {t:'เก็บไว้จนวันสุดท้าย',s:'ทอง +18',fx:{g:18,s:-2},al:[0,-.06]}]},
- {id:'deity_late',at:'any',cond:x=>!x.deity&&(x.donated||x.life.ward==='full'||x.s<30||x.downs>0),h:'ศรัทธาที่มาช้า',
+ {id:'deity_late',at:'any',cond:x=>!x.deity&&(x.donated||x.life.ward==='full'),h:'ศรัทธาที่มาช้า',
   b:x=>x.formerDeity?`ช่วงนี้คิดถึงศาลเจ้าของ${deityOf(x.formerDeity).th}ที่เคยไปบ่อย ๆ ตอนเด็ก`:'คนที่ผ่านเรื่องหนัก ๆ มามักเริ่มหาที่พึ่ง นักบวชที่วิหารบอกว่ายังไม่สายเกินไป',
   ch:x=>[...deityOffer(x).slice(0,2).map(D=>({t:`${D.th} (${D.en})`,s:D.blurb,deity:D.id})),{t:'ยังไม่ใช่ตอนนี้',s:'ไหว้ตามเทศกาลเหมือนเดิม',fx:{}}]},
  {id:'pause_end',at:'old',kind:'reflect',h:'ใกล้ถึงตอนท้ายแล้ว',q:'ถ้าได้ฝากไว้หนึ่งประโยคกับคนที่จะมาอ่านทะเบียนนี้ จะเขียนว่าอะไร?'}
@@ -1201,11 +1266,72 @@ function renderLog(){
     st.onclick=()=>{const i=S.stars.indexOf(e.id);if(i<0)S.stars.push(e.id);else S.stars.splice(i,1);renderLog();};
     d.append(y,c,st);el.appendChild(d);});
 }
+/* ---- the character sheet: everything the dice read from, on one plate ---- */
+function sheetInto(el,full){
+  el.textContent='';el.className='sheet';
+  const sab=ce('div');sab.className='sab';
+  ABIL.forEach(a=>{
+    const d=ce('div'),sp=S.saveProf.includes(a);
+    const k=ce('span');k.className='k';k.textContent=a;
+    const b=ce('b');b.textContent=S.ab[a];
+    const m=ce('span');m.className='m';m.textContent=sgn(mod(S.ab[a]));
+    const sv=ce('span');sv.className='sv'+(sp?' p':'');sv.textContent=(sp?'● ':'○ ')+sgn(mod(S.ab[a])+(sp?S.prof:0));
+    d.title=ABIL_TH[a];d.append(k,b,m,sv);sab.appendChild(d);});
+  const vit=ce('div');vit.className='vit';
+  const box=(lbl,val,extra)=>{const d=ce('div');const l=ce('span');l.textContent=lbl;const v=ce('b');v.textContent=val;d.append(l,v);if(extra)d.appendChild(extra);vit.appendChild(d);return d;};
+  const bar=ce('div');bar.className='hpbar';const bi=ce('i');bi.style.width=clamp(S.hp/S.hpMax*100,0,100)+'%';bar.appendChild(bi);
+  box('เลือด (HP)',`${Math.max(0,S.hp)} / ${S.hpMax}`,bar);
+  box('เกราะ (AC)',acFor());
+  box('ความชำนาญ',sgn(S.prof));
+  const lv=ce('div');lv.className='wide';
+  const l1=ce('span');l1.textContent=S.lvl?`เลเวล ${S.lvl} · ${S.cls.th}`:'เลเวล 0 · คนธรรมดา';l1.style.fontSize='13px';l1.style.color='var(--ink)';
+  const l2=ce('span');l2.className='mono';l2.textContent=S.lvl?(S.lvl<20?`XP ${fmt(S.xp)} / ${fmt(XP_LV[S.lvl])}`:`XP ${fmt(S.xp)}`):'ไม่มี XP ให้เก็บ';
+  lv.append(l1,l2);vit.appendChild(lv);
+  const cap=ce('div');cap.className='shh';cap.style.margin='0 0 -6px';cap.textContent='ค่าสเตตัส · แถวล่างคือทอยป้องกัน (● = ชำนาญ)';
+  el.append(cap,sab,vit);
+  const row=(lbl,node,txt)=>{const r=ce('div');r.className='shrow';const a=ce('div');if(node)a.appendChild(node);else a.textContent=lbl;
+    const b=ce('div');if(lbl&&node){const t=ce('div');t.textContent=lbl;b.appendChild(t);}
+    if(txt){const m=ce('div');m.className='muted';m.textContent=txt;b.appendChild(m);}r.append(a,b);el.appendChild(r);};
+  const pips=ce('div');pips.className='pips';
+  for(let i=1;i<=6;i++){const p=ce('i');if(i<=S.exhFloor)p.className='fl';else if(i<=S.exh)p.className='on';pips.appendChild(p);}
+  row(`ความอ่อนล้า ระดับ ${S.exh}`,pips,S.exh?EXH_TH[S.exh]+(S.exhFloor?` · ${S.exhFloor} ระดับจากความชราไม่มีวันหาย`:''):'ไม่มี');
+  const ag=ce('div');ag.className='algrid';const code=alignCode(S);
+  ['LG','NG','CG','LN','N','CN','LE','NE','CE'].forEach(c=>{const i=ce('i');i.textContent=c;if(c===code)i.className='on';ag.appendChild(i);});
+  const D=S.deity&&deityOf(S.deity),F=S.formerDeity&&deityOf(S.formerDeity);
+  row(alignTh(S),ag,D?`เทพประจำตัว: ${D.th} (${D.en}) · ${D.realm} · ศรัทธา ${Math.round(S.faith)}`:F?`เคยถือ${F.th} แต่ศรัทธาจางหายไปแล้ว`:'ยังไม่ได้ถือเทพองค์ใดเป็นที่พึ่ง');
+  const bg=S.bg&&BGS.find(b=>b.id===S.bg);
+  const info=ce('div');info.className='sm';
+  info.textContent=(bg?`ภูมิหลัง: ${bg.th} (${bg.en})`:`ภูมิหลัง: ยังไม่ตกผลึก — จะตกผลึกเมื่ออายุ ${S.race.mature} ปี`)+` · ${RACE_TRAIT[S.race.id]}`+(S.raisePen>0?` · ผลจากการชุบชีวิต: ทุกการทอย −${S.raisePen}`:'');
+  el.appendChild(info);
+  const sh=ce('div');const h=ce('div');h.className='shh';h.textContent=full?'ทักษะทั้งหมด · ● = ชำนาญ':'ทักษะที่ชำนาญ';
+  const sl=ce('div');sl.className='sklist';
+  const keys=full?Object.keys(SKILLS):S.skills;
+  if(!keys.length){const p=ce('div');p.className='n';p.textContent='ยังไม่มี';sl.appendChild(p);}
+  keys.forEach(k=>{const sk=SKILLS[k],pr=S.skills.includes(k),d=ce('div');if(full&&!pr)d.className='n';
+    const a=ce('span');a.textContent=(full?(pr?'● ':'○ '):'')+sk.th;a.title=sk.en+' ('+sk.ab+')';if(pr)a.className='p';
+    const b=ce('b');b.textContent=sgn(mod(S.ab[sk.ab])+(pr?S.prof:0));d.append(a,b);sl.appendChild(d);});
+  sh.append(h,sl);el.appendChild(sh);
+}
+function renderRolls(){
+  const el=$('#lRoll');el.textContent='';
+  const r=S.lastRoll;
+  if(!r){const p=ce('p');p.className='sm muted';p.textContent='ยังไม่มีการทอย — ปีแรกจะเริ่มทอยทันที';el.appendChild(p);return;}
+  const top=ce('div');top.className='top';
+  const d=ce('div');d.className='d20'+(r.d===20?' crit':(!r.ok?' no':''));d.textContent=r.d;
+  const t=ce('div');const n=ce('div');n.className='nm';n.textContent=`อายุ ${r.age} · ${rollName(r)}`;
+  const l=ce('div');l.className='line';l.textContent=rollTh(r);
+  t.append(n,l);top.append(d,t);el.appendChild(top);
+  const rest=S.rolls.slice(1,6);
+  if(rest.length){const h=ce('div');h.className='hist';
+    rest.forEach(x=>{const q=ce('div');if(!x.ok)q.className='no';q.textContent=`${x.age} ปี · ${rollTh(x)}`;h.appendChild(q);});
+    el.appendChild(h);}
+}
 function renderLife(){
   $('#lAge').textContent=S.age;
   $('#lMeta').textContent=`ปี ${S.year} DR · ${S.name} · 1 ปี ≈ ${(msPerYear()/1000).toFixed(1)} วินาที`;
   const job=S.adv?`${S.cls.th} (นักผจญภัย)`:(S.age<S.race.mature?'ยังไม่ถึงวัยทำงาน':(S.bizYears>0?S.trade+' (มีร้านของตัวเอง)':S.trade));
   const hob=S.hobbies.length?S.hobbies.map(h=>`${h.th} Lv.${h.lv}`).join(' · '):'ยังไม่มี';
+  sheetInto($('#lSheet'),false);renderRolls();
   kvInto($('#lKv'),[['เผ่า',S.race.th],['แคว้น',S.region.th],['ทางทำกิน',job],
     ['ที่อยู่',S.home==='parents'?'บ้านพ่อแม่':(S.home==='owned'?'บ้านของตัวเอง':'เช่าอยู่เอง')],
     ['งานอดิเรก',hob],['อายุขัยที่ทอยได้',S.span+' ปี']]);
@@ -1442,32 +1568,61 @@ function stageKey(){
 }
 /* how often a year-sized thing happens: a 720-year elf meets as many per life as a human does */
 const scaleQ=()=>Math.pow(72/S.span,.82);
-function hazard(){
+/* A threat is the old chance of death, now only a chance to be put in danger.
+   Whether it kills is up to the save, the hit points, whoever is at the bedside and the death saves. */
+const TQ=4.7;
+function threatQ(){
   const f=S.age/S.span,m=S.race.mature;
   let q;
   if(S.age<m*.06)q=.045; else if(S.age<m*.3)q=.018; else if(S.age<m*.75)q=.006; else q=.0035;
   q*=scaleQ();
   q*=Math.exp(Math.max(0,f-.55)*7.2);
   q*=S.region.danger;
-  q*=1+S.exh*.15;
-  if(S.own.armor)q*=.85;
-  if(S.own.weapon)q*=.88;
   if(S.own.horse)q*=1.06;
   if(S.chronic)q*=1.25;
   if(S.life.ward==='full')q*=.93;
-  if(S.adv)q*=(S.cls?S.cls.risk:1.3)*(focusSet().find(x=>x.id===S.focus)?.risk||1);
-  return clamp(q,0,.9);
+  if(S.adv){const fo=focusSet().find(x=>x.id===S.focus);q*=(S.cls?S.cls.risk:1.3)*(fo&&fo.enc?.6:(fo?.risk||1));}
+  return clamp(q*TQ,0,.95);
 }
-const CAUSES_N=['ไข้ที่ไม่มีใครเรียกชื่อได้','โรคระบาดที่เข้ามากับขบวนเรือ','อุบัติเหตุระหว่างทำงาน','ความหนาวในฤดูที่ยาวเกินไป','บาดแผลที่ติดเชื้อ'];
-const CAUSES_V=['ถูกโจรดักระหว่างทาง','สงครามชายแดน','สัตว์ร้ายในป่านอกกำแพง'];
-const CAUSES_A=['ไม่ได้ขึ้นมาจากชั้นล่างสุดของดันเจี้ยน','กับดักในสุสานเก่า','ถูกซุ่มโจมตีระหว่างคุ้มกันขบวน'];
-function causeOf(){
-  if(S.hp<=0&&S.downBy)return S.downBy;
-  if(S.age>S.span*.82)return 'ชราภาพ';
-  if(S.chronic&&Math.random()<.35)return 'โรคเรื้อรังที่สะสมมานาน';
-  if(S.adv&&Math.random()<.6)return pick(CAUSES_A);
-  if(Math.random()<S.region.danger*.22)return pick(CAUSES_V);
-  return pick(CAUSES_N);
+const THREATS=[
+ {th:'ไข้ที่ไม่มีใครเรียกชื่อได้',ab:'CON',ongoing:1,w:x=>3},
+ {th:'โรคระบาดที่เข้ามากับขบวนเรือ',ab:'CON',ongoing:1,w:x=>['bg','wd','lus','amn','cal'].includes(x.region.id)?2:1},
+ {th:'บาดแผลที่ติดเชื้อ',ab:'CON',ongoing:1,w:x=>1.2},
+ {th:'ความหนาวในฤดูที่ยาวเกินไป',ab:'CON',ongoing:1,w:x=>['icd','rash','und'].includes(x.region.id)?3:.8},
+ {th:'อุบัติเหตุระหว่างทำงาน',ab:'DEX',w:x=>x.age<x.race.mature*.3?.5:1.6+(x.own.horse?.6:0)},
+ {th:'โรคเรื้อรังที่สะสมมานาน',ab:'CON',ongoing:1,w:x=>x.chronic?3:0},
+ {th:'เหล้าเถื่อนกับอาหารบูด',ab:'CON',poison:1,ongoing:1,w:x=>x.age<x.race.mature?.2:.6+(x.life.diet==='tavern'?.8:0)},
+ {th:'ถูกโจรดักระหว่างทาง',atk:4,w:x=>x.age<x.race.mature*.5?0:x.region.danger*.9},
+ {th:'สงครามชายแดน',atk:5,ongoing:1,w:x=>x.age<x.race.mature?0:x.region.danger*.4*(era().id==='war'?2.5:1)},
+ {th:'สัตว์ร้ายในป่านอกกำแพง',atk:4,w:x=>x.region.danger*.5},
+ {th:'กับดักในสุสานเก่า',ab:'DEX',w:x=>x.adv?1.5:0},
+ {th:'ถูกซุ่มโจมตีระหว่างคุ้มกันขบวน',atk:5,w:x=>x.adv?1.5:0}
+];
+function runThreat(){
+  const t=wpick(THREATS.map(z=>({z,w:z.w(S)})).filter(o=>o.w>0)).z;
+  const dc=10+Math.round(S.region.danger*1.5)+Math.round(S.age/S.span*4);
+  const D=dice(S.adv?1+S.lvl:1,6)+2;
+  let r,took;
+  if(t.atk){r=npcRoll(`${t.th} · ศัตรูโจมตี`,t.atk+(S.adv?Math.floor(S.lvl/2):0),acFor());r.vsAC=1;took=r.ok?D:0;}
+  else{r=check(t.ab,dc,{save:1,adv:t.poison&&S.race.id==='dwarf',label:`ทอยป้องกัน${ABIL_TH[t.ab]} · ${t.th}`});took=r.ok?Math.floor(D/2):D;}
+  if(took)damage(took,t.th,true);
+  S.threats=(S.threats||0)+1;S.ongoing=!!t.ongoing;
+  addLog(S.age,`ภัยถึงชีวิต: ${t.th}${S.hp<=0?' — ล้มลง':took?' — รอดมาได้แต่บาดเจ็บ':' — รอดมาได้หวุดหวิด'}`,
+    rollTh(r)+(took?` · เสียเลือด ${took} เหลือ ${Math.max(0,S.hp)}/${S.hpMax}`:''),true,S.hp<=0);
+}
+/* Old age: past most of the span, a CON save that only gets harder; each failure is exhaustion that never heals. */
+function oldAge(){
+  const start=S.span*.82;
+  if(S.age<start||Math.random()>scaleQ())return;
+  const dc=10+Math.round((S.age-start)/S.span*55);
+  const r=check('CON',dc,{save:1,label:'ทอยป้องกันทน · ความชรา'});
+  if(!r.ok){
+    S.exhFloor=Math.min(6,S.exhFloor+1);gainExh(1,null,6);
+    /* the sixth level would be death outright; here it is the last fall, so the family still gets to kneel */
+    if(S.exh>=6){S.exh=S.exhFloor=5;S.hpMax=hpMaxFor();S.hp=0;S.downBy='ชราภาพ';S.ongoing=0;
+      addLog(S.age,'ร่างกายถึงขีดสุดของมัน — ล้มลงและไม่ยอมลุก',rollTh(r),true,true);}
+    else addLog(S.age,`ร่างกายเสื่อมลงอีกขั้น — ความอ่อนล้าที่ไม่มีวันหายระดับ ${S.exhFloor}`,[rollTh(r),EXH_TH[S.exh]],true,true);
+  }
 }
 function runAuto(){
   AUTO.forEach(a=>{
@@ -1505,8 +1660,8 @@ const HAZ=[
  {id:'accident',ab:'DEX',th:'อุบัติเหตุ',w:x=>2+(x.own.horse?.8:0),no:'พลาดท่าบาดเจ็บระหว่างทำงาน',hurt:1},
  {id:'despair',ab:'WIS',th:'ความสิ้นหวัง',w:x=>1.2+(x.s<35?2:0)+(x.r<30?1:0),no:'จมอยู่กับความเศร้าไปทั้งฤดูหนาว',s:-6},
  {id:'labor',ab:'STR',th:'งานเกินกำลัง',w:x=>x.age<x.race.mature*.5?0:1.8+(['trade','work','delve'].includes(x.focus)?1.5:0),no:'ฝืนแบกงานจนร่างพัง',exh:1},
- {id:'exploit',ab:'CHA',th:'ถูกเอาเปรียบ',w:x=>x.age<x.race.mature?.5:1.3+(x.tier.lvl<=2?.6:0),no:'ถูกกดค่าแรงและโกงกันต่อหน้า',g:.15},
- {id:'contract',ab:'INT',th:'ถูกหลอกเรื่องสัญญา',w:x=>x.age<x.race.mature?0:.8+(x.gold>60?1:0),no:'เซ็นสัญญาที่มีเงื่อนไขซ่อนอยู่',g:.25,illit:1}
+ {id:'exploit',ab:'CHA',th:'ถูกเอาเปรียบ',w:x=>x.age<x.race.mature?.5:1.3+(x.tier.lvl<=2?.6:0),no:'ถูกกดค่าแรงและโกงกันต่อหน้า',g:.05},
+ {id:'contract',ab:'INT',th:'ถูกหลอกเรื่องสัญญา',w:x=>x.age<x.race.mature?0:.8+(x.gold>60?1:0),no:'เซ็นสัญญาที่มีเงื่อนไขซ่อนอยู่',g:.09,illit:1}
 ];
 function annualSave(f){
   const h=wpick(HAZ.map(z=>({z,w:z.w(S)}))).z;
@@ -1514,7 +1669,7 @@ function annualSave(f){
   const r=check(h.ab,dc,{save:1,imp:false,adv:f.adv===h.ab,dis:h.illit&&S.l<30,label:`ทอยป้องกัน${ABIL_TH[h.ab]} · ${h.th}`});
   if(r.d===20){
     S.s=clamp(S.s+4,0,100);S.r=clamp(S.r+1.5,0,100);healExh(1);S.strain=0;
-    const g=(baseIncome()+spouseIncome()+3)*.1*yearScale();S.gold+=g;
+    const g=(baseIncome()+spouseIncome()+3)*.12*yearScale();S.gold+=g;
     if(S.deity)S.faith=clamp(S.faith+3,0,100);
     addLog(S.age,'ปีที่ดี — ทุกอย่างลงตัวอย่างไม่น่าเชื่อ',rollTh(r)+(g>=1?` · ได้เพิ่ม ${gp(g)}`:''));
     return;
@@ -1635,7 +1790,7 @@ function tick(){
   /* a long rest: an unhurt year heals all the way, a hurt one only half */
   S.hpMax=hpMaxFor();
   S.hp=S.hit?Math.min(S.hpMax,S.hp+Math.ceil((S.hpMax-S.hp)/2)):S.hpMax;
-  if(!S.hit&&S.gold>-40)healExh(1);
+  if(S.gold>-40&&(!S.hit||Math.random()<.5))healExh(1);
   if(f.rest)healExh(1);
   S.hit=0;S.relent=0;
   if(S.raisePen>0)S.raisePen--;
@@ -1686,7 +1841,10 @@ function tick(){
   annualSave(f);
   if(S.adv&&f.enc)encounter(f);
   if(S.adv&&f.xp)gainXp(xpNeed()*f.xp*yearScale());
-  if(S.hp<=0||Math.random()<hazard()||S.age>=S.span+Math.round(S.span*.22)){die();return;}
+  if(S.hp>0&&Math.random()<threatQ())runThreat();
+  oldAge();
+  if(S.age>=S.span+Math.round(S.span*.22)){perish('ชราภาพ');return;}
+  if(S.hp<=0){dying();return;}
   renderLife();
   const dec=nextDec();
   if(dec){openDec(dec);}
@@ -1810,7 +1968,7 @@ function applyChoice(d,c){
   if(c.apply){
     const r=c.apply==='wizard'?check('INT',17,{skill:'arcana',adv:S.l>60,label:'สอบเข้าสำนักเวท'})
       :c.apply==='temple'?check('INT',16,{skill:'religion',adv:!!S.deity,label:'สอบเข้าวิหาร'})
-      :check('STR',16,{skill:'athletics',label:'ทดสอบเข้าสมาคมนักผจญภัย'});
+      :check('STR',17,{skill:'athletics',label:'ทดสอบเข้าสมาคมนักผจญภัย'});
     notes.push(rollTh(r));
     if(!r.ok){S.s=clamp(S.s-4,0,100);addLog(S.age,'สมัครแล้วเขาไม่รับ',['คนที่สอบเข้าสำนักเวทในแฟรูนได้มีไม่ถึงหนึ่งในยี่สิบของผู้สมัคร',rollTh(r)],true,true);}
     else if(c.apply==='wizard'){S.l=clamp(S.l+22,0,100);S.jobMul*=1.5;addLog(S.age,'ได้เข้าสำนักเวทในเมือง',rollTh(r),true);}
@@ -1834,43 +1992,129 @@ function applyChoice(d,c){
   renderLife();
 }
 /* ---------------- death ---------------- */
-function die(){
-  const cause=causeOf();
-  const canPay=S.gold>=500,access=S.life.ward==='full'||S.donated||S.region.temple>=1||S.adv;
-  if(!S.raised&&cause!=='ชราภาพ'&&S.age<S.span*.8&&canPay&&access){
-    stop();
-    const scrim=ce('div');scrim.className='scrim';
-    const m=ce('div');m.className='modal';
-    const eb=ce('p');eb.className='eyebrow';eb.textContent=`ความตาย · อายุ ${S.age} ปี`;
-    const h=ce('h2');h.textContent='วิหารรับคำขอชุบชีวิต';
-    const p=ce('p');p.textContent=`${S.name} ${cause} นักบวชประกอบพิธี Raise Dead ได้ ค่าบูชาและเพชรสำหรับพิธีรวม 500 gp คุณมี ${gp(S.gold)}`;
-    const l=ce('div');l.className='lore';l.textContent='ในแฟรูนความตายไม่ใช่สิ่งถาวร ถ้าคุณจ่ายไหว 500 gp คือรายได้ทั้งปีของชาวนาสิบเอ็ดปี นี่คือเหตุผลที่ขุนนางตายยากกว่าชาวนา ทั้งที่อยู่ใต้ฟ้าเดียวกัน';
-    const wrap=ce('div');wrap.className='choices';
-    [['จ่ายค่าพิธี 500 gp','ร่างกายไม่เหมือนเดิมอีก แต่ได้อยู่ต่อ',1],['ปล่อยไป','ทะเบียนปิดที่นี่',0]].forEach(([t,s,yes],i)=>{
-      const b=ce('button');b.type='button';const n=ce('span');n.className='n';n.textContent=String(i+1);
-      const inner=ce('span');const bb=ce('b');bb.textContent=t;const e=ce('em');e.textContent=s;inner.append(bb,e);
-      b.append(n,inner);
-      b.onclick=()=>{scrim.remove();
-        if(yes){S.gold-=500;S.raised=1;S.raisePen=4;S.hp=1;S.dead=false;
-          addLog(S.age,'ถูกชุบชีวิตกลับมาที่วิหาร ร่างกายไม่เหมือนเดิมอีกเลย',null,true);renderLife();resume();}
-        else finish(cause);};
-      wrap.appendChild(b);});
-    m.append(eb,h,p,l,wrap);scrim.appendChild(m);$('#modalHost').appendChild(scrim);
+/* One modal for everything that is not a choice of path: falling, the Fugue Plane, the temple's offer. */
+function present(o){
+  stop();
+  const scrim=ce('div');scrim.className='scrim';
+  const m=ce('div');m.className='modal';
+  const eb=ce('p');eb.className='eyebrow';eb.textContent=o.eyebrow;
+  const h=ce('h2');h.textContent=o.title;
+  m.append(eb,h);
+  (o.paras||[]).filter(Boolean).forEach(t=>{const p=ce('p');p.style.marginTop='8px';p.textContent=t;m.appendChild(p);});
+  if(o.rolls&&o.rolls.length){
+    const l=ce('div');l.className='rollist';
+    o.rolls.forEach(r=>{const d=ce('div');d.className=r.ok?'ok':'no';d.textContent=rollTh(r);l.appendChild(d);});
+    m.appendChild(l);
+  }
+  if(o.lore){const l=ce('div');l.className='lore';l.textContent=o.lore;m.appendChild(l);}
+  const wrap=ce('div');wrap.className='choices';
+  o.buttons.forEach((c,i)=>{
+    const b=ce('button');b.type='button';
+    const n=ce('span');n.className='n';n.textContent=String(i+1);
+    const inner=ce('span');const t=ce('b');t.textContent=c.t;inner.appendChild(t);
+    if(c.s){const e=ce('em');e.textContent=c.s;inner.appendChild(e);}
+    b.append(n,inner);b.onclick=()=>{scrim.remove();c.fn();};
+    wrap.appendChild(b);});
+  m.appendChild(wrap);scrim.appendChild(m);$('#modalHost').appendChild(scrim);
+  m.querySelector('button')?.focus();
+}
+/* who is close enough to kneel beside you, and how good their hands are */
+function helper(){
+  const h=[];
+  const fo=focusSet().find(x=>x.id===S.focus);
+  if(S.adv&&fo&&fo.enc)h.push({who:'นักบวชในคณะเดินทาง',b:5});
+  if(S.life.ward==='full')h.push({who:'นักบวชจากวิหารที่คุณบำรุง',b:5});
+  if(S.spouse)h.push({who:S.spouse.name,b:1});
+  if(S.home==='parents')h.push({who:'แม่',b:1});
+  const kid=S.kids.find(k=>k.age>=S.race.mature);if(kid)h.push({who:kid.name,b:0});
+  if(S.friends.length&&S.r>=50)h.push({who:S.friends[0].name,b:0});
+  return h.sort((x,y)=>y.b-x.b)[0]||null;
+}
+function dying(){
+  S.downs++;
+  const cause=S.downBy||'บาดแผล',rolls=[],paras=[`${S.name}ล้มลงเพราะ${cause} เลือดหมดเหลือศูนย์`];
+  let out='';
+  const h=helper();
+  if(h){
+    const r=npcRoll(`${h.who} ทดสอบการแพทย์ (Medicine) เพื่อพยุงไว้`,h.b,10);rolls.push(r);
+    if(r.ok){out='stable';paras.push(`${h.who}ห้ามเลือดและประคองไว้ได้ทัน`);}
+    else paras.push(`${h.who}อยู่ข้าง ๆ แต่ทำอะไรไม่ถูก`);
+  }else paras.push('ไม่มีใครอยู่ใกล้พอจะช่วย');
+  S.dsNow=0;
+  if(!out){
+    S.dsEp++;S.dsNow=1;
+    /* with nobody there the danger keeps working on you: one failure before the first roll */
+    let fails=S.ongoing&&!h?1:0,succ=0;
+    const g=faithBoon();let again=g&&g.boon.death?1:0;
+    if(fails)paras.push('ภัยยังไม่จบ — นับเป็นความล้มเหลวหนึ่งครั้งตั้งแต่ก่อนทอย');
+    while(!out){
+      let r=check(null,10,{death:1});
+      if(!r.ok&&again){again=0;rolls.push(r);r=check(null,10,{death:1,label:`ทอยรักษาชีวิตอีกครั้ง · ${g.th}`});r.boon=g.id;S.boonUsed=(S.boonUsed||0)+1;}
+      rolls.push(r);
+      if(r.d===20){out='revive';break;}
+      if(r.d===1)fails+=2;else if(r.ok)succ++;else fails++;
+      if(fails>=3)out='dead';else if(succ>=3)out='stable';
+    }
+    paras.push(out==='revive'?'ลืมตาขึ้นมาเองกลางความมืด':out==='stable'?'ลมหายใจกลับมาสม่ำเสมอ — รอดมาได้':'ลมหายใจสุดท้ายผ่านไป');
+  }
+  const after=()=>{
+    if(out==='dead'){S.dsDied=(S.dsDied||0)+1;perish(cause);return;}
+    S.hp=1;S.stabilized++;gainExh(1,null,5);
+    if(S.deity)S.faith=clamp(S.faith+8,0,100);
+    renderLife();resume();
+  };
+  addLog(S.age,out==='dead'?`ล้มลงเพราะ${cause} และไม่ได้ลุกขึ้นมาอีก`:`ล้มลงเพราะ${cause} แต่รอดมาได้`,rolls.map(rollTh),true,true);
+  if(out==='stable'&&!S.dsNow){after();return;}
+  present({eyebrow:`เลือดหมด · อายุ ${S.age} ปี · ปี ${S.year} DR`,title:out==='dead'?'สิ้นใจ':'รอดจากความตาย',paras,rolls,
+    lore:'ใน 5e คนที่เลือดหมดจะทอยรักษาชีวิต (death saving throw) ทุกตา ได้ 10 ขึ้นไปนับเป็นสำเร็จ สามสำเร็จรอด สามล้มเหลวตาย ทอยได้ 20 ฟื้นทันที ทอยได้ 1 นับเป็นล้มเหลวสองครั้ง',
+    buttons:[{t:out==='dead'?'ไปยังฟิวก์เพลน':'ใช้ชีวิตต่อ',s:out==='dead'?'วิญญาณทุกดวงต้องไปยืนต่อหน้าเคเลมวอร์':'เลือด 1 · ความอ่อนล้า +1',fn:after}]});
+}
+/* Kelemvor's ruling, by the faith held at the moment of death */
+function verdict(){
+  const D=S.deity&&deityOf(S.deity);
+  if(D&&S.faith>=25){
+    const far=Math.abs(S.law-D.law)+Math.abs(S.good-D.good)>=2;
+    return {kind:'faithful',title:`ส่งไปยัง${D.realm}`,
+      text:`เคเลมวอร์อ่านทะเบียนชีวิตของ${S.name}จนจบ แล้วส่งให้ทูตของ${D.th}พาไปยัง${D.realm}`+(far?` — ทูตรับไปด้วยสีหน้าลังเล ชีวิตนี้ไม่ได้เดินตามทางของ${D.th}นัก`:'')};
+  }
+  if(D)return {kind:'weak',title:'รอที่นครแห่งการพิพากษา',
+    text:`ศรัทธาต่อ${D.th}บางเบาจนทูตใช้เวลานานกว่าจะมาถึง วิญญาณต้องรออยู่ในฟิวก์เพลนหลายปีก่อนได้ไปยัง${D.realm}`};
+  if(S.formerDeity){const F=deityOf(S.formerDeity);return {kind:'false',title:'ผู้ทรยศศรัทธา',
+    text:`เคยถือ${F.th}เป็นที่พึ่งแล้วทิ้งไป เคเลมวอร์ตัดสินว่าเป็นผู้ทรยศศรัทธา (the False) ต้องรับโทษในนครแห่งการพิพากษาจนครบกำหนด แล้วจึงถูกก่อเข้าไปในกำแพงแห่งผู้ไร้ศรัทธา`};}
+  return {kind:'faithless',title:'กำแพงแห่งผู้ไร้ศรัทธา',
+    text:`${S.name}ไม่เคยถือเทพองค์ใดเป็นที่พึ่ง ไม่มีทูตจากภพไหนมารับ เคเลมวอร์ทำได้เพียงตามกฎที่มีมาก่อนเขา — วิญญาณถูกก่อเข้าไปในกำแพงแห่งผู้ไร้ศรัทธา (Wall of the Faithless) ที่ล้อมนครแห่งการพิพากษา`};
+}
+const raiseOk=cause=>!S.raised&&cause!=='ชราภาพ'&&S.age<S.span*.8&&S.gold>=500&&(S.life.ward==='full'||S.donated||S.region.temple>=1||S.adv);
+function perish(cause){
+  stop();S.cause=cause;
+  const v=verdict();S.verdict=v;
+  const lore='ในแฟรูน วิญญาณทุกดวงไปยังฟิวก์เพลนก่อน แล้วรอให้ทูตของเทพที่ตนนับถือมารับ คนที่ไม่เคยนับถือเทพองค์ใดไม่มีที่ให้ไป';
+  if(raiseOk(cause)){
+    present({eyebrow:`ฟิวก์เพลน · ต่อหน้าเคเลมวอร์ · อายุ ${S.age} ปี`,title:v.title,
+      paras:[v.text,`ระหว่างนั้น ที่โลกเบื้องล่าง วิหารรับคำขอชุบชีวิต — พิธี Raise Dead ต้องใช้เพชรมูลค่า 500 gp คุณมี ${gp(S.gold)}`],
+      lore:'500 gp คือรายได้ทั้งปีของชาวนาสิบเอ็ดปี นี่คือเหตุผลที่ขุนนางตายยากกว่าชาวนา ทั้งที่อยู่ใต้ฟ้าเดียวกัน',
+      buttons:[{t:'จ่ายค่าพิธี 500 gp',s:'ดึงวิญญาณกลับลงมา · ทุกการทอย −4 แล้วค่อย ๆ หายปีละ 1',fn:()=>{
+          S.gold-=500;S.raised=1;S.raisePen=4;S.hp=1;S.verdict=null;S.cause='';S.downBy='';
+          addLog(S.age,'ถูกชุบชีวิตกลับมาที่วิหาร ร่างกายไม่เหมือนเดิมอีกเลย',`ได้เห็น${v.title}มาแล้วครั้งหนึ่ง`,true);
+          renderLife();resume();}},
+        {t:'ปล่อยไป',s:'ทะเบียนปิดที่นี่',fn:()=>finish(cause)}]});
     return;
   }
-  finish(cause);
+  present({eyebrow:`ฟิวก์เพลน · ต่อหน้าเคเลมวอร์ · อายุ ${S.age} ปี`,title:v.title,paras:[v.text],lore,
+    buttons:[{t:'ปิดทะเบียน',s:'ดูแผ่นตัวละครทั้งใบ',fn:()=>finish(cause)}]});
 }
 function finish(cause){
   stop();S.happy[S.age]=S.s;S.dead=true;S.cause=cause;
+  if(!S.verdict)S.verdict=verdict();
   if(S.life.ward==='full'&&S.age<S.span*.75&&S.kids.length)addLog(S.age,'วิหารจ่ายเงินช่วยเหลือให้ครอบครัวตามที่ตกลงไว้',null,true);
-  addLog(S.age,`จากไปเมื่ออายุ ${S.age} ปี — ${cause}`,null,true,true);
+  addLog(S.age,`จากไปเมื่ออายุ ${S.age} ปี — ${cause}`,S.verdict.title,true,true);
   renderDeath();show('s-death');savePast();
 }
 function renderDeath(){
   $('#dName').textContent=S.name;
   $('#dDates').textContent=`${S.born} – ${S.year} DR · ${S.race.th}แห่ง${S.region.th}`;
   $('#dQuote').textContent=S.notes.length?'“'+S.notes[S.notes.length-1]+'”':(S.r>65?'“มีคนมาส่งจนถึงหลุม และนั่นก็มากพอแล้ว”':'“เกิดมาแล้วก็ทำไปตามที่ทำได้”');
-  $('#dCause').textContent=`สาเหตุ: ${S.cause}${S.raised?' · เคยถูกชุบชีวิตกลับมาหนึ่งครั้ง':''}`;
+  $('#dCause').textContent=`สาเหตุ: ${S.cause}${S.raised?' · เคยถูกชุบชีวิตกลับมาหนึ่งครั้ง':''}${S.bg?' · '+BGS.find(b=>b.id===S.bg).th:''}`;
   const o=oddsPct();
   $('#dOdds').textContent=o.toFixed(3)+'%';
   $('#dOddsSub').textContent=`ราว 1 ใน ${fmt(100/o)} ดวงวิญญาณ · ${era().th}`;
@@ -1879,6 +2123,16 @@ function renderDeath(){
   $('#dLeft').textContent=(S.gold<0?'−':'')+gp(Math.abs(S.gold));
   $('#dLeftSub').textContent=(S.gold<0?'หนี้ที่ตกถึงครอบครัว':'')+(S.kids.length?` และลูก ${S.kids.length} คน${S.kids.some(k=>k.school)?' ที่ได้เรียนหนังสือ':''}`:(S.gold<0?'':'ไม่มีผู้สืบสกุล'));
   gridInto($('#dGrid'),$('#dLegend'));
+  const v=S.verdict||verdict();
+  $('#dVerdictT').textContent=v.title;$('#dVerdict').textContent=v.text;
+  $('#dPName').textContent=S.name;
+  $('#dPSub').textContent=`${S.race.th} · ${S.lvl?S.cls.th+'เลเวล '+S.lvl:'คนธรรมดาเลเวล 0'} · ${alignTh(S)}`;
+  drawPortrait($('#dPortrait'),S);
+  sheetInto($('#dSheet'),true);
+  $('#dDice').textContent=fmt(S.nRolls)+' ครั้ง';
+  $('#dDiceSub').textContent=`ได้ 20 ${S.n20} ครั้ง · ได้ 1 ${S.n1} ครั้ง · ล้มลง ${S.downs} ครั้ง · ทอยรักษาชีวิต ${S.dsEp} รอบ`;
+  const un=$('#dUnused');un.textContent='';
+  unusedList().forEach(t=>{const d=ce('div');const a=ce('span');a.textContent='—';const b=ce('span');b.textContent=t;d.append(a,b);un.appendChild(d);});
   const nv=$('#dNever');nv.textContent='';
   const never=[];
   if(!S.adv&&!S.travelled)never.push('ไม่เคยออกจากแคว้นบ้านเกิดไปไกลกว่าสิบไมล์');
@@ -1898,10 +2152,24 @@ function renderDeath(){
   else sel.forEach(e=>{const d=ce('div');d.className='soul';const a=ce('span');a.textContent=e.t;const b=ce('span');b.className='st';b.textContent=e.age+' ปี';d.append(a,b);se.appendChild(d);});
   soulsInto($('#dSouls'),S.peers);renderPast();
 }
+/* the sheet's unspent half: scores that were never asked for, skills never called on */
+function unusedList(){
+  const out=[];
+  ABIL.forEach(a=>{const v=S.ab[a];if(v>=13&&!S.used[a])out.push(`${a} ${v} (${sgn(mod(v))}) — ไม่เคยได้ทอยอะไรที่สำคัญเลยสักครั้ง`);});
+  S.skills.forEach(k=>{if(!S.used[k]){const sk=SKILLS[k];out.push(`${sk.th} (${sk.en}) ${sgn(mod(S.ab[sk.ab])+S.prof)} — ชำนาญแต่ไม่เคยได้ใช้`);}});
+  if(!S.lvl){const c=CLASSES.find(x=>x.key===S.best);
+    if(c&&S.ab[S.best]>=14)out.push(`${S.best} ${S.ab[S.best]} — พอจะเป็น${c.th}ได้ แต่ทั้งชีวิตเป็นคนธรรมดาเลเวล 0 เลือด ${Math.max(1,4+mod(S.ab.CON))}`);}
+  if(S.race.id==='halforc'&&!S.relentUsed)out.push('ความทรหดของเลือดออร์ค — ไม่เคยถูกปลุกขึ้นมาสักครั้ง');
+  if(S.race.id==='halfling'&&!S.luckyUsed)out.push('โชคของฮาล์ฟลิง — ไม่เคยทอยได้ 1 ให้มันได้ทำงาน');
+  const D=S.deity&&deityOf(S.deity);
+  if(D&&!S.boonUsed)out.push(`พรของ${D.th} — ไม่เคยรู้ว่ามีอยู่`);
+  if(!out.length)out.push('ทุกค่าบนแผ่นนี้ได้ถูกทอยใช้อย่างน้อยหนึ่งครั้ง');
+  return out;
+}
 function savePast(){
   try{
     const k='faerun_register_v3',arr=JSON.parse(localStorage.getItem(k)||'[]');
-    arr.unshift({name:S.name,race:S.race.th,region:S.region.th,age:S.age,adv:S.adv});
+    arr.unshift({name:S.name,race:S.race.th,region:S.region.th,age:S.age,adv:S.adv,v:(S.verdict||{}).title||''});
     localStorage.setItem(k,JSON.stringify(arr.slice(0,12)));
   }catch(e){}
 }
@@ -1910,7 +2178,7 @@ function renderPast(){
   let arr=[];try{arr=JSON.parse(localStorage.getItem('faerun_register_v3')||'[]');}catch(e){}
   if(!arr.length){const p=ce('p');p.className='sm muted';p.textContent='ยังไม่มีชีวิตอื่นในทะเบียนนี้';el.appendChild(p);return;}
   arr.forEach(x=>{const d=ce('div');d.className='soul';const a=ce('span');a.textContent=x.name+(x.adv?' · นักผจญภัย':'');
-    const b=ce('span');b.className='st';b.textContent=`${x.race} · ${x.region} · ${x.age} ปี`;d.append(a,b);el.appendChild(d);});
+    const b=ce('span');b.className='st';b.textContent=`${x.race} · ${x.region} · ${x.age} ปี${x.v?' · '+x.v:''}`;d.append(a,b);el.appendChild(d);});
 }
 
 /* ---------------- loop + options ---------------- */

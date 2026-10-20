@@ -262,7 +262,7 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
         <dl class="kv" id="recKv"></dl>
         <div class="sigil" id="recSigil"></div>
         <div class="abil" id="recAbil"></div>
-        <p class="xs muted" style="margin-top:11px">ทอยด้วย 4d6 ตัดลูกต่ำสุด เหมือนที่สร้างตัวละคร ต่างกันแค่ว่าชาวนาส่วนใหญ่ไม่เคยได้ใช้มันเลย</p>
+        <p class="xs muted" style="margin-top:11px" id="recAbilNote"></p>
       </div>
       <div class="plate" id="recCmpBox">
         <p class="eyebrow" style="margin-bottom:4px">ถ้าเกิดวันเดียวกัน</p>
@@ -445,6 +445,172 @@ const CLASSES=[
 ];
 const ABIL=['STR','DEX','CON','INT','WIS','CHA'];
 const ABIL_TH={STR:'พละ',DEX:'คล่อง',CON:'ทน',INT:'ปัญญา',WIS:'หยั่งรู้',CHA:'เสน่ห์'};
+
+/* ---------------- rules ----------------
+   The 5e core the whole life runs on. Every outcome that matters goes through
+   check(), so it can be traced back to a d20 the player saw land. */
+const ASI={human:{STR:1,DEX:1,CON:1,INT:1,WIS:1,CHA:1},halfling:{DEX:2,CHA:1},dwarf:{CON:2,WIS:1},halfelf:{CHA:2},
+ elf:{DEX:2,INT:1},gnome:{INT:2,CON:1},halforc:{STR:2,CON:1},tiefling:{CHA:2,INT:1},dragonborn:{STR:2,CHA:1}};
+const RACE_TRAIT={human:'ปรับตัวได้ — ค่าสเตตัสทุกตัว +1',halfling:'โชคของฮาล์ฟลิง — ทอยได้ 1 ให้ทอยใหม่',
+ dwarf:'ทนพิษ — ได้เปรียบเมื่อทอยป้องกันพิษ',halfelf:'สองสายเลือด — ชำนาญเพิ่มสองทักษะ',elf:'ประสาทสัมผัสภูต — ชำนาญการรับรู้',
+ gnome:'ไหวพริบโนม — ปัญญาไวเกินตัว',halforc:'ความทรหด — ปีละครั้ง เลือดหมดแล้วยังเหลือ 1',tiefling:'สายเลือดนรก — ทนไฟ',
+ dragonborn:'สายเลือดมังกร — ลมหายใจธาตุ'};
+const RACE_SK={elf:['perception'],halforc:['intimidation']};
+const SKILLS={
+ athletics:{ab:'STR',th:'กรีฑา',en:'Athletics'},acrobatics:{ab:'DEX',th:'กายกรรม',en:'Acrobatics'},
+ sleight:{ab:'DEX',th:'มือไว',en:'Sleight of Hand'},stealth:{ab:'DEX',th:'ลอบเร้น',en:'Stealth'},
+ arcana:{ab:'INT',th:'ศาสตร์เวท',en:'Arcana'},history:{ab:'INT',th:'ประวัติศาสตร์',en:'History'},
+ investigation:{ab:'INT',th:'สืบสวน',en:'Investigation'},nature:{ab:'INT',th:'ธรรมชาติ',en:'Nature'},
+ religion:{ab:'INT',th:'ศาสนา',en:'Religion'},animal:{ab:'WIS',th:'จัดการสัตว์',en:'Animal Handling'},
+ insight:{ab:'WIS',th:'หยั่งใจ',en:'Insight'},medicine:{ab:'WIS',th:'การแพทย์',en:'Medicine'},
+ perception:{ab:'WIS',th:'การรับรู้',en:'Perception'},survival:{ab:'WIS',th:'เอาตัวรอด',en:'Survival'},
+ deception:{ab:'CHA',th:'หลอกลวง',en:'Deception'},intimidation:{ab:'CHA',th:'ข่มขู่',en:'Intimidation'},
+ performance:{ab:'CHA',th:'การแสดง',en:'Performance'},persuasion:{ab:'CHA',th:'โน้มน้าว',en:'Persuasion'}
+};
+const BGS=[
+ {id:'acolyte',th:'ผู้รับใช้วิหาร',en:'Acolyte',sk:['insight','religion']},
+ {id:'criminal',th:'คนนอกกฎหมาย',en:'Criminal',sk:['deception','stealth']},
+ {id:'folkhero',th:'วีรชนชาวบ้าน',en:'Folk Hero',sk:['animal','survival']},
+ {id:'artisan',th:'ช่างในสมาคม',en:'Guild Artisan',sk:['insight','persuasion']},
+ {id:'noble',th:'ผู้ดีมีตระกูล',en:'Noble',sk:['history','persuasion']},
+ {id:'sage',th:'ผู้คงแก่เรียน',en:'Sage',sk:['arcana','history']},
+ {id:'soldier',th:'ทหารเกณฑ์',en:'Soldier',sk:['athletics','intimidation']},
+ {id:'urchin',th:'เด็กข้างถนน',en:'Urchin',sk:['sleight','stealth']},
+ {id:'sailor',th:'กะลาสี',en:'Sailor',sk:['athletics','perception']},
+ {id:'hermit',th:'ผู้สันโดษ',en:'Hermit',sk:['medicine','religion']}
+];
+/* law/good run −1..1. boon is what faith quietly does; the choice never says. */
+const DEITIES=[
+ {id:'tyr',th:'ไทร์',en:'Tyr',law:1,good:1,realm:'ศาลยุติธรรม (The Court)',blurb:'เทพผู้ตาบอดแห่งความยุติธรรม ตาชั่งแขวนอยู่เหนือศาลทุกแห่ง',rg:['cor','wd'],tier:[4,5],boon:{save:'INT'}},
+ {id:'ilmater',th:'อิลเมเตอร์',en:'Ilmater',law:1,good:1,realm:'มาร์เทอร์ดอม (Martyrdom)',blurb:'ผู้แบกความเจ็บปวดแทนคนอื่น ศาลเจ้าของเขาอยู่ใกล้คนจนที่สุดเสมอ',tier:[1,2],boon:{death:1}},
+ {id:'lathander',th:'ลาธานเดอร์',en:'Lathander',law:0,good:1,realm:'มอร์นิงกลอรี (Morninglory)',blurb:'เทพแห่งรุ่งอรุณ คนสวดถึงเมื่อเริ่มสิ่งใหม่',rg:['wd','cor','sc'],boon:{save:'CON'}},
+ {id:'chauntea',th:'ชอนเทีย',en:'Chauntea',law:0,good:1,realm:'เนินใหญ่ (The Great Mound)',blurb:'มารดาแห่งผืนดิน ชาวนาฝังขนมปังก้อนแรกไว้ให้นาง',rg:['sc','cor','sem'],tier:[2],boon:{save:'CON'}},
+ {id:'mystra',th:'มิสตรา',en:'Mystra',law:0,good:1,realm:'ดวีโอเมอร์ฮาร์ต (Dweomerheart)',blurb:'มารดาแห่งเวทมนตร์ ทุกคาถาในแฟรูนทอผ่านมือนาง',rg:['wd','thay','rash'],boon:{skill:'arcana'}},
+ {id:'selune',th:'เซลูเน',en:'Selûne',law:-1,good:1,realm:'ประตูแห่งจันทรา (Gates of the Moon)',blurb:'จันทราผู้นำทางกะลาสีและคนหลงทางในความมืด',rg:['bg','lus','nw','icd'],boon:{save:'WIS'}},
+ {id:'tymora',th:'ไทโมรา',en:'Tymora',law:-1,good:1,realm:'ไบรต์วอเตอร์ (Brightwater)',blurb:'เทพีแห่งโชค นักเสี่ยงโชคทุกคนพกเหรียญของนางไว้',rg:['bg','sem','amn'],boon:{lucky:1}},
+ {id:'waukeen',th:'วอคีน',en:'Waukeen',law:0,good:0,realm:'ห้องโถงทองคำ (The Golden Hall)',blurb:'เทพีแห่งการค้า เหรียญแรกของวันถวายให้นาง',rg:['amn','sem','cal','bg'],tier:[3,4],boon:{save:'CHA'}},
+ {id:'kelemvor',th:'เคเลมวอร์',en:'Kelemvor',law:1,good:0,realm:'หอคอยผลึก (The Crystal Spire)',blurb:'ผู้พิพากษาแห่งความตาย ทุกดวงวิญญาณต้องไปยืนต่อหน้าเขา',boon:{death:1}},
+ {id:'tempus',th:'เทมปัส',en:'Tempus',law:0,good:0,realm:'ที่พักนักรบ (Warrior’s Rest)',blurb:'เจ้าแห่งสงคราม ทหารทุกคนเอ่ยชื่อเขาก่อนออกรบ',rg:['icd','nw','chu','lus'],boon:{save:'STR'}},
+ {id:'bane',th:'เบน',en:'Bane',law:1,good:-1,realm:'เบนโฮลด์ (Banehold)',blurb:'จอมทรราชผู้สัญญาระเบียบแลกกับความยำเกรง',rg:['thay','cal'],tier:[5],boon:{skill:'intimidation'}},
+ {id:'shar',th:'ชาร์',en:'Shar',law:0,good:-1,realm:'วังแห่งความสูญสิ้น (Palace of Loss)',blurb:'นายหญิงแห่งราตรีและการลืม ผู้รับคำสวดของคนที่ไม่อยากจำ',rg:['und','thay','lus'],boon:{save:'WIS'}}
+];
+const deityOf=id=>DEITIES.find(d=>d.id===id)||null;
+const mod=v=>Math.floor((v-10)/2);
+const sgn=n=>(n<0?'−':'+')+Math.abs(n);
+const XP_LV=[0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
+function lvlFromXp(xp){let l=1;while(l<20&&xp>=XP_LV[l])l++;return l;}
+/* Level 0 is the commoner: a CR 0 creature still has +2, it just has nothing to spend it on. */
+const profFor=lvl=>2+Math.floor((Math.max(1,lvl)-1)/4);
+const HD={fighter:10,rogue:8,cleric:8,wizard:6,ranger:10,bard:8,barbarian:12,druid:8};
+const CLS_SAVE={fighter:['STR','CON'],rogue:['DEX','INT'],cleric:['WIS','CHA'],wizard:['INT','WIS'],ranger:['STR','DEX'],bard:['DEX','CHA'],barbarian:['STR','CON'],druid:['INT','WIS']};
+const CLS_SK={fighter:['athletics','perception'],rogue:['stealth','sleight'],cleric:['medicine','religion'],wizard:['arcana','investigation'],ranger:['survival','nature'],bard:['performance','persuasion'],barbarian:['athletics','survival'],druid:['nature','medicine']};
+const CLS_DMG={fighter:[2,6],rogue:[1,6],cleric:[1,8],wizard:[1,10],ranger:[1,8],bard:[1,8],barbarian:[1,12],druid:[1,8]};
+const ALIGN_TH={LG:'ยึดระเบียบ ฝักใฝ่ความดี',NG:'ฝักใฝ่ความดี',CG:'รักอิสระ ฝักใฝ่ความดี',LN:'ยึดระเบียบ',N:'เป็นกลางแท้',CN:'รักอิสระ',LE:'ยึดระเบียบ ฝักใฝ่ความชั่ว',NE:'ฝักใฝ่ความชั่ว',CE:'รักอิสระ ฝักใฝ่ความชั่ว'};
+const EXH_TH=['ไม่มี','เสียเปรียบเมื่อทดสอบความสามารถ','เคลื่อนไหวช้าลงครึ่งหนึ่ง','เสียเปรียบเมื่อโจมตีและทอยป้องกัน','เลือดสูงสุดลดลงครึ่งหนึ่ง','แทบขยับตัวไม่ได้','สิ้นใจ'];
+const dice=(n,d)=>{let t=0;for(let i=0;i<n;i++)t+=1+rnd(d);return t;};
+const d20=()=>1+rnd(20);
+function applyASI(ab,raceId){
+  const a=ASI[raceId]||{};
+  for(const k in a)ab[k]=Math.min(20,ab[k]+a[k]);
+  if(raceId==='halfelf')ABIL.filter(k=>k!=='CHA').sort((x,y)=>ab[y]-ab[x]).slice(0,2).forEach(k=>{ab[k]=Math.min(20,ab[k]+1);});
+  return ab;
+}
+const alignCode=x=>{const L=x.law>.33?'L':x.law<-.33?'C':'N',G=x.good>.33?'G':x.good<-.33?'E':'N';return L==='N'&&G==='N'?'N':L+G;};
+const alignTh=x=>{const c=alignCode(x||S);return ALIGN_TH[c]+' ('+c+')';};
+function shiftAlign(dl,dg){S.law=clamp(S.law+dl,-1,1);S.good=clamp(S.good+dg,-1,1);}
+function hpMaxFor(x){
+  x=x||S;const m=mod(x.ab.CON);let v;
+  if(!x.lvl)v=4+m;
+  else{const h=HD[x.cls.id]||8;v=h+m+(x.lvl-1)*(h/2+1+m);}
+  v=Math.max(1,Math.round(v));
+  if(x.exh>=4)v=Math.max(1,Math.floor(v/2));
+  return v;
+}
+function acFor(x){
+  x=x||S;const dx=mod(x.ab.DEX);
+  if(x.adv&&x.cls){
+    const c=x.cls.id;
+    if(c==='fighter')return 16;
+    if(c==='cleric')return 14+Math.min(2,dx)+2;
+    if(c==='barbarian')return 10+dx+mod(x.ab.CON);
+    if(c==='wizard')return 13+dx;
+    if(c==='druid')return 11+dx+2;
+    if(c==='ranger')return 13+Math.min(2,dx);
+    return 11+dx;
+  }
+  return (x.own.armor?11:10)+dx+(x.own.weapon?2:0);
+}
+/* faith only answers once it is held strongly enough */
+function faithBoon(){const D=S.deity&&deityOf(S.deity);return D&&S.faith>=30?D:null;}
+const isProf=(A,o)=>o.prof||(o.skill?S.skills.includes(o.skill):(o.save?S.saveProf.includes(A):false));
+function check(ab,dc,o){
+  o=o||{};
+  const A=o.skill?SKILLS[o.skill].ab:ab;
+  let adv=!!o.adv,dis=!!o.dis,boon=null;
+  if(o.save||o.death||o.attack){if(S.exh>=3)dis=true;}
+  else if(S.exh>=1)dis=true;
+  const g=faithBoon();
+  if(g&&((o.save&&g.boon.save===A)||(o.skill&&g.boon.skill===o.skill))){adv=true;boon=g.id;}
+  const a=d20(),b=d20(),mode=adv&&!dis?'adv':dis&&!adv?'dis':'';
+  let d=mode==='adv'?Math.max(a,b):mode==='dis'?Math.min(a,b):a,lucky=0;
+  if(d===1&&(S.race.id==='halfling'||(g&&g.boon.lucky))){lucky=d;d=d20();if(S.race.id!=='halfling')boon=g.id;S.luckyUsed=(S.luckyUsed||0)+1;}
+  const pr=o.death?0:(isProf(A,o)?S.prof:0);
+  const bonus=o.death?0:mod(S.ab[A])+pr+(o.bonus||0)-(S.raisePen||0);
+  const total=d+bonus,ok=o.death?d>=10:total>=dc;
+  const r={label:o.label||'',ab:A,skill:o.skill||null,save:!!o.save,death:!!o.death,attack:!!o.attack,
+    dc,d,a,b,mode,lucky,pr,bonus,total,ok,age:S.age,boon};
+  pushRoll(r);
+  if(d===20)S.n20++;if(d===1)S.n1++;
+  if(o.imp!==false&&!o.death){S.used[A]=(S.used[A]||0)+1;if(o.skill)S.used[o.skill]=(S.used[o.skill]||0)+1;}
+  return r;
+}
+/* someone else's die — a parent at the bedside, a goblin's spear — still shown on the table */
+function npcRoll(label,bonus,dc){
+  const d=d20(),total=d+bonus,r={label,npc:1,dc,d,a:d,b:d,mode:'',bonus,total,ok:total>=dc,age:S.age};
+  pushRoll(r);return r;
+}
+function pushRoll(r){S.lastRoll=r;S.rolls.unshift(r);if(S.rolls.length>8)S.rolls.pop();S.nRolls++;S.yearRolls++;}
+function rollName(r){
+  if(r.label)return r.label;
+  if(r.death)return 'ทอยรักษาชีวิต (death save)';
+  if(r.skill)return 'ทดสอบ'+SKILLS[r.skill].th+' ('+SKILLS[r.skill].en+')';
+  return (r.save?'ทอยป้องกัน':'ทดสอบ')+ABIL_TH[r.ab];
+}
+function rollTh(r){
+  let die=r.mode?`${r.a}/${r.b} ${r.mode==='adv'?'ได้เปรียบ':'เสียเปรียบ'}`:String(r.lucky?1:r.d);
+  if(r.lucky)die+=` → ทอยใหม่ ${r.d}`;
+  if(r.death)return `${rollName(r)} — d20 ${die} · ${r.d===20?'ฟื้นขึ้นมาทันที':r.d===1?'ล้มเหลวสองครั้ง':r.ok?'สำเร็จ':'ล้มเหลว'}`;
+  const vs=r.attack||r.vsAC?'AC':'DC';
+  return `${rollName(r)} ${vs} ${r.dc} — d20 ${die} ${sgn(r.bonus)} = ${r.total} · ${r.ok?'ผ่าน':'ไม่ผ่าน'}`;
+}
+/* the ledger only keeps rolls worth remembering, so it never drowns */
+function logRoll(r,t,force){if(force||!r.ok||r.d===20||r.d===1)addLog(S.age,t||rollName(r),rollTh(r),false,!r.ok);}
+function gainExh(n,why){
+  const was=S.exh;S.exh=clamp(S.exh+n,S.exhFloor,6);
+  if(S.exh!==was){S.hpMax=hpMaxFor();S.hp=Math.min(S.hp,S.hpMax);
+    if(why)addLog(S.age,`${why} — ความอ่อนล้าระดับ ${S.exh}`,EXH_TH[S.exh],false,true);}
+}
+function healExh(n){const was=S.exh;S.exh=clamp(S.exh-n,S.exhFloor,6);if(S.exh!==was){S.hpMax=hpMaxFor();}}
+/* Wounds below the threshold of a threat never drop anyone; only a threat can. */
+function damage(n,cause,lethal){
+  n=Math.max(0,Math.round(n));if(!n)return 0;
+  S.hit=1;
+  if(!lethal){S.hp=Math.max(1,S.hp-n);return n;}
+  S.hp-=n;
+  if(S.hp<=0){
+    if(S.race.id==='halforc'&&!S.relent){S.relent=1;S.hp=1;S.relentUsed=(S.relentUsed||0)+1;
+      addLog(S.age,'เลือดออร์คไม่ยอมให้ล้ม — ลุกขึ้นมาได้ทั้งที่ควรจะจบไปแล้ว','ความทรหด (Relentless Endurance) ของครึ่งออร์ค ใช้ได้หนึ่งครั้งต่อการพักยาว',true);}
+    else{S.hp=0;S.downBy=cause;}
+  }
+  return n;
+}
+/* the strain bar from the old body meter: hard years add up into exhaustion */
+function bodyFx(v){
+  if(!v)return;
+  if(v>0){S.strain=Math.max(0,S.strain-v);return;}
+  S.strain+=-v;
+  while(S.strain>=6){S.strain-=6;gainExh(1,'ร่างกายล้าสะสมจากงานหนัก');}
+}
 const HOBBY_POOL=['ดาบไม้','เป่าขลุ่ย','แกะสลักไม้','ตกปลา','ปลูกสมุนไพร','เล่าเรื่องในโรงเตี๊ยม','ทอยเต๋า','วาดบนหนังสัตว์','ร้องเพลงประสานในวิหาร','ตีเหล็กเล่น'];
 const PETS=[['สุนัข','เจ้าด่าง'],['แมว','ขี้เถ้า'],['เหยี่ยว','ลมเหนือ'],['ลา','ตาโต'],['อีกา','ถ่าน']];
 const NAMES={
@@ -461,26 +627,26 @@ const NAMES={
 const nameFor=r=>{const n=NAMES[r]||NAMES.human;return pick(n[0])+' '+pick(n[1]);};
 
 const FOCUS_CHILD=[
- {id:'help',th:'ช่วยงานบ้าน',hint:'สายสัมพันธ์↑ ความรู้↓',fx:{r:2,l:-1.2}},
+ {id:'help',th:'ช่วยงานบ้าน',hint:'สายสัมพันธ์↑ · ได้เปรียบทอยป้องกัน WIS',fx:{r:2,l:-1.2},adv:'WIS'},
  {id:'play',th:'เล่นกับเพื่อน',hint:'จิตใจ↑ สายสัมพันธ์↑',fx:{s:2,r:1.6}},
- {id:'learn',th:'เรียนหนังสือ',hint:'ความรู้↑',fx:{l:2.6,s:-.4}},
- {id:'work',th:'ออกแรงทำงาน',hint:'ร่างกาย↑ ทอง↑',fx:{b:1.4,g:3}},
+ {id:'learn',th:'เรียนหนังสือ',hint:'การศึกษา↑ · ได้เปรียบทอยป้องกัน INT',fx:{l:2.6,s:-.4},adv:'INT'},
+ {id:'work',th:'ออกแรงทำงาน',hint:'ทอง↑ · ได้เปรียบทอยป้องกัน STR',fx:{b:-.4,g:3},adv:'STR'},
  {id:'hobby',th:'งานอดิเรก',hint:'จิตใจ↑ ฝีมือ↑',fx:{s:2.2},hob:1}
 ];
 const FOCUS_ADULT=[
- {id:'trade',th:'ทุ่มให้อาชีพ',hint:'รายได้ +35% · จิตใจ↓',fx:{s:-1.1,b:-.5},mul:1.35},
+ {id:'trade',th:'ทุ่มให้อาชีพ',hint:'รายได้ +35% · จิตใจ↓ ร่างกายล้า',fx:{s:-1.1,b:-.6},mul:1.35},
  {id:'balance',th:'สมดุล',hint:'รายได้ +12% · ทุกอย่างพอประมาณ',fx:{s:.5,b:.3,r:.5},mul:1.12},
- {id:'kin',th:'ครอบครัวและมิตร',hint:'สายสัมพันธ์↑ จิตใจ↑',fx:{r:2.2,s:1.6},mul:1},
- {id:'body',th:'ดูแลร่างกาย',hint:'ร่างกาย↑ รายได้ −5%',fx:{b:2.4},mul:.95},
- {id:'study',th:'ศึกษาตำรา',hint:'ความรู้↑ รายได้ +5%',fx:{l:2.4},mul:1.05},
+ {id:'kin',th:'ครอบครัวและมิตร',hint:'สายสัมพันธ์↑ จิตใจ↑ · ได้เปรียบทอยป้องกัน WIS',fx:{r:2.2,s:1.6},mul:1,adv:'WIS'},
+ {id:'body',th:'ดูแลร่างกาย',hint:'หายล้าเร็ว · ได้เปรียบทอยป้องกัน CON · รายได้ −5%',fx:{b:2.4},mul:.95,adv:'CON',rest:1},
+ {id:'study',th:'ศึกษาตำรา',hint:'การศึกษา↑ · ได้เปรียบทอยป้องกัน INT · รายได้ +5%',fx:{l:2.4},mul:1.05,adv:'INT'},
  {id:'hobby',th:'งานอดิเรก',hint:'จิตใจ↑ ฝีมือ↑ รายได้ −5%',fx:{s:2.6},mul:.95,hob:1}
 ];
 const FOCUS_ADV=[
- {id:'delve',th:'ลงดันเจี้ยน',hint:'รายได้ +60% · เสี่ยงตาย',fx:{b:-1.6,s:.6},mul:1.6,risk:1.9},
- {id:'guard',th:'รับจ้างคุ้มกัน',hint:'รายได้ +20% · ปลอดภัยกว่า',fx:{b:-.4},mul:1.2,risk:1.15},
- {id:'train',th:'ฝึกฝน',hint:'ร่างกาย↑ ความรู้↑ รายได้ −10%',fx:{b:2,l:1.6},mul:.9,risk:.8},
- {id:'kin',th:'ครอบครัวและมิตร',hint:'สายสัมพันธ์↑ รายได้ −15%',fx:{r:2.2,s:1.8},mul:.85,risk:.6},
- {id:'rest',th:'พักที่โรงเตี๊ยม',hint:'จิตใจ↑ ร่างกาย↑ รายได้ −20%',fx:{s:2,b:1.4},mul:.8,risk:.5}
+ {id:'delve',th:'ลงดันเจี้ยน',hint:'รายได้ +60% · เผชิญหน้าแทบทุกปี · XP มาก',fx:{b:-1.6,s:.6},mul:1.6,risk:1,enc:.9},
+ {id:'guard',th:'รับจ้างคุ้มกัน',hint:'รายได้ +20% · เผชิญหน้าบางปี',fx:{b:-.4},mul:1.2,risk:1,enc:.45},
+ {id:'train',th:'ฝึกฝน',hint:'XP ทีละน้อย · ได้เปรียบทอยป้องกัน STR · รายได้ −10%',fx:{b:1,l:1.6},mul:.9,risk:.8,adv:'STR',xp:.12},
+ {id:'kin',th:'ครอบครัวและมิตร',hint:'สายสัมพันธ์↑ รายได้ −15%',fx:{r:2.2,s:1.8},mul:.85,risk:.6,adv:'WIS'},
+ {id:'rest',th:'พักที่โรงเตี๊ยม',hint:'จิตใจ↑ หายล้าเร็ว · รายได้ −20%',fx:{s:2,b:1.4},mul:.8,risk:.5,rest:1}
 ];
 
 /* ---------------- spending ----------------
@@ -489,29 +655,29 @@ const FOCUS_ADV=[
 const ITEMS=[
  {id:'feast',th:'เลี้ยงข้าวญาติมิตรที่โรงเตี๊ยม',cost:1,fx:'สายสัมพันธ์ +4 · จิตใจ +2',rep:1,
   apply:x=>{x.r=clamp(x.r+4,0,100);x.s=clamp(x.s+2,0,100);},log:'เลี้ยงข้าวญาติมิตรที่โรงเตี๊ยมทั้งโต๊ะ'},
- {id:'checkup',th:'ให้นักบวชตรวจร่างกาย',cost:3,fx:'ร่างกาย +6 · ลดโอกาสเป็นโรคเรื้อรัง',rep:1,
-  apply:x=>{x.b=clamp(x.b+6,0,100);x.checked=(x.checked||0)+1;},log:'ไปให้นักบวชตรวจร่างกายและรับยาบำรุง',
+ {id:'checkup',th:'ให้นักบวชตรวจร่างกาย',cost:3,fx:'หายล้า 1 ระดับ · เลือดเต็ม · ลดโอกาสเป็นโรคเรื้อรัง',rep:1,
+  apply:x=>{healExh(1);x.hp=x.hpMax=hpMaxFor();x.strain=0;x.checked=(x.checked||0)+1;},log:'ไปให้นักบวชตรวจร่างกายและรับยาบำรุง',
   note:'วิหารในแฟรูนทำหน้าที่เป็นทั้งที่รักษาโรคและที่ฝากเงิน'},
  {id:'kinmoney',th:'ส่งเงินและยาให้พ่อแม่',cost:5,fx:'สายสัมพันธ์ +5 · สุขภาพพ่อแม่ ↑',rep:1,need:x=>x.age<x.race.span*.6,
   apply:x=>{x.r=clamp(x.r+5,0,100);},log:'ส่งเงินและยากลับไปให้พ่อแม่'},
  {id:'alms',th:'บริจาคให้วิหาร',cost:4,fx:'จิตใจ +4 · สายสัมพันธ์ +2',rep:1,
   apply:x=>{x.s=clamp(x.s+4,0,100);x.r=clamp(x.r+2,0,100);x.donated=1;},log:'บริจาคให้วิหารประจำแคว้น'},
- {id:'festival',th:'ไปงานฉลองในเมืองใกล้ ๆ',fx:'จิตใจ +5 · ความรู้ +1',rep:1,
+ {id:'festival',th:'ไปงานฉลองในเมืองใกล้ ๆ',fx:'จิตใจ +5 · การศึกษา +1',rep:1,
   opts:[{th:'กับคนรัก',cost:5,bond:6},{th:'กับเพื่อน ๆ',cost:3,bond:3},{th:'กับพ่อแม่',cost:6,bond:5},{th:'คนเดียว',cost:3,bond:0}],
   apply:(x,o)=>{x.s=clamp(x.s+5,0,100);x.l=clamp(x.l+1,0,100);x.r=clamp(x.r+o.bond,0,100);},log:'ไปงานฉลองในเมืองใกล้ ๆ'},
- {id:'journey',th:'เดินทางไกลข้ามแคว้น',fx:'จิตใจ +8 · ความรู้ +3',rep:1,credit:1,
+ {id:'journey',th:'เดินทางไกลข้ามแคว้น',fx:'จิตใจ +8 · การศึกษา +3',rep:1,credit:1,
   opts:[{th:'กับคนรัก',cost:22,bond:8},{th:'กับเพื่อน ๆ',cost:15,bond:5},{th:'คนเดียว',cost:14,bond:0}],
   apply:(x,o)=>{x.s=clamp(x.s+8,0,100);x.l=clamp(x.l+3,0,100);x.r=clamp(x.r+o.bond,0,100);x.travelled=1;},
   log:'ออกเดินทางข้ามแคว้นไปจนสุดถนน',note:'คนในแฟรูนไม่ถึงหนึ่งในห้าที่เคยออกจากแคว้นบ้านเกิดเกินสิบไมล์'},
- {id:'craft',th:'เรียนวิชากับช่างฝีมือ',cost:7,fx:'ความรู้ +6 · รายได้ ↑ สามปี',rep:1,
+ {id:'craft',th:'เรียนวิชากับช่างฝีมือ',cost:7,fx:'การศึกษา +6 · รายได้ ↑ สามปี',rep:1,
   apply:x=>{x.l=clamp(x.l+6,0,100);x.boost=3;},log:'ฝากตัวเรียนวิชากับช่างฝีมือในเมืองหนึ่งฤดู'},
  {id:'hobbygear',th:'อุปกรณ์และครูสอนงานอดิเรก',cost:4,fx:'ฝีมือ ↑ · จิตใจ +3',rep:1,need:x=>x.hobbies.length>0,
   apply:x=>{if(x.hobbies.length){const h=x.hobbies[rnd(x.hobbies.length)];h.lv=Math.min(20,h.lv+2);}x.s=clamp(x.s+3,0,100);},log:'ซื้ออุปกรณ์ดี ๆ และจ้างครูมาสอนงานอดิเรก'},
  {id:'newhobby',th:'หางานอดิเรกใหม่',cost:2,fx:'มีได้สูงสุดสามอย่าง',rep:1,need:x=>x.hobbies.length<3,
   apply:x=>{const left=HOBBY_POOL.filter(h=>!x.hobbies.find(y=>y.th===h));if(left.length)x.hobbies.push({th:pick(left),lv:1});},log:'เริ่มงานอดิเรกใหม่'},
  {id:'mule',th:'ลาหนึ่งตัว',cost:6,fx:'จิตใจ +3 · รายได้ +5%',once:1,log:'ซื้อลามาหนึ่งตัว บรรทุกของได้มากกว่าแบกเอง'},
- {id:'armor',th:'เสื้อเกราะหนัง',cost:10,fx:'ลดความเสี่ยงตาย 15%',once:1,log:'ซื้อเสื้อเกราะหนังมาใส่เวลาออกนอกกำแพง'},
- {id:'weapon',th:'ดาบและโล่',cost:15,fx:'ลดความเสี่ยง 12%',once:1,log:'ซื้อดาบกับโล่มาเก็บไว้ข้างประตู'},
+ {id:'armor',th:'เสื้อเกราะหนัง',cost:10,fx:'AC 11 + DEX แทน 10 + DEX',once:1,log:'ซื้อเสื้อเกราะหนังมาใส่เวลาออกนอกกำแพง'},
+ {id:'weapon',th:'ดาบและโล่',cost:15,fx:'AC +2 · มีอาวุธติดมือเวลาโจรมา',once:1,log:'ซื้อดาบกับโล่มาเก็บไว้ข้างประตู'},
  {id:'horse',th:'ม้าและอาน',cost:30,fx:'จิตใจ +7 · รายได้ +15% · เสี่ยงอุบัติเหตุ ↑',once:1,log:'ซื้อม้ามาตัวหนึ่ง เดินทางได้ไกลกว่าเดิมมาก'},
  {id:'moveout',th:'ย้ายออกจากบ้านพ่อแม่',cost:12,fx:'มัดจำและของใช้ · หลังจากนั้นดูแลค่ากินเอง',once:1,need:x=>x.home==='parents'&&x.age>=x.race.mature,
   apply:x=>{x.home='own';},log:'ย้ายออกจากบ้านพ่อแม่ไปเช่าห้องของตัวเอง'},
@@ -828,8 +994,14 @@ function regionWith(){
 function makeSoul(){
   const race=wpick(raceList()),region=regionWith(),tier=wpick(TIERS);
   const span=Math.round(race.span*(1+(Math.random()*2-1)*race.var));
-  const ab={};ABIL.forEach(a=>ab[a]=roll4d6());
-  return {race,region,tier,span,ab,name:nameFor(race.id),age:0,alive:true,look:makeLook(race,tier)};
+  const raw={};ABIL.forEach(a=>raw[a]=roll4d6());
+  const ab=applyASI({...raw},race.id);
+  return {race,region,tier,span,raw,ab,name:nameFor(race.id),age:0,alive:true,look:makeLook(race,tier)};
+}
+/* Where a soul starts on the two axes: the law of the place, the comfort of the house, and a coin toss. */
+function startAlign(s){
+  const lawful=['cor','wd','thay','nw'].includes(s.region.id)?.22:['lus','chu','und','icd'].includes(s.region.id)?-.22:0;
+  return {law:clamp(lawful+(s.tier.lvl>=4?.1:0)+(Math.random()-.5)*.5,-1,1),good:clamp((Math.random()-.5)*.6,-1,1)};
 }
 function birth(){
   const s=makeSoul(),E=era();
@@ -843,7 +1015,14 @@ function birth(){
     own:{},spouse:null,kids:[],friends:[],pet:null,
     life:{invest:'temple',gifts:'half',ward:'none',diet:'same'},autoOn:{},lastAuto:{},
     plant:{},log:[],done:{},notes:[],stars:[],happy:[],peers:[],dead:false,cause:'',
-    partnerName:nameFor(s.race.id),petOffer:pick(PETS)};
+    partnerName:nameFor(s.race.id),petOffer:pick(PETS),
+    lvl:0,xp:0,prof:profFor(0),saveProf:[],skills:[...(RACE_SK[s.race.id]||[])],bg:null,focusYears:{},
+    exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
+    ...startAlign(s),deity:null,faith:0,formerDeity:null,
+    rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
+    downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null};
+  if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
+  S.hpMax=hpMaxFor();S.hp=S.hpMax;
   S.callWho=S.region.danger>1.4?'ไปเป็นคนคุ้มกันกองคาราวาน':(best==='INT'||best==='WIS'?'ไปเป็นลูกศิษย์ของผู้วิเศษในเมือง':'ไปลองเสี่ยงในซากเมืองเก่า');
   for(let i=0;i<4;i++)S.peers.push(makeSoul());
   addLog(0,`เกิดเป็น${S.race.th}ใน${S.region.kind}แห่ง${S.region.th} ใน${S.tier.th}`,null,true);
@@ -972,7 +1151,10 @@ function renderRecord(){
     ['อายุขัยของเผ่า',S.race.span+' ปี'],['อายุขัยที่ทอยได้',S.span+' ปี'],['บรรลุนิติภาวะ',S.race.mature+' ปี'],['ทรัพย์ติดตัว',gp(S.gold)]]);
   $('#recSigil').textContent=`KELEMVOR<${S.region.id.toUpperCase()}<${S.race.id.toUpperCase()}<<${S.name.replace(/ /g,'<')}<<<<<<<<<<`.slice(0,74);
   const ab=$('#recAbil');ab.textContent='';
-  ABIL.forEach(a=>{const d=ce('div');if(a===S.best)d.className='hi';const b=ce('b');b.textContent=S.ab[a];const s=ce('span');s.textContent=ABIL_TH[a];d.append(b,s);ab.appendChild(d);});
+  ABIL.forEach(a=>{const d=ce('div');if(a===S.best)d.className='hi';const b=ce('b');b.textContent=S.ab[a];
+    const s=ce('span');s.textContent=`${a} ${sgn(mod(S.ab[a]))}`;const t=ce('span');t.textContent=ABIL_TH[a];d.append(b,s,t);ab.appendChild(d);});
+  const bonus=ABIL.filter(a=>S.ab[a]!==S.raw[a]).map(a=>`${a} +${S.ab[a]-S.raw[a]}`).join(' ');
+  $('#recAbilNote').textContent=`ทอย 4d6 ตัดลูกต่ำสุด แล้วบวกโบนัสเผ่า${S.race.th} (${bonus||'—'}) · ${RACE_TRAIT[S.race.id]} · คนธรรมดาเลเวล 0 เลือด ${S.hpMax} · AC ${acFor()} · ทุกค่าในนี้จะถูกทอยใช้จริงตลอดชีวิต`;
   const cmp=RACES.find(r=>r.id===opt.cmp);
   $('#recCmpBox').hidden=!cmp;
   if(cmp){

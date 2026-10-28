@@ -504,6 +504,12 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
     <h2 id="dVerdictT"></h2><p id="dVerdict"></p>
   </div>
   <div class="plate" style="margin-top:18px">
+    <p class="eyebrow" style="margin-bottom:8px">เส้นทางและความฝัน</p>
+    <p id="dDream" style="margin:0 0 10px"></p>
+    <div id="dPath"></div>
+    <p class="xs muted" id="dRoad" style="margin-top:10px"></p>
+  </div>
+  <div class="plate" style="margin-top:18px">
     <div class="phead">
       <canvas class="portrait" id="dPortrait" width="184" height="184"></canvas>
       <div class="who"><p class="eyebrow">แผ่นตัวละคร</p><div class="nm" id="dPName"></div><p class="xs muted" id="dPSub"></p></div>
@@ -3784,7 +3790,31 @@ function finish(cause){
   addLog(S.age,`จากไปเมื่ออายุ ${S.age} ปี — ${cause}`,S.verdict.title,true,true);
   renderDeath();show('s-death');savePast();saveSeen();
 }
+/* why a climb stopped where it did */
+function stopWhy(){
+  if(!S.path)return 'ไม่เคยเข้าเส้นทางใด';
+  if(S.rank>=5)return 'ไปถึงจุดสูงสุดของเส้นทาง';
+  if(S.path==='adv')return `หยุดที่เลเวล ${S.lvl}`;
+  const q=rankReqs().filter(x=>!x.ok);
+  if(q.length)return 'ขั้นต่อไปยังขาด: '+q.map(x=>x.t).join(' · ');
+  if(S.merit>=100)return 'ผลงานครบแล้ว แต่ไม่ได้สอบอีกก่อนสิ้นใจ';
+  return `ผลงานสะสมได้ ${Math.floor(S.merit)} จาก 100`;
+}
 function renderDeath(){
+  const dp=$('#dPath');dp.textContent='';
+  const now=S.path?pathOf(S.path):null,top=now&&S.rank?now.ranks[S.rank-1]:null;
+  const dream=S.dream?pathOf(S.dream):null;
+  $('#dDream').textContent=(dream?`ความฝันตอนเกิด: ${dream.ranks[4][0]} (${dream.th}) — `:'ไม่ได้ตั้งความฝันไว้ — ')+
+    (top?`ไปถึง ${top[0]} · ${top[1]} (ขั้น ${S.rank} จาก 5)`:'ไม่ได้เข้าเส้นทางใด')+(dream&&S.path===S.dream&&S.rank>=5?' ★':'');
+  if(now){ladderInto(dp,now,S.rank,S.rankAt);const w=ce('p');w.className='sm muted';w.style.marginTop='8px';w.textContent=stopWhy();dp.appendChild(w);}
+  const bits=[];
+  if(S.pastPaths.length)bits.push('เคยเดิน '+S.pastPaths.map(x=>`${pathOf(x.path).th} ถึง ${pathOf(x.path).ranks[x.rank-1][0]}`).join(' · '));
+  if(S.exams)bits.push(`สอบเลื่อนขั้น ${S.exams} ครั้ง`);
+  if(S.quests)bits.push(`ภารกิจ ${S.quests} งาน สำเร็จ ${S.questWins||0} · ใช้ชีวิตบนถนน ${Math.round(S.awaySeasons/4*10)/10} ปี`);
+  if((S.magicFound||[]).length)bits.push('ของเวทที่ได้มา: '+S.magicFound.join(', '));
+  if(S.potions)bits.push(`ยารักษาช่วยชีวิตไว้ ${S.potions} ครั้ง`);
+  const lostPals=(S.party||[]).filter(p=>!p.alive).map(p=>p.name);if(lostPals.length)bits.push('เพื่อนร่วมทางที่ไม่ได้กลับมา: '+lostPals.join(', '));
+  $('#dRoad').textContent=bits.join(' · ');
   $('#dName').textContent=S.name;
   $('#dDates').textContent=`${S.born} – ${S.year} DR · ${S.race.th}แห่ง${S.region.th}`;
   $('#dQuote').textContent=S.notes.length?'“'+S.notes[S.notes.length-1]+'”':(S.r>65?'“มีคนมาส่งจนถึงหลุม และนั่นก็มากพอแล้ว”':'“เกิดมาแล้วก็ทำไปตามที่ทำได้”');
@@ -3837,13 +3867,15 @@ function unusedList(){
   if(S.race.id==='halfling'&&!S.luckyUsed)out.push('โชคของฮาล์ฟลิง — ไม่เคยทอยได้ 1 ให้มันได้ทำงาน');
   const D=S.deity&&deityOf(S.deity);
   if(D&&!S.boonUsed)out.push(`พรของ${D.th} — ไม่เคยรู้ว่ามีอยู่`);
+  S.bag.filter(b=>GEAR[b.id].uses&&!GEAR[b.id].gift).forEach(b=>out.push(`${GEAR[b.id].th} — ซื้อไว้ ${gp(GEAR[b.id].cost)} เก็บไว้จนวันสุดท้าย`));
+  if(S.grown)out.push(`สเตตัสที่ฝึกขึ้นมาในวัยเด็ก +${S.grown} — ${Object.entries(S.grownAb).map(([a,n])=>a+' +'+n).join(' · ')}`);
   if(!out.length)out.push('ทุกค่าบนแผ่นนี้ได้ถูกทอยใช้อย่างน้อยหนึ่งครั้ง');
   return out;
 }
 function savePast(){
   try{
     const k='faerun_register_v3',arr=JSON.parse(localStorage.getItem(k)||'[]');
-    arr.unshift({name:S.name,race:S.race.th,region:S.region.th,age:S.age,adv:S.adv,v:(S.verdict||{}).title||''});
+    arr.unshift({name:S.name,race:S.race.th,region:S.region.th,age:S.age,adv:S.adv,v:(S.verdict||{}).title||'',rk:rankName()});
     localStorage.setItem(k,JSON.stringify(arr.slice(0,12)));
   }catch(e){}
 }
@@ -3851,7 +3883,7 @@ function renderPast(){
   const el=$('#dPast');el.textContent='';
   let arr=[];try{arr=JSON.parse(localStorage.getItem('faerun_register_v3')||'[]');}catch(e){}
   if(!arr.length){const p=ce('p');p.className='sm muted';p.textContent='ยังไม่มีชีวิตอื่นในทะเบียนนี้';el.appendChild(p);return;}
-  arr.forEach(x=>{const d=ce('div');d.className='soul';const a=ce('span');a.textContent=x.name+(x.adv?' · นักผจญภัย':'');
+  arr.forEach(x=>{const d=ce('div');d.className='soul';const a=ce('span');a.textContent=x.name+(x.rk?' · '+x.rk:(x.adv?' · นักผจญภัย':''));
     const b=ce('span');b.className='st';b.textContent=`${x.race} · ${x.region} · ${x.age} ปี${x.v?' · '+x.v:''}`;d.append(a,b);el.appendChild(d);});
 }
 

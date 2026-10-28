@@ -4,7 +4,7 @@ const fs=require('fs');
 const OUT=require('os').tmpdir();
 (async()=>{
   let html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
-  html=html.replace('(function init(){','window.__T={get S(){return S},set S(v){S=v},RACES,REGIONS,TIERS,birth,tick,renderLife,renderDeath,finish,drawPortrait,drawScene,show,makeLook,set:(n,f)=>{eval(n+"=f")}};\n(function init(){');
+  html=html.replace('(function init(){','window.__T={get S(){return S},set S(v){S=v},RACES,REGIONS,TIERS,birth,tick,renderLife,renderDeath,finish,drawPortrait,drawScene,show,makeLook,openCope,set:(n,f)=>{eval(n+"=f")}};\n(function init(){');
   fs.writeFileSync(OUT+'/t.html',html);
   const b=await chromium.launch(process.env.CHROMIUM?{executablePath:process.env.CHROMIUM}:{});
   const errors=[];
@@ -16,7 +16,7 @@ const OUT=require('os').tmpdir();
     const res=await p.evaluate(()=>{
       const T=window.__T,out=[];
       T.set('reveal',d=>d());
-      T.set('openDec',d=>{T.S.done[d.id]=1;});
+      T.set('openDec',(d,done)=>{T.S.done[d.id]=1;done&&done();});T.set('openCope',(sit,cb)=>cb(sit.opts[0],false));
       for(const race of T.RACES){
         T.birth();const S=T.S;S.race=race;S.look=T.makeLook(race,S.tier);
         for(const age of [0,race.mature,Math.round(race.span*.9)]){

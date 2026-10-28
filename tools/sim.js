@@ -4,8 +4,8 @@ const T=load(require('path').join(__dirname,'..','index.html'),'birth,tick,apply
 T.set('reveal',()=>{});
 // a big matter is answered the way a player who reads the odds would: best chance on the table
 T.set('openCope',(sit,cb)=>{const o=T.autoPick(sit,'any');cb(o,!!T.S.insp&&o.p<.5);});
-T.set('openDec',d=>{const S=T.S;if(d.id)S.done[d.id]=1;if(d.kind==='reflect')return;
-  let c=d.ch[Math.floor(Math.random()*d.ch.length)];if(d.id==='call')c=d.ch[0];T.applyChoice(d,c);});
+T.set('openDec',(d,done)=>{const S=T.S;if(d.id)S.done[d.id]=1;if(d.kind!=='reflect'){
+  let c=d.ch[Math.floor(Math.random()*d.ch.length)];if(d.id==='call')c=d.ch[0];T.applyChoice(d,c);}done();});
 let deathRec=null;
 const realPerish=T.perish;
 let firstPerish=true;

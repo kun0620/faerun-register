@@ -142,6 +142,14 @@ table.cmp thead th{font-family:var(--f-mono);font-size:11px;text-transform:upper
 .choices .n{font-family:var(--f-mono);font-size:12.5px;color:var(--ink-soft);padding-top:2px}
 .choices b{display:block;font-size:15px}
 .choices em{display:block;font-style:normal;font-size:12px;color:var(--ink-soft);margin-top:2px}
+.choices .odds{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-soft);margin-top:5px}
+.choices .tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.choices .tg i{font-style:normal;font-size:10.5px;line-height:1.5;border:1px solid var(--rule);border-radius:2px;padding:0 6px;color:var(--ink-soft)}
+.choices .tg i.up{border-color:var(--verdigris);color:var(--verdigris)}
+.choices .tg i.dn{border-color:var(--blood);color:var(--blood)}
+.choices button:disabled{opacity:.45;cursor:default}
+.foe{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:4px 12px;font-family:var(--f-mono);font-size:12.5px;border:1px solid var(--rule);border-radius:2px;padding:9px 12px;margin-top:10px}
+.foe span{display:block;font-size:10.5px;color:var(--ink-soft);font-family:inherit}
 .lore{font-size:12.5px;color:var(--ink-soft);background:var(--vellum-2);border-left:2px solid var(--verdigris);padding:9px 12px;margin-top:12px}
 textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);border:1px solid var(--rule);border-radius:2px;padding:10px;font:inherit;font-size:14px;margin-top:13px;resize:vertical}
 .modal .foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:flex-end}
@@ -387,6 +395,11 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
         <p class="xs muted" id="lFocusCtx" style="margin-bottom:11px"></p>
         <div class="focus" id="lFocus"></div>
       </div>
+      <div class="plate">
+        <p class="eyebrow" style="margin-bottom:3px">ท่าทีประจำตัว</p>
+        <p class="xs muted" style="margin-bottom:11px">เรื่องเล็กจะรับมือตามท่าทีนี้โดยไม่ถาม · เรื่องใหญ่จะเปิดให้เลือกเองพร้อมโอกาสผ่าน</p>
+        <div class="focus" id="lStance"></div>
+      </div>
       <div>
         <p class="eyebrow" style="margin-bottom:9px">บันทึกชีวิต <span class="muted" style="letter-spacing:0;text-transform:none">· แตะดาวเพื่อติดไว้</span></p>
         <div class="log" id="lLog"></div>
@@ -542,6 +555,48 @@ const BGS=[
  {id:'sailor',th:'กะลาสี',en:'Sailor',sk:['athletics','perception']},
  {id:'hermit',th:'ผู้สันโดษ',en:'Hermit',sk:['medicine','religion']}
 ];
+/* Ideals and flaws from the 5e background tables. Every choice and every way through a hard
+   year carries tags; an ideal is kept when a choice carries it and broken when it carries one of its anti tags. */
+const IDEALS={
+ charity:{th:'การให้',d:'ใครลำบากกว่า ต้องได้รับความช่วยเหลือก่อน',anti:['greed','might']},
+ tradition:{th:'ประเพณี',d:'ธรรมเนียมที่สืบมาคือสิ่งที่ทำให้คนอยู่ร่วมกันได้',anti:['freedom']},
+ faith:{th:'ศรัทธา',d:'เทพจะนำทาง ถ้าเชื่อมั่นมากพอ',anti:['deceit','greed']},
+ freedom:{th:'อิสรภาพ',d:'ไม่มีใครควรถูกล่ามโซ่ ไม่ว่าด้วยกฎหรือด้วยหนี้',anti:['tradition','might']},
+ fairness:{th:'ความยุติธรรม',d:'ทุกคนต้องได้สิ่งที่ควรได้ ไม่มากไม่น้อยกว่านั้น',anti:['greed','deceit']},
+ greed:{th:'ทรัพย์สิน',d:'เงินทองคือสิ่งเดียวที่ไม่เคยหักหลังใคร',anti:['charity']},
+ might:{th:'ความแข็งแกร่ง',d:'ผู้ที่แข็งแรงกว่าย่อมเป็นฝ่ายกำหนด',anti:['coward']},
+ knowledge:{th:'ความรู้',d:'ทุกอย่างเริ่มจากการเข้าใจมันให้ได้ก่อน',anti:['rash']},
+ people:{th:'คนของเรา',d:'ญาติมิตรสำคัญกว่าอุดมการณ์ใด ๆ',anti:['coward']},
+ honor:{th:'เกียรติ',d:'ไม่โกหก ไม่หักหลัง แม้จะต้องเสียเปรียบ',anti:['deceit','coward']},
+ independence:{th:'พึ่งตัวเอง',d:'ไม่ขอใคร ไม่ติดหนี้บุญคุณใคร',anti:['people']},
+ aspiration:{th:'ไปให้ไกลกว่าที่เกิดมา',d:'วันหนึ่งจะต้องเป็นมากกว่าที่คนในบ้านเคยเป็น',anti:['coward']}
+};
+const BG_IDEALS={acolyte:['tradition','charity','faith'],criminal:['honor','freedom','greed'],folkhero:['fairness','freedom','might'],
+ artisan:['people','charity','greed'],noble:['honor','might','people'],sage:['knowledge','freedom','might'],
+ soldier:['charity','tradition','might'],urchin:['people','fairness','aspiration'],sailor:['fairness','freedom','people'],
+ hermit:['charity','knowledge','independence']};
+const BG_FLAWS={
+ acolyte:[['ตัดสินคนอื่นแรง แต่ไม่เคยหันมาดูตัวเอง','pride'],['เชื่อคนในวิหารทุกคำโดยไม่ตั้งคำถาม','blind'],['ยึดทางเดิมจนไม่ยอมเปลี่ยน','stubborn']],
+ criminal:[['เห็นของมีค่าแล้วมือไปก่อนใจ','greed'],['หนีทุกครั้งที่เรื่องเริ่มแย่','coward'],['โกหกคล่องปากจนแยกไม่ออกว่าเรื่องไหนจริง','deceit']],
+ folkhero:[['มั่นใจในตัวเองเกินกว่าเหตุ','pride'],['เห็นความไม่เป็นธรรมแล้วลงมือก่อนคิด','rash'],['ฉลองจนเกินพอดีทุกครั้ง','vice']],
+ artisan:[['ยอมทำทุกอย่างเพื่อของชิ้นงามสักชิ้น','greed'],['ระแวงว่าคนจะขโมยฝีมือ','distrust'],['หยิ่งในฝีมือจนดูถูกคนอื่น','pride']],
+ noble:[['คิดว่าตัวเองสูงกว่าคนที่เกิดต่ำกว่า','pride'],['ใช้เงินแก้ทุกเรื่อง','greed'],['ทำตามที่ตระกูลสั่งแม้รู้ว่าผิด','blind']],
+ sage:[['อ่านเพลินจนลืมทุกอย่างรอบตัว','obsess'],['พูดความจริงโดยไม่คิดว่าใครจะเจ็บ','pride'],['ไม่เชื่อสิ่งที่ตำราไม่ได้เขียนไว้','stubborn']],
+ soldier:[['ยังฝันร้ายถึงสนามรบ และกลัวว่ามันจะกลับมา','coward'],['ดูแคลนคนที่ไม่เคยจับอาวุธ','pride'],['ทำตามคำสั่งแม้มันผิด','blind']],
+ urchin:[['หยิบของคนอื่นจนเป็นนิสัย','greed'],['หนีก่อนเสมอเมื่อมีเรื่อง','coward'],['ไม่ไว้ใจใครเลยสักคน','distrust']],
+ sailor:[['ดื่มหนักทุกครั้งที่ขึ้นฝั่ง','vice'],['เชื่อฟังคนที่แข็งแรงกว่าเสมอ','blind'],['โกรธง่ายและลงมือก่อน','rash']],
+ hermit:[['ไม่ไว้ใจคนแปลกหน้า','distrust'],['ยึดความคิดตัวเองจนฟังใครไม่ได้','stubborn'],['เก็บตัวทุกครั้งที่มีปัญหา','coward']]};
+/* the bond is picked from the life actually lived so far */
+function bondOffer(x){
+  const o=[];
+  if(x.friends.length)o.push({kind:'friend',th:x.friends[0].name,s:'เพื่อนที่โตมาด้วยกัน'});
+  o.push({kind:'mother',th:'แม่',s:'คนที่เลี้ยงมาจนโต'});
+  o.push({kind:'home',th:x.region.th,s:'บ้านเกิดที่ไม่ว่าไปไหนก็ยังคิดถึง'});
+  if(x.deity)o.push({kind:'deity',th:deityOf(x.deity).th,s:'เทพที่สวดถึงทุกคืน'});
+  else if(x.hobbies.length)o.push({kind:'craft',th:x.hobbies[0].th,s:'สิ่งเดียวที่ทำแล้วลืมเวลา'});
+  return o.slice(0,4);
+}
+const forBond=o=>!!(S.bond&&o.bk&&o.bk.includes(S.bond.kind));
 /* law/good run −1..1. boon is what faith quietly does; the choice never says. */
 const DEITIES=[
  {id:'tyr',th:'ไทร์',en:'Tyr',law:1,good:1,realm:'ศาลยุติธรรม (The Court)',blurb:'เทพผู้ตาบอดแห่งความยุติธรรม ตาชั่งแขวนอยู่เหนือศาลทุกแห่ง',rg:['cor','wd'],tier:[4,5],boon:{save:'INT'}},
@@ -606,22 +661,34 @@ function acFor(x){
 /* faith only answers once it is held strongly enough */
 function faithBoon(){const D=S.deity&&deityOf(S.deity);return D&&S.faith>=30?D:null;}
 const isProf=(A,o)=>o.prof||(o.skill?S.skills.includes(o.skill):(o.save?S.saveProf.includes(A):false));
-function check(ab,dc,o){
-  o=o||{};
+/* everything that bends a roll before the die lands; shared by check() and the odds shown in a choice */
+function rollMods(ab,o){
   const A=o.skill?SKILLS[o.skill].ab:ab;
   let adv=!!o.adv,dis=!!o.dis,boon=null;
   if(o.save||o.death||o.attack){if(S.exh>=3)dis=true;}
   else if(S.exh>=1)dis=true;
   const g=faithBoon();
-  if(g&&((o.save&&g.boon.save===A)||(o.skill&&g.boon.skill===o.skill))){adv=true;boon=g.id;S.boonUsed=(S.boonUsed||0)+1;}
-  const a=d20(),b=d20(),mode=adv&&!dis?'adv':dis&&!adv?'dis':'';
-  let d=mode==='adv'?Math.max(a,b):mode==='dis'?Math.min(a,b):a,lucky=0;
-  if(d===1&&(S.race.id==='halfling'||(g&&g.boon.lucky))){lucky=d;d=d20();if(S.race.id!=='halfling'){boon=g.id;S.boonUsed=(S.boonUsed||0)+1;}else S.luckyUsed=(S.luckyUsed||0)+1;}
+  if(g&&((o.save&&g.boon.save===A)||(o.skill&&g.boon.skill===o.skill))){adv=true;boon=g.id;}
   const pr=o.death?0:(isProf(A,o)?S.prof:0);
   const bonus=o.death?0:mod(S.ab[A])+pr+(o.bonus||0)-(S.raisePen||0);
+  return {A,g,boon,pr,bonus,mode:adv&&!dis?'adv':dis&&!adv?'dis':''};
+}
+function chanceOf(ab,dc,o){
+  const m=rollMods(ab,o||{});
+  let p=clamp((21-(dc-m.bonus))/20,0,1);
+  if(S.race.id==='halfling'||(m.g&&m.g.boon.lucky))p=Math.min(1,p*1.05);
+  return m.mode==='adv'?1-(1-p)*(1-p):m.mode==='dis'?p*p:p;
+}
+function check(ab,dc,o){
+  o=o||{};
+  const m=rollMods(ab,o),{A,g,pr,bonus,mode}=m;let boon=m.boon;
+  if(boon)S.boonUsed=(S.boonUsed||0)+1;
+  const a=d20(),b=d20();
+  let d=mode==='adv'?Math.max(a,b):mode==='dis'?Math.min(a,b):a,lucky=0;
+  if(d===1&&(S.race.id==='halfling'||(g&&g.boon.lucky))){lucky=d;d=d20();if(S.race.id!=='halfling'){boon=g.id;S.boonUsed=(S.boonUsed||0)+1;}else S.luckyUsed=(S.luckyUsed||0)+1;}
   const total=d+bonus,ok=o.death?d>=10:total>=dc;
   const r={label:o.label||'',ab:A,skill:o.skill||null,save:!!o.save,death:!!o.death,attack:!!o.attack,
-    dc,d,a,b,mode,lucky,pr,bonus,total,ok,age:S.age,boon};
+    dc,d,a,b,mode,lucky,pr,bonus,total,ok,age:S.age,boon,dec:!!S.decCtx};
   pushRoll(r);
   if(d===20)S.n20++;if(d===1)S.n1++;
   if(o.imp!==false&&!o.death){S.used[A]=(S.used[A]||0)+1;if(o.skill)S.used[o.skill]=(S.used[o.skill]||0)+1;}
@@ -632,7 +699,8 @@ function npcRoll(label,bonus,dc){
   const d=d20(),total=d+bonus,r={label,npc:1,dc,d,a:d,b:d,mode:'',bonus,total,ok:total>=dc,age:S.age};
   pushRoll(r);return r;
 }
-function pushRoll(r){S.lastRoll=r;S.rolls.unshift(r);if(S.rolls.length>8)S.rolls.pop();S.nRolls++;S.yearRolls++;}
+function pushRoll(r){S.lastRoll=r;S.rolls.unshift(r);if(S.rolls.length>8)S.rolls.pop();S.nRolls++;S.yearRolls++;
+  if(!r.npc){S.nOwn++;if(r.dec)S.nDecRolls++;}}
 function rollName(r){
   if(r.label)return r.label;
   if(r.death)return 'ทอยรักษาชีวิต (death save)';
@@ -841,7 +909,7 @@ const EVENTS=[
 ];
 
 const DECS=[
- {id:'deity',at:'c',cond:x=>x.age>=x.race.mature*.8,h:'เทพที่จะสวดถึง',
+ {id:'deity',at:'c',core:1,cond:x=>x.age>=x.race.mature*.65,h:'เทพที่จะสวดถึง',
   b:x=>`ก่อนถึงวันเป็นผู้ใหญ่ คนใน${x.region.th}จะเลือกเทพองค์หนึ่งไว้สวดถึงเป็นพิเศษ ผู้ใหญ่ในบ้านพาไปดูศาลเจ้าสามแห่งที่อยู่ใกล้ที่สุด`,
   lore:'ชาวแฟรูนส่วนใหญ่ไหว้เทพหลายองค์ตามฤดูกาล แต่องค์ที่คนเราถือเป็นเทพประจำตัวมีเพียงองค์เดียว',
   ch:x=>[...deityOffer(x).map(D=>({t:`${D.th} (${D.en})`,s:D.blurb,deity:D.id})),{t:'ยังไม่เลือก',s:'ไหว้ทุกองค์เท่า ๆ กันอย่างที่ผู้ใหญ่ทำ',fx:{}}]},
@@ -869,6 +937,16 @@ const DECS=[
   ch:[{t:'สืบทอดงานของพ่อแม่',s:'มั่นคง · สายสัมพันธ์ +6',fx:{g:12,r:6}},
       {t:'เข้าเมืองไปหางานใหม่',s:'ทอง +24 · สายสัมพันธ์ −6',fx:{g:24,r:-6,s:-2}},
       {t:'ขอเป็นลูกมือช่างฝีมือ',s:'การศึกษา +9 · ทอง +16',fx:{l:9,g:16,s:-2}}]},
+ {id:'ideal',at:'any',core:1,cond:x=>!!x.bg&&!x.ideal,h:'สิ่งที่ยึดถือ',
+  b:x=>`ชีวิตแบบ${BGS.find(b=>b.id===x.bg).th}สอนอะไรบางอย่างไว้ ถึงวันหนึ่งก็ต้องรู้ว่าตัวเองยืนอยู่ข้างไหน`,
+  lore:'ใน 5e ตัวละครทุกตัวมีอุดมการณ์ (Ideal) สิ่งผูกพัน (Bond) และจุดอ่อน (Flaw) ทำตามสิ่งเหล่านี้แล้วจะได้แรงบันดาลใจ (Inspiration) ไว้ใช้ทอยแบบได้เปรียบหนึ่งครั้ง',
+  ch:x=>BG_IDEALS[x.bg].map(id=>({t:IDEALS[id].th,s:IDEALS[id].d,ideal:id}))},
+ {id:'bond',at:'any',core:1,cond:x=>!!x.ideal&&!x.bond,h:'สิ่งที่ผูกใจไว้',
+  b:()=>'มีบางอย่างที่ถ้าต้องเลือก ก็จะยอมเสียทุกอย่างเพื่อมัน',
+  ch:x=>bondOffer(x).map(b=>({t:b.th,s:b.s,bond:b}))},
+ {id:'flaw',at:'any',core:1,cond:x=>!!x.bond&&!x.flaw,h:'จุดอ่อนที่รู้ตัวดี',
+  b:()=>'ทุกคนมีนิสัยที่แก้ไม่หาย ทำตามมันแล้วได้แรงฮึดชั่วคราว แต่คนรอบตัวจะเห็นมันทุกครั้ง',
+  ch:x=>BG_FLAWS[x.bg].map(([t,tag])=>({t,s:'ทำตามนิสัยนี้แล้วได้แรงบันดาลใจ · สายสัมพันธ์ −2 ทุกครั้ง',flaw:tag}))},
  {id:'marry',at:'adult',h:'มีคนมาสู่ขอ',
   b:x=>`${x.partnerName} อยู่ในแคว้นเดียวกันมาตั้งแต่เด็ก ครอบครัวทั้งสองฝ่ายเห็นดีด้วย`,
   ch:[{t:'แต่งงาน',s:'สายสัมพันธ์ +14 · และมีอีกคนช่วยหาเลี้ยง',fx:{r:14,s:9,g:-8},marry:1,al:[.04,0]},
@@ -1095,7 +1173,8 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null};
+    downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    stance:'grit',nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
   S.callWho=S.region.danger>1.4?'ไปเป็นคนคุ้มกันกองคาราวาน':(best==='INT'||best==='WIS'?'ไปเป็นลูกศิษย์ของผู้วิเศษในเมือง':'ไปลองเสี่ยงในซากเมืองเก่า');
@@ -1303,6 +1382,12 @@ function sheetInto(el,full){
   const info=ce('div');info.className='sm';
   info.textContent=(bg?`ภูมิหลัง: ${bg.th} (${bg.en})`:`ภูมิหลัง: ยังไม่ตกผลึก — จะตกผลึกเมื่ออายุ ${S.race.mature} ปี`)+` · ${RACE_TRAIT[S.race.id]}`+(S.raisePen>0?` · ผลจากการชุบชีวิต: ทุกการทอย −${S.raisePen}`:'');
   el.appendChild(info);
+  if(S.ideal||S.insp){
+    const ib=ce('div');ib.className='sm';
+    ib.textContent=[S.ideal&&`อุดมการณ์: ${IDEALS[S.ideal].th}`,S.bond&&`ผูกพันกับ: ${S.bond.th}`,S.flawTh&&`จุดอ่อน: ${S.flawTh}`,
+      `แรงบันดาลใจ: ${S.insp?'มีอยู่ 1':'ยังไม่มี'}`].filter(Boolean).join(' · ');
+    el.appendChild(ib);
+  }
   const sh=ce('div');const h=ce('div');h.className='shh';h.textContent=full?'ทักษะทั้งหมด · ● = ชำนาญ':'ทักษะที่ชำนาญ';
   const sl=ce('div');sl.className='sklist';
   const keys=full?Object.keys(SKILLS):S.skills;
@@ -1357,7 +1442,7 @@ function renderLife(){
   const tot=S.span+Math.round(S.span*.25);
   $('#progFill').style.width=clamp(S.age/tot*100,0,100)+'%';
   $('#progMark').style.left=clamp(S.span/tot*100,0,100)+'%';
-  renderKin();renderFocus();renderLog();
+  renderKin();renderFocus();renderStance();renderLog();
   gridInto($('#lGrid'),$('#lLegend'));
   soulsInto($('#lSouls'),S.peers);
   kvIndInto($('#lBudget'),[['ภาษีและส่วย',gp(B.tax)],['ค่าอาหาร',gp(B.food)],['ที่อยู่อาศัย',gp(B.house)],
@@ -1381,6 +1466,13 @@ function renderKin(){
 }
 const bondTh=b=>b>=75?'สนิทกันมาก':b>=50?'เข้ากันได้ดี':b>=30?'ห่าง ๆ กัน':'ห่างเหินกัน';
 const focusSet=()=>S.age<S.race.mature?FOCUS_CHILD:(S.adv?FOCUS_ADV:FOCUS_ADULT);
+function renderStance(){
+  const el=$('#lStance');el.textContent='';
+  STANCES.forEach(x=>{
+    const b=ce('button');b.type='button';b.setAttribute('aria-pressed',String(S.stance===x.id));
+    const n=ce('b');n.textContent=x.th;const e=ce('em');e.textContent=x.hint;
+    b.append(n,e);b.onclick=()=>{S.stance=x.id;renderStance();};el.appendChild(b);});
+}
 function renderFocus(){
   const el=$('#lFocus');el.textContent='';
   const set=focusSet();
@@ -1585,30 +1677,85 @@ function threatQ(){
   return clamp(q*TQ,0,.95);
 }
 const THREATS=[
- {th:'ไข้ที่ไม่มีใครเรียกชื่อได้',ab:'CON',ongoing:1,w:x=>3},
- {th:'โรคระบาดที่เข้ามากับขบวนเรือ',ab:'CON',ongoing:1,w:x=>['bg','wd','lus','amn','cal'].includes(x.region.id)?2:1},
- {th:'บาดแผลที่ติดเชื้อ',ab:'CON',ongoing:1,w:x=>1.2},
- {th:'ความหนาวในฤดูที่ยาวเกินไป',ab:'CON',ongoing:1,w:x=>['icd','rash','und'].includes(x.region.id)?3:.8},
- {th:'อุบัติเหตุระหว่างทำงาน',ab:'DEX',w:x=>x.age<x.race.mature*.3?.5:1.6+(x.own.horse?.6:0)},
- {th:'โรคเรื้อรังที่สะสมมานาน',ab:'CON',ongoing:1,w:x=>x.chronic?3:0},
- {th:'เหล้าเถื่อนกับอาหารบูด',ab:'CON',poison:1,ongoing:1,w:x=>x.age<x.race.mature?.2:.6+(x.life.diet==='tavern'?.8:0)},
- {th:'ถูกโจรดักระหว่างทาง',atk:4,w:x=>x.age<x.race.mature*.5?0:x.region.danger*.9},
- {th:'สงครามชายแดน',atk:5,ongoing:1,w:x=>x.age<x.race.mature?0:x.region.danger*.4*(era().id==='war'?2.5:1)},
- {th:'สัตว์ร้ายในป่านอกกำแพง',atk:4,w:x=>x.region.danger*.5},
- {th:'กับดักในสุสานเก่า',ab:'DEX',w:x=>x.adv?1.5:0},
- {th:'ถูกซุ่มโจมตีระหว่างคุ้มกันขบวน',atk:5,w:x=>x.adv?1.5:0}
+ {th:'ไข้ที่ไม่มีใครเรียกชื่อได้',ab:'CON',cope:'ill',ongoing:1,w:x=>3},
+ {th:'โรคระบาดที่เข้ามากับขบวนเรือ',ab:'CON',cope:'ill',ongoing:1,w:x=>['bg','wd','lus','amn','cal'].includes(x.region.id)?2:1},
+ {th:'บาดแผลที่ติดเชื้อ',ab:'CON',cope:'ill',ongoing:1,w:x=>1.2},
+ {th:'ความหนาวในฤดูที่ยาวเกินไป',ab:'CON',cope:'cold',ongoing:1,w:x=>['icd','rash','und'].includes(x.region.id)?3:.8},
+ {th:'อุบัติเหตุระหว่างทำงาน',ab:'DEX',cope:'fall',w:x=>x.age<x.race.mature*.3?.5:1.6+(x.own.horse?.6:0)},
+ {th:'โรคเรื้อรังที่สะสมมานาน',ab:'CON',cope:'ill',ongoing:1,w:x=>x.chronic?3:0},
+ {th:'เหล้าเถื่อนกับอาหารบูด',ab:'CON',cope:'ill',poison:1,ongoing:1,w:x=>x.age<x.race.mature?.2:.6+(x.life.diet==='tavern'?.8:0)},
+ {th:'ถูกโจรดักระหว่างทาง',atk:4,cope:'robbers',w:x=>x.age<x.race.mature*.5?0:x.region.danger*.9},
+ {th:'สงครามชายแดน',atk:5,cope:'war',ongoing:1,w:x=>x.age<x.race.mature?0:x.region.danger*.4*(era().id==='war'?2.5:1)},
+ {th:'สัตว์ร้ายในป่านอกกำแพง',atk:4,cope:'beast',w:x=>x.region.danger*.5},
+ {th:'กับดักในสุสานเก่า',ab:'DEX',cope:'fall',w:x=>x.adv?1.5:0},
+ {th:'ถูกซุ่มโจมตีระหว่างคุ้มกันขบวน',atk:5,cope:'robbers',w:x=>x.adv?1.5:0}
 ];
-function runThreat(){
+/* Ways through a threat. Against sickness and falls a pass still costs half, as a save does;
+   against an attacker a pass costs nothing and a miss lets the blow land on your AC. */
+const hasHelper=x=>!!(x.spouse||x.home==='parents'||x.kids.some(k=>k.age>=x.race.mature)||(x.friends.length&&x.r>=50));
+const priestFee=x=>x.life.ward==='full'?2:14;
+const bestArm=()=>S.ab.DEX>S.ab.STR?'DEX':'STR';
+const TCOPE={
+ ill:[
+  {t:'นอนพักสู้กับมันด้วยร่างกายตัวเอง',save:1,ab:'CON',st:'grit',s:'ผ่านแล้วเสียเลือดครึ่งเดียว',half:1,tg:['independence']},
+  {t:'ต้มยาตามตำราชาวบ้าน',ab:'WIS',skill:'medicine',st:'wits',s:'ผ่านแล้วเสียเลือดครึ่งเดียว',half:1,tg:['knowledge']},
+  {t:'ให้คนในบ้านผลัดกันเฝ้าไข้',save:1,ab:'CON',st:'kin',s:'ได้เปรียบเพราะมีคนอยู่ด้วย · สายสัมพันธ์ลด',half:1,fx:{r:-2},adv:1,need:hasHelper,tg:['people']},
+  {t:'จ่ายนักบวชให้ร่ายคาถารักษา',save:1,ab:'CON',bonus:5,st:'kin',fee:1,need:x=>x.region.temple>=.8||x.life.ward==='full',tg:['faith']},
+  {t:'แอบขโมยยาจากห้องเก็บของวิหาร',ab:'DEX',skill:'stealth',st:'shady',s:'ไปทางร้าย · ผ่านแล้วไม่เสียเลือดเลย',al:[-.05,-.06],tg:['greed','coward']}],
+ cold:[
+  {t:'ตัดฟืนทั้งวันให้ไฟไม่ดับ',ab:'STR',skill:'athletics',st:'grit',s:'ผ่านแล้วเสียเลือดครึ่งเดียว',half:1,tg:['independence']},
+  {t:'อุดรอยรั่วและขุดหลุมเก็บความร้อน',ab:'WIS',skill:'survival',st:'wits',s:'ผ่านแล้วเสียเลือดครึ่งเดียว',half:1,tg:['knowledge']},
+  {t:'ย้ายไปนอนรวมกันในบ้านญาติ',save:1,ab:'CON',st:'kin',s:'ได้เปรียบ · สายสัมพันธ์ลด',half:1,fx:{r:-2},adv:1,need:hasHelper,tg:['people']},
+  {t:'ขโมยฟืนจากกองของคนอื่น',ab:'DEX',skill:'stealth',st:'shady',s:'ไปทางร้าย · ผ่านแล้วไม่เสียเลือดเลย',al:[-.03,-.06],tg:['greed']}],
+ fall:[
+  {t:'กระโดดหลบ',save:1,ab:'DEX',st:'wits',s:'ผ่านแล้วเสียเลือดครึ่งเดียว',half:1,tg:[]},
+  {t:'ใช้แรงยันไว้',ab:'STR',skill:'athletics',st:'grit',s:'ผ่านแล้วเสียเลือดครึ่งเดียว',half:1,tg:['pride']},
+  {t:'ร้องเรียกคนที่อยู่ใกล้ที่สุด',ab:'CHA',skill:'persuasion',st:'kin',s:'ผ่านแล้วเขาคว้าไว้ทัน ไม่เสียเลือดเลย',d:3,need:hasHelper,tg:['people']},
+  {t:'ดึงคนข้าง ๆ มาบังไว้',ab:'DEX',skill:'sleight',st:'shady',s:'ไปทางร้าย · ผ่านแล้วไม่เสียเลือดเลย · สายสัมพันธ์ลด',fx:{r:-3},al:[0,-.08],d:2,tg:['coward','might']}],
+ robbers:[
+  {t:'สู้กลับ',arm:1,attack:1,st:'grit',s:'ชนะแล้วไม่เสียอะไร · แพ้แล้วศัตรูได้ฟันใส่',tg:['might','pride']},
+  {t:'วิ่งหนีเข้าซอก',ab:'DEX',skill:'acrobatics',st:'wits',s:'ผ่านแล้วไม่เสียอะไร',tg:['coward']},
+  {t:'ยื่นเงินให้แลกกับชีวิต',ab:'CHA',skill:'persuasion',st:'kin',s:'เสียเงินไม่ว่าผ่านหรือไม่',pay:1,d:-2,tg:['people']},
+  {t:'ข่มขู่ให้ถอยไป',ab:'CHA',skill:'intimidation',st:'shady',s:'ไปทางร้าย',al:[-.02,-.04],tg:['might']}],
+ war:[
+  {t:'จับหอกยืนแนวหน้า',arm:1,attack:1,st:'grit',s:'ผ่านแล้วไม่เสียอะไร',tg:['might','honor']},
+  {t:'หลบซ่อนตัวจนทัพผ่านไป',ab:'DEX',skill:'stealth',st:'wits',s:'ผ่านแล้วไม่เสียอะไร',tg:['coward']},
+  {t:'อพยพไปกับคนทั้งหมู่บ้าน',ab:'WIS',skill:'survival',st:'kin',s:'ผ่านแล้วสายสัมพันธ์ดีขึ้น',okfx:{r:2},tg:['people']},
+  {t:'หนีทัพกลางดึก',ab:'DEX',skill:'stealth',st:'shady',s:'ไปทางเสรีและร้าย · ผ่านแล้วไม่เสียอะไร',d:-1,al:[-.08,-.03],tg:['coward','freedom']}],
+ beast:[
+  {t:'ยืนสู้กับมัน',arm:1,attack:1,st:'grit',s:'ผ่านแล้วไม่เสียอะไร',tg:['might']},
+  {t:'ค่อย ๆ ถอยโดยไม่หันหลังให้มัน',ab:'WIS',skill:'animal',st:'wits',s:'ผ่านแล้วไม่เสียอะไร',tg:['knowledge']},
+  {t:'ตะโกนเรียกคนในหมู่บ้าน',ab:'CHA',skill:'intimidation',st:'kin',s:'ผ่านแล้วไม่เสียอะไร',d:1,tg:['people']},
+  {t:'ทิ้งคนที่วิ่งช้ากว่าไว้ข้างหลัง',ab:'DEX',skill:'acrobatics',st:'shady',s:'ไปทางร้าย · สายสัมพันธ์ลด',fx:{r:-4},al:[0,-.1],d:-3,tg:['coward']}]
+};
+const THREAT_DC=0;
+function threatSit(t,dc,D){
+  const opts=TCOPE[t.cope].map(o=>{
+    const x={...o,dc:dc+(o.d||0)};
+    if(o.arm){x.ab=bestArm();x.prof=!!S.own.weapon||S.adv;x.bonus=S.own.weapon?1:0;}
+    if(o.fee){x.cost=priestFee(S);x.s=`+5 · ผ่านแล้วไม่เสียเลือดเลย · ค่าบูชา ${x.cost} gp`;}
+    if(t.poison&&o.save&&S.race.id==='dwarf')x.adv=1;
+    return x;});
+  return {id:'threat_'+t.cope,kind:'threat',big:true,h:`ภัยถึงชีวิต: ${t.th}`,
+    b:`อาจเสียเลือดได้ถึง ${D} — ตอนนี้มีอยู่ ${Math.max(0,S.hp)}/${S.hpMax}${D>=S.hp?' · ถ้าไม่ผ่านอาจล้มลง':''}`,opts,
+    resolve:(o,r,how)=>{
+      let took=0,note=rollTh(r);
+      if(r.ok)took=o.half?Math.floor(D/2):0;
+      else if(t.atk){const a=npcRoll(`${t.th} · ศัตรูโจมตี`,t.atk+(S.adv?Math.floor(S.lvl/2):0),acFor());a.vsAC=1;took=a.ok?D:0;note+=' · '+rollTh(a);}
+      else took=D;
+      if(o.pay){const lost=Math.min(Math.max(0,S.gold),r.ok?4:9);S.gold-=lost;if(lost)note+=` · เสีย ${gp(lost)}`;}
+      if(r.ok&&o.okfx)applyFx(o.okfx,1);
+      if(took)damage(took,t.th,true);
+      S.threats=(S.threats||0)+1;S.ongoing=!!t.ongoing;
+      addLog(S.age,`ภัยถึงชีวิต: ${t.th} — ${how}${S.hp<=0?' — ล้มลง':took?' — รอดมาได้แต่บาดเจ็บ':' — รอดมาได้'}`,
+        note+(took?` · เสียเลือด ${took} เหลือ ${Math.max(0,S.hp)}/${S.hpMax}`:''),true,S.hp<=0);
+    }};
+}
+function runThreat(done){
   const t=wpick(THREATS.map(z=>({z,w:z.w(S)})).filter(o=>o.w>0)).z;
-  const dc=10+Math.round(S.region.danger*1.5)+Math.round(S.age/S.span*4);
+  const dc=10+Math.round(S.region.danger*1.5)+Math.round(S.age/S.span*4)+THREAT_DC;
   const D=dice(S.adv?1+S.lvl:1,6)+2;
-  let r,took;
-  if(t.atk){r=npcRoll(`${t.th} · ศัตรูโจมตี`,t.atk+(S.adv?Math.floor(S.lvl/2):0),acFor());r.vsAC=1;took=r.ok?D:0;}
-  else{r=check(t.ab,dc,{save:1,adv:t.poison&&S.race.id==='dwarf',label:`ทอยป้องกัน${ABIL_TH[t.ab]} · ${t.th}`});took=r.ok?Math.floor(D/2):D;}
-  if(took)damage(took,t.th,true);
-  S.threats=(S.threats||0)+1;S.ongoing=!!t.ongoing;
-  addLog(S.age,`ภัยถึงชีวิต: ${t.th}${S.hp<=0?' — ล้มลง':took?' — รอดมาได้แต่บาดเจ็บ':' — รอดมาได้หวุดหวิด'}`,
-    rollTh(r)+(took?` · เสียเลือด ${took} เหลือ ${Math.max(0,S.hp)}/${S.hpMax}`:''),true,S.hp<=0);
+  askCope(threatSit(t,dc,D),done);
 }
 /* Old age: past most of the span, a CON save that only gets harder; each failure is exhaustion that never heals. */
 function oldAge(){
@@ -1643,8 +1790,8 @@ function applyFx(fx,gm){
   if(fx.b)bodyFx(fx.b);
   if(fx.g)S.gold+=fx.g*(gm==null?1:gm);
 }
-function runChk(c,gm){
-  const r=check(c.ab,c.dc,{skill:c.skill,save:c.save,label:c.label,adv:c.adv&&c.adv(S)});
+function runChk(c,gm,adv){
+  const r=check(c.ab,c.dc,{skill:c.skill,save:c.save,label:c.label,adv:adv||(c.adv&&c.adv(S))});
   const out=r.ok?c.ok:c.no;
   if(out){
     applyFx(out.fx||{},gm);
@@ -1663,24 +1810,204 @@ const HAZ=[
  {id:'exploit',ab:'CHA',th:'ถูกเอาเปรียบ',w:x=>x.age<x.race.mature?.5:1.3+(x.tier.lvl<=2?.6:0),no:'ถูกกดค่าแรงและโกงกันต่อหน้า',g:.05},
  {id:'contract',ab:'INT',th:'ถูกหลอกเรื่องสัญญา',w:x=>x.age<x.race.mature?0:.8+(x.gold>60?1:0),no:'เซ็นสัญญาที่มีเงื่อนไขซ่อนอยู่',g:.09,illit:1}
 ];
-function annualSave(f){
-  const h=wpick(HAZ.map(z=>({z,w:z.w(S)}))).z;
+function annualSave(f,done){
+  const h=wpick(HAZ.map(z=>({z,w:z.w(S)})).filter(o=>o.w>0)).z;
   const dc=8+Math.round(S.region.danger*2)+Math.round(S.age/S.span*5);
+  if(copeYear()){askCope(hazSit(h,dc,f),done);return;}
   const r=check(h.ab,dc,{save:1,imp:false,adv:f.adv===h.ab,dis:h.illit&&S.l<30,label:`ทอยป้องกัน${ABIL_TH[h.ab]} · ${h.th}`});
+  hazOutcome(h,r,null);
+  done();
+}
+/* what a hard year leaves behind; o is the way it was met, when there was one */
+function hazOutcome(h,r,o,how){
   if(r.d===20){
     S.s=clamp(S.s+4,0,100);S.r=clamp(S.r+1.5,0,100);healExh(1);S.strain=0;
     const g=(baseIncome()+spouseIncome()+3)*.12*yearScale();S.gold+=g;
     if(S.deity)S.faith=clamp(S.faith+3,0,100);
-    addLog(S.age,'ปีที่ดี — ทุกอย่างลงตัวอย่างไม่น่าเชื่อ',rollTh(r)+(g>=1?` · ได้เพิ่ม ${gp(g)}`:''));
+    addLog(S.age,o?`${h.th} — ${how} แล้วปีนั้นกลับเป็นปีที่ดีที่สุด`:'ปีที่ดี — ทุกอย่างลงตัวอย่างไม่น่าเชื่อ',rollTh(r)+(g>=1?` · ได้เพิ่ม ${gp(g)}`:''),!!o);
+    if(o&&o.ok&&o.ok.fx)applyFx(o.ok.fx,1);
     return;
   }
-  if(r.ok)return;
-  const k=r.d===1?2:1;let loss=0;
-  if(h.hurt)damage(h.hurt*k,h.th,false);
-  if(h.exh&&Math.random()<h.exh*k)gainExh(1);
+  if(r.ok){
+    if(o){if(o.ok&&o.ok.fx)applyFx(o.ok.fx,1);addLog(S.age,`${h.th} — ${how} และผ่านไปได้`,rollTh(r));}
+    return;
+  }
+  const k=r.d===1?2:1,no=(o&&o.no)||{};let loss=0;
+  if(h.hurt&&!(o&&o.noHurt))damage(h.hurt*k,h.th,false);
+  if(no.hurt)damage(no.hurt*k,h.th,false);
+  if(h.exh&&!(o&&o.noExh)&&Math.random()<h.exh*k)gainExh(1);
+  if(no.exh)gainExh(no.exh);
   if(h.s)S.s=clamp(S.s+h.s*k,0,100);
-  if(h.g){loss=Math.max(1,(baseIncome()+spouseIncome()+3)*h.g*k)*yearScale();S.gold-=loss;}
-  addLog(S.age,`${h.th} — ${h.no}${k>1?' และหนักกว่าทุกครั้งที่เคยเจอ':''}`,rollTh(r)+(loss>=1?` · เสีย ${gp(loss)}`:''),false,true);
+  if(no.fx)applyFx(no.fx,1);
+  const gl=(h.g||0)+(no.g||0);
+  if(gl){loss=Math.max(1,(baseIncome()+spouseIncome()+3)*gl*k)*yearScale();S.gold-=loss;}
+  addLog(S.age,o?`${h.th} — ${how} แต่ไม่สำเร็จ · ${no.t||h.no}`:`${h.th} — ${h.no}${k>1?' และหนักกว่าทุกครั้งที่เคยเจอ':''}`,rollTh(r)+(loss>=1?` · เสีย ${gp(loss)}`:''),false,true);
+}
+/* ---- coping: the player says how, then the d20 says whether ----
+   Every hard year and every threat comes with three or four ways through, each read off a
+   different score. Small matters follow the standing stance; big ones open a window. */
+const STANCES=[
+ {id:'grit',th:'ขยันสู้',hint:'ใช้แรงและความอดทน'},
+ {id:'wits',th:'หัวไวเอาตัวรอด',hint:'ใช้ไหวพริบ การสังเกต และความรู้'},
+ {id:'kin',th:'พึ่งคนรอบตัว',hint:'ขอแรงญาติมิตร แลกด้วยน้ำใจ'},
+ {id:'any',th:'ทำทุกทางที่รอด',hint:'รวมทางที่ผิดกฎและผิดใจคน'}
+];
+const stanceTh=id=>(STANCES.find(x=>x.id===id)||STANCES[0]).th;
+const COPE={
+ disease:[
+  {t:'ทำงานหนักขึ้นเพื่อซื้อข้าวซื้อยา',ab:'STR',skill:'athletics',st:'grit',s:'ไม่ผ่านแล้วอ่อนล้า',no:{exh:1},tg:['independence']},
+  {t:'ออกหาของป่าและสมุนไพรเอง',ab:'WIS',skill:'survival',st:'wits',s:'ไม่ผ่านแล้วเสียเลือด',tg:['knowledge']},
+  {t:'ขอยืมข้าวจากญาติ',ab:'CHA',skill:'persuasion',st:'kin',s:'สายสัมพันธ์ลด ไม่ว่าผ่านหรือไม่',fx:{r:-3},tg:['people']},
+  {t:'ขโมยจากยุ้งฉางของเจ้าเมือง',ab:'DEX',skill:'stealth',st:'shady',s:'ไปทางเสรีและร้าย · ไม่ผ่านแล้วโดนจับ',al:[-.06,-.06],noHurt:1,no:{g:.12,fx:{s:-4},t:'ถูกจับได้ โดนคาดคอกลางตลาดสามวันและถูกปรับ'},tg:['greed','freedom']}],
+ accident:[
+  {t:'ฝืนยกเองให้เสร็จ',ab:'STR',skill:'athletics',st:'grit',s:'ไม่ผ่านแล้วเจ็บหนักกว่าเดิม',no:{hurt:1},tg:['independence','pride']},
+  {t:'ดูทางให้ดีก่อนลงมือ',ab:'WIS',skill:'perception',st:'wits',s:'งานช้าลง รายได้หายไปนิดหน่อย',fx:{g:-2},tg:['knowledge']},
+  {t:'เรียกเพื่อนบ้านมาช่วยกัน',ab:'CHA',skill:'persuasion',st:'kin',s:'ต้องเลี้ยงข้าวตอบแทน',fx:{g:-2,r:1},tg:['people']},
+  {t:'โยนงานอันตรายให้ลูกจ้างทำแทน',ab:'CHA',skill:'deception',st:'shady',s:'ไปทางร้าย · ถ้าเขาเจ็บ คนทั้งตลาดจะรู้',al:[0,-.07],noHurt:1,no:{fx:{r:-4},t:'ลูกจ้างตกนั่งร้าน และทุกคนรู้ว่าใครสั่ง'},tg:['might','coward']}],
+ despair:[
+  {t:'ทำงานให้ยุ่งจนไม่มีเวลาคิด',ab:'CON',save:1,st:'grit',s:'ไม่ผ่านแล้วอ่อนล้าด้วย',no:{exh:1},tg:['independence']},
+  {t:'นั่งทบทวนว่าอะไรพาให้มาถึงตรงนี้',ab:'WIS',skill:'insight',st:'wits',s:'ผ่านแล้วใจเบาลงกว่าเดิม',ok:{fx:{s:3}},tg:['knowledge']},
+  {t:'ไปหาเพื่อนเก่าที่ไม่ได้เจอนาน',ab:'CHA',skill:'persuasion',st:'kin',s:'ผ่านแล้วได้เพื่อนกลับมา',ok:{fx:{r:3}},tg:['people']},
+  {t:'ดื่มให้ลืม',ab:'CON',save:1,st:'shady',s:'ใจเบาลงทันที · ไม่ผ่านแล้วอ่อนล้า',fx:{s:2},no:{exh:1},al:[-.04,0],tg:['vice']}],
+ labor:[
+  {t:'แบกให้ไหว',ab:'STR',skill:'athletics',st:'grit',s:'ไม่ผ่านแล้วอ่อนล้า',tg:['pride']},
+  {t:'หาวิธีทุ่นแรง',ab:'INT',skill:'investigation',st:'wits',s:'ผ่านแล้วงานเสร็จเร็ว ได้ค่าแรงเพิ่ม',ok:{fx:{g:3}},tg:['knowledge']},
+  {t:'ขอแรงคนในบ้านช่วย',ab:'CHA',skill:'persuasion',st:'kin',s:'สายสัมพันธ์ลดเล็กน้อย',fx:{r:-1.5},tg:['people']},
+  {t:'อู้งานตอนนายเผลอ',ab:'DEX',skill:'stealth',st:'shady',s:'ไปทางเสรี · ไม่ผ่านแล้วถูกหักค่าแรง',al:[-.05,0],noExh:1,no:{g:.08,t:'นายจับได้ หักค่าแรงทั้งเดือน'},tg:['freedom','coward']}],
+ exploit:[
+  {t:'ทำงานเพิ่มชดเชยส่วนที่หาย',ab:'CON',save:1,st:'grit',s:'ไม่ผ่านแล้วอ่อนล้าด้วย',no:{exh:1},tg:['independence']},
+  {t:'ไล่ดูบัญชีหาจุดที่ถูกโกง',ab:'INT',skill:'investigation',st:'wits',s:'ผ่านแล้วได้เงินคืนบางส่วน',ok:{fx:{g:3}},tg:['fairness']},
+  {t:'รวมคนงานไปต่อรองด้วยกัน',ab:'CHA',skill:'persuasion',st:'kin',s:'ไปทางดีและเสรี · ไม่ผ่านแล้วนายจำหน้าได้',al:[-.03,.03],no:{fx:{s:-2}},tg:['fairness','people','freedom']},
+  {t:'โกงคืนให้สาสม',ab:'CHA',skill:'deception',st:'shady',s:'ไปทางร้าย · ผ่านแล้วได้มากกว่าที่เสีย',al:[-.03,-.05],ok:{fx:{g:4}},tg:['greed','deceit']}],
+ contract:[
+  {t:'อ่านทุกบรรทัดเอง',ab:'INT',skill:'investigation',st:'wits',s:'อ่านไม่ออกแล้วเสียเปรียบ',illit:1,tg:['knowledge','independence']},
+  {t:'ทนทำตามสัญญาแล้วทำงานใช้',ab:'CON',save:1,st:'grit',s:'ไม่ผ่านแล้วอ่อนล้าด้วย',no:{exh:1},tg:['honor']},
+  {t:'ให้คนที่อ่านออกช่วยดู',ab:'WIS',skill:'insight',st:'kin',s:'ค่าน้ำใจ 1 gp',cost:1,tg:['people']},
+  {t:'ฉีกสัญญาแล้วหนีหนี้',ab:'DEX',skill:'stealth',st:'shady',s:'ไปทางเสรีและร้าย · ไม่ผ่านแล้วโดนตามตัว',al:[-.08,-.03],no:{fx:{s:-3},t:'ถูกตามตัวจนเจอ ต้องจ่ายพร้อมค่าปรับ'},tg:['freedom','deceit']}]
+};
+/* a child meets the same year with a child's means */
+const CHILD_WITS={CON:['แอบเก็บผลไม้ป่ามากินเอง','WIS','survival'],DEX:['ระวังตัวอย่างที่พ่อสอน','WIS','perception'],
+ WIS:['หาที่เงียบ ๆ นั่งคิดคนเดียว','WIS','insight'],STR:['ทำทีละน้อยแบบที่ไม่เจ็บตัว','DEX','acrobatics'],
+ CHA:['จำหน้าคนที่โกงไว้ให้ดี','WIS','insight'],INT:['นับเหรียญเองทุกเหรียญ','INT','investigation']};
+function childCope(h){
+  const w=CHILD_WITS[h.ab];
+  return [{t:'อดทนไว้ไม่ร้องให้ใครเห็น',ab:h.ab,save:1,st:'grit',s:'ทอยป้องกันตรง ๆ',tg:['pride']},
+   {t:w[0],ab:w[1],skill:w[2],st:'wits',s:'ใช้ไหวพริบแบบเด็ก ๆ',tg:['knowledge']},
+   {t:'วิ่งไปบอกพ่อแม่',ab:'CHA',skill:'persuasion',st:'kin',s:'ผ่านแล้วพ่อแม่ช่วยทัน',ok:{fx:{r:1}},tg:['people']},
+   {t:'แอบหยิบของคนอื่นมาใช้',ab:'DEX',skill:'sleight',st:'shady',s:'ไปทางร้าย · ไม่ผ่านแล้วถูกตีต่อหน้าเพื่อน',al:[-.04,-.04],no:{fx:{s:-3},t:'ถูกจับได้และโดนตีต่อหน้าเพื่อน'},tg:['greed']}];
+}
+const COPE_P=.06,COPE_RAMP=.07,COPE_DC=1,ASK_GAP=30000,BIG_SHARE=1/6;
+/* A hard year becomes a matter to handle more often the longer nothing has been asked,
+   counted in human years so every race is asked about as often per real minute. */
+function copeYear(){
+  if(S.age<S.race.mature*.25)return false;
+  const quiet=(S.age-S.lastDecAge)*yearScale();
+  return Math.random()<clamp(COPE_P+quiet*COPE_RAMP,0,1);
+}
+function hazSit(h,dc,f){
+  const kid=S.age<S.race.mature;
+  const opts=(kid?childCope(h):COPE[h.id]).map(o=>({...o,dc:dc+COPE_DC+(o.d||0),adv:f.adv&&f.adv===(o.skill?SKILLS[o.skill].ab:o.ab),dis:o.illit&&S.l<30}));
+  return {id:'haz_'+h.id,kind:'haz',big:Math.random()<BIG_SHARE,h:h.th,
+    b:kid?`ปีนี้${h.th}มาถึงบ้าน และเด็กคนหนึ่งก็ต้องผ่านมันไปให้ได้`:`ปีนี้${h.th}มาถึงตัว ไม่ผ่านแล้วจะ${h.no}`,
+    opts,resolve:(o,r,how)=>hazOutcome(h,r,o,how)};
+}
+/* real time at 1× since the last window opened; small matters never interrupt inside it */
+const canAsk=()=>(S.age-S.lastAskAge)*msPerYear()>=ASK_GAP;
+function noteAsk(){S.lastAskAge=S.age;S.nAsk++;}
+function noteDecision(stance){S.nDec++;if(stance)S.nStance++;S.lastDecAge=S.age;S.decAges.push(S.age);}
+function prepOpts(sit){
+  sit.opts=sit.opts.filter(o=>!o.need||o.need(S));
+  sit.opts.forEach(o=>{if(forBond(o)){o.adv=1;o.bond=1;}o.p=chanceOf(o.ab,o.dc,o);o.can=!o.cost||S.gold>=o.cost;});
+}
+const tagUp=o=>!!(S.ideal&&o.tg&&o.tg.includes(S.ideal));
+const tagDown=o=>!!(S.ideal&&o.tg&&IDEALS[S.ideal].anti.some(t=>o.tg.includes(t)));
+/* the stance picks the best odds among its own kind of answer, leaning toward the ideal */
+function autoPick(sit,stance){
+  const st=stance||S.stance||'grit',ok=sit.opts.filter(o=>o.can);
+  let pool=ok.filter(o=>st==='any'||o.st===st);
+  if(!pool.length)pool=ok.filter(o=>o.st!=='shady');
+  if(!pool.length)pool=ok.length?ok:sit.opts;
+  const sc=o=>o.p+(tagUp(o)?.08:0)-(tagDown(o)?.15:0)+(o.bond?.05:0);
+  return pool.reduce((a,b)=>sc(b)>sc(a)?b:a);
+}
+function askCope(sit,done){
+  prepOpts(sit);
+  if(sit.big&&!opt.auto&&canAsk()){noteAsk();openCope(sit,(o,insp)=>{resolveCope(sit,o,insp,false);done();});return;}
+  resolveCope(sit,autoPick(sit),opt.auto&&S.insp&&sit.big&&autoPick(sit).p<.5,true);
+  done();
+}
+function resolveCope(sit,o,insp,auto){
+  S.decCtx=1;noteDecision(auto);
+  if(o.cost)S.gold-=o.cost;
+  if(o.fx)applyFx(o.fx,1);
+  if(insp)S.insp=0;
+  const r=check(o.ab,o.dc,{skill:o.skill,save:o.save,attack:o.attack,prof:o.prof,bonus:o.bonus,adv:o.adv||insp,dis:o.dis,label:o.t});
+  if(o.al)shiftAlign(o.al[0],o.al[1]);
+  const how=`${auto?'ตามท่าที'+stanceTh(S.stance)+' ':''}${o.t}`;
+  sit.resolve(o,r,how);
+  markTags(o);
+  S.decCtx=0;
+}
+/* acting on the ideal, for the bond, or giving in to the flaw: counted, and paid in inspiration */
+function markTags(o){
+  const up=tagUp(o),bond=forBond(o),fl=!!(S.flaw&&o.tg&&o.tg.includes(S.flaw));
+  if(up)S.idealKept=(S.idealKept||0)+1;
+  if(tagDown(o))S.idealBroke=(S.idealBroke||0)+1;
+  if(fl){S.r=clamp(S.r-2,0,100);S.flawN=(S.flawN||0)+1;}
+  if((up||bond||fl)&&!S.insp){S.insp=1;S.inspGot=(S.inspGot||0)+1;
+    addLog(S.age,'ได้แรงบันดาลใจ',up?`ทำตามอุดมการณ์${IDEALS[S.ideal].th}`:bond?`ทำเพื่อ${S.bond.th}`:`ทำตามนิสัย${S.flawTh||''}`);}
+}
+function oddsTh(o){
+  const r=rollMods(o.ab,o),nm=o.skill?`${SKILLS[o.skill].th} (${SKILLS[o.skill].ab})`:(o.save?'ทอยป้องกัน':'')+ABIL_TH[o.ab]+` (${o.ab})`;
+  return `${nm} · ${o.attack?'AC':'DC'} ${o.dc} · โบนัส ${sgn(r.bonus)}${r.mode?(r.mode==='adv'?' · ได้เปรียบ':' · เสียเปรียบ'):''} · โอกาสผ่าน ${Math.round(o.p*100)}%`;
+}
+function optTags(o){
+  const t=[];
+  if(o.st==='shady')t.push(['ผิดกฎหรือผิดใจคน','dn']);
+  if(tagUp(o))t.push(['ตรงอุดมการณ์ · '+IDEALS[S.ideal].th,'up']);
+  if(tagDown(o))t.push(['ขัดอุดมการณ์','dn']);
+  if(o.bond&&S.bond)t.push([`เพื่อ${S.bond.th} · ได้เปรียบ`,'up']);
+  if(S.flaw&&o.tg&&o.tg.includes(S.flaw))t.push(['ตามนิสัยเสีย · สายสัมพันธ์ −2','dn']);
+  if(!S.insp&&(tagUp(o)||(o.bond&&S.bond)||(S.flaw&&o.tg&&o.tg.includes(S.flaw))))t.push(['ได้แรงบันดาลใจ','up']);
+  return t;
+}
+/* the big-matter window: every way through with its DC, the bonus it reads, and the odds */
+function openCope(sit,cb){
+  stop();
+  const scrim=ce('div');scrim.className='scrim';
+  const m=ce('div');m.className='modal';
+  const eb=ce('p');eb.className='eyebrow';eb.textContent=`เรื่องใหญ่ · อายุ ${S.age} ปี · ปี ${S.year} DR`;
+  const h=ce('h2');h.textContent=sit.h;
+  const p=ce('p');p.textContent=sit.b;
+  m.append(eb,h,p);
+  if(sit.card){const c=ce('div');c.className='foe';sit.card.forEach(([k,v])=>{const d=ce('div');const a=ce('span');a.textContent=k;d.append(a,document.createTextNode(v));c.appendChild(d);});m.appendChild(c);}
+  if(sit.lore){const l=ce('div');l.className='lore';l.textContent=sit.lore;m.appendChild(l);}
+  let insp=false;
+  const wrap=ce('div');wrap.className='choices';
+  const draw=()=>{
+    wrap.textContent='';
+    sit.opts.forEach((o,i)=>{
+      const pp=insp&&!o.adv?1-(1-o.p)*(1-o.p):o.p;
+      const b=ce('button');b.type='button';b.disabled=!o.can;
+      const n=ce('span');n.className='n';n.textContent=String(i+1);
+      const inner=ce('span');const t=ce('b');t.textContent=o.t;inner.appendChild(t);
+      if(o.s){const e=ce('em');e.textContent=o.s+(o.can?'':' · เงินไม่พอ');inner.appendChild(e);}
+      const od=ce('span');od.className='odds';od.textContent=oddsTh({...o,p:pp,adv:o.adv||insp});inner.appendChild(od);
+      const tg=optTags(o);
+      if(tg.length){const w=ce('span');w.className='tg';tg.forEach(([x,c])=>{const i2=ce('i');i2.className=c;i2.textContent=x;w.appendChild(i2);});inner.appendChild(w);}
+      b.append(n,inner);
+      b.onclick=()=>{scrim.remove();cb(o,insp);resume();};
+      wrap.appendChild(b);});
+  };
+  draw();m.appendChild(wrap);
+  const foot=ce('div');foot.className='foot';
+  if(S.insp){const ib=ce('button');ib.className='chip';ib.type='button';ib.setAttribute('aria-pressed','false');ib.textContent='ใช้แรงบันดาลใจ · ได้เปรียบ';
+    ib.onclick=()=>{insp=!insp;ib.setAttribute('aria-pressed',String(insp));draw();};foot.appendChild(ib);}
+  const au=ce('button');au.className='chip';au.type='button';au.textContent=`ให้ท่าที${stanceTh(S.stance)}ตัดสินใจ`;
+  au.onclick=()=>{scrim.remove();const o=autoPick(sit);cb(o,false);resume();};
+  foot.appendChild(au);m.appendChild(foot);
+  scrim.appendChild(m);$('#modalHost').appendChild(scrim);
+  m.querySelector('button')?.focus();
 }
 /* ---- background crystallises at coming of age, out of the childhood actually lived ---- */
 function bgPick(){
@@ -1749,41 +2076,82 @@ function gainXp(n){
 }
 const xpNeed=()=>XP_LV[S.lvl]-XP_LV[S.lvl-1];
 const FOES=[
- {lv:1,th:'ฝูงก็อบลินในเหมืองร้าง',ac:13,sv:'DEX',hz:'กับดักหอกที่พวกมันขึงไว้'},
- {lv:1,th:'หมาป่าสามตัวกลางหิมะ',ac:13,sv:'STR',hz:'ถูกลากล้มลงกับพื้น'},
- {lv:1,th:'โคบอลด์ใต้เพดานหินผุ',ac:12,sv:'DEX',hz:'หินที่ร่วงลงมา'},
- {lv:3,th:'ออร์คที่ซุ่มอยู่ริมถนน',ac:13,sv:'CON',hz:'ลูกธนูอาบพิษ',poison:1},
- {lv:3,th:'กูลในสุสานเก่า',ac:12,sv:'CON',hz:'กรงเล็บที่ทำให้ชา'},
- {lv:3,th:'ออเกอร์ใต้สะพาน',ac:11,sv:'STR',hz:'กระบองที่ฟาดจนกระเด็น'},
- {lv:5,th:'อาวล์แบร์ในป่าลึก',ac:13,sv:'STR',hz:'อ้อมกอดที่บีบจนกระดูกลั่น'},
- {lv:5,th:'โทรลล์ที่ไม่ยอมตาย',ac:15,sv:'CON',hz:'บาดแผลที่ไม่ยอมปิด'},
- {lv:5,th:'ไวเวิร์นบนหน้าผา',ac:13,sv:'CON',hz:'พิษที่ปลายหาง',poison:1},
- {lv:9,th:'มังกรหนุ่มในถ้ำ',ac:18,sv:'DEX',hz:'ลมหายใจมังกร'},
- {lv:9,th:'บีโฮลเดอร์ในซากหอคอย',ac:18,sv:'DEX',hz:'ลำแสงจากดวงตา'},
- {lv:9,th:'ไลช์ที่หลับใหลใต้หอสมุด',ac:17,sv:'CON',hz:'คำสาปเย็นเยียบ'}
+ {lv:1,th:'ฝูงก็อบลินในเหมืองร้าง',ac:13,hp:21,sv:'DEX',hz:'กับดักหอกที่พวกมันขึงไว้'},
+ {lv:1,th:'หมาป่าสามตัวกลางหิมะ',ac:13,hp:33,sv:'STR',hz:'ถูกลากล้มลงกับพื้น',kind:'beast'},
+ {lv:1,th:'โคบอลด์ใต้เพดานหินผุ',ac:12,hp:15,sv:'DEX',hz:'หินที่ร่วงลงมา'},
+ {lv:3,th:'ออร์คที่ซุ่มอยู่ริมถนน',ac:13,hp:30,sv:'CON',hz:'ลูกธนูอาบพิษ',poison:1},
+ {lv:3,th:'กูลในสุสานเก่า',ac:12,hp:22,sv:'CON',hz:'กรงเล็บที่ทำให้ชา',kind:'undead'},
+ {lv:3,th:'ออเกอร์ใต้สะพาน',ac:11,hp:59,sv:'STR',hz:'กระบองที่ฟาดจนกระเด็น'},
+ {lv:5,th:'อาวล์แบร์ในป่าลึก',ac:13,hp:59,sv:'STR',hz:'อ้อมกอดที่บีบจนกระดูกลั่น',kind:'beast'},
+ {lv:5,th:'โทรลล์ที่ไม่ยอมตาย',ac:15,hp:84,sv:'CON',hz:'บาดแผลที่ไม่ยอมปิด'},
+ {lv:5,th:'ไวเวิร์นบนหน้าผา',ac:13,hp:110,sv:'CON',hz:'พิษที่ปลายหาง',poison:1,kind:'beast'},
+ {lv:9,th:'มังกรหนุ่มในถ้ำ',ac:18,hp:178,sv:'DEX',hz:'ลมหายใจมังกร'},
+ {lv:9,th:'บีโฮลเดอร์ในซากหอคอย',ac:18,hp:180,sv:'DEX',hz:'ลำแสงจากดวงตา'},
+ {lv:9,th:'ไลช์ที่หลับใหลใต้หอสมุด',ac:17,hp:135,sv:'CON',hz:'คำสาปเย็นเยียบ',kind:'undead'}
 ];
-const ENC_DMG=6;
-function encounter(f){
-  if(Math.random()>f.enc*scaleQ())return;
-  const tier=S.lvl>=9?9:S.lvl>=5?5:S.lvl>=3?3:1,foe=pick(FOES.filter(x=>x.lv===tier)),key=S.cls.key;
+const ENC_DMG=6,ENC_TIERS=[1,3,5,9],ENC_UP=.2;
+/* classes that cast reach for their spell instead of their blade */
+const CASTER={wizard:{t:'ร่ายเวทใส่จุดอ่อน',s:'ทอยโจมตีด้วยเวท vs AC −1 · ความเสียหายสูง'},
+ cleric:{t:'วิงวอนให้เทพลงทัณฑ์',s:'ทอยโจมตีด้วยเวท vs AC −1 · ความเสียหายสูง'},
+ druid:{t:'เรียกพลังของป่าเข้าใส่',s:'ทอยโจมตีด้วยเวท vs AC −1 · ความเสียหายสูง'},
+ bard:{t:'ร่ายเพลงที่ทำให้มันเสียขวัญ',s:'ทอยโจมตีด้วยเวท vs AC −1 · ความเสียหายสูง'}};
+function encounter(f,done){
+  if(Math.random()>f.enc*scaleQ()){done();return;}
+  const ti=S.lvl>=9?3:S.lvl>=5?2:S.lvl>=3?1:0,up=ti<3&&Math.random()<ENC_UP,tier=ENC_TIERS[ti+(up?1:0)];
+  const foe=pick(FOES.filter(x=>x.lv===tier));
   S.encounters++;
-  const atk=check(key,foe.ac,{attack:1,prof:1,label:`โจมตี${foe.th}`});
-  const [n,dd]=CLS_DMG[S.cls.id];
-  const nd=n*(S.lvl>=5&&['fighter','barbarian','ranger'].includes(S.cls.id)?2:1)+(S.cls.id==='rogue'?Math.ceil(S.lvl/2):0);
-  const dealt=atk.ok?Math.max(1,dice(nd,dd)+mod(S.ab[key])):0;
-  const sv=check(foe.sv,10+Math.ceil(tier/2)+(atk.ok?0:2),{save:1,adv:S.race.id==='dwarf'&&foe.poison,label:`ทอยป้องกัน${ABIL_TH[foe.sv]} · ${foe.hz}`});
-  const D=dice(1+S.lvl,ENC_DMG);
-  const took=sv.ok?(atk.ok?0:Math.floor(D/2)):D;
+  askCope(encSit(foe,tier,up),done);
+}
+/* Fight, run, talk, or cast. The card shows what is across the room before anything is rolled. */
+function encSit(foe,tier,up){
+  const key=S.cls.key,cast=CASTER[S.cls.id],talkDc=12+Math.ceil(tier/2);
+  const sneak=S.skills.includes('stealth')&&!S.skills.includes('acrobatics')?'stealth':'acrobatics';
+  const opts=[{t:'สู้',act:'fight',ab:key,attack:1,prof:1,dc:foe.ac,st:'grit',s:'ทอยโจมตี vs AC แล้วทอยความเสียหาย · ได้ XP และของเต็ม',tg:['might']},
+    {t:'หนี',act:'flee',ab:'DEX',skill:sneak,dc:10+tier,st:'wits',s:'แข่งกับการสังเกตของศัตรู · ได้ XP น้อย · ไม่ผ่านแล้วโดนตี',tg:['coward']}];
+  if(foe.kind==='beast')opts.push({t:'ทำให้มันสงบลง',act:'talk',ab:'WIS',skill:'animal',dc:talkDc,st:'kin',s:'ได้ XP ครึ่งหนึ่ง · ปลอดภัยกว่า · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',tg:['knowledge']});
+  else if(foe.kind!=='undead'){
+    opts.push({t:'เจรจา',act:'talk',ab:'CHA',skill:'persuasion',dc:talkDc,st:'kin',s:'ได้ XP ครึ่งหนึ่ง · ไปทางดี · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',al:[0,.03],tg:['charity','people']});
+    opts.push({t:'ข่มขู่',act:'talk',ab:'CHA',skill:'intimidation',dc:talkDc+1,st:'shady',s:'ได้ XP ครึ่งหนึ่ง · ไปทางร้าย · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',al:[0,-.03],tg:['might']});
+  }
+  if(cast)opts.push({t:cast.t,act:'spell',ab:key,attack:1,prof:1,dc:foe.ac-1,st:'wits',s:cast.s,tg:['knowledge']});
+  const diff=up?'สูงกว่าเลเวลคุณ':'พอ ๆ กับเลเวลคุณ';
+  return {id:'enc',kind:'enc',big:up||Math.random()<BIG_SHARE,h:`การเผชิญหน้า: ${foe.th}`,
+    b:up?'สิ่งที่รออยู่ข้างหน้าแข็งแกร่งกว่าทุกอย่างที่เคยเจอ ชนะแล้วได้ XP สองเท่า':'คณะเดินทางหยุดอยู่ตรงหน้ามัน ทุกคนรอให้คุณตัดสินใจ',
+    card:[['ศัตรู',foe.th],['AC',String(foe.ac)],['เลือด',String(foe.hp)],['ความยาก',diff]],opts,
+    resolve:(o,r,how)=>encOutcome(foe,tier,up,o,r,how)};
+}
+function encOutcome(foe,tier,up,o,r,how){
+  const key=S.cls.key,note=[],mul=up?2:1;
+  let won=false,xp=0,took=0,sv=null,loot=0;
+  const strike=atk=>{
+    const [n,dd]=CLS_DMG[S.cls.id];
+    let nd=n*(S.lvl>=5&&['fighter','barbarian','ranger'].includes(S.cls.id)?2:1)+(S.cls.id==='rogue'?Math.ceil(S.lvl/2):0);
+    if(o.act==='spell')nd=1+Math.ceil(S.lvl/2);
+    const dealt=atk.ok?Math.max(1,dice(nd,dd)+mod(S.ab[key])):0;
+    note.push(rollTh(atk)+(atk.ok?` · ดาเมจ ${nd}d${dd}${sgn(mod(S.ab[key]))} = ${dealt}`:''));
+    return atk.ok;
+  };
+  const hit=extra=>{
+    sv=check(foe.sv,10+Math.ceil(tier/2)+extra,{save:1,adv:S.race.id==='dwarf'&&foe.poison,label:`ทอยป้องกัน${ABIL_TH[foe.sv]} · ${foe.hz}`});
+    const D=dice(1+S.lvl,ENC_DMG);
+    return sv.ok?(extra?Math.floor(D/2):0):D;
+  };
+  if(o.act==='fight'||o.act==='spell'){won=strike(r);took=hit(won?0:2);xp=xpNeed()/(won?3:6);}
+  else if(o.act==='flee'){note.push(rollTh(r));if(r.ok)xp=xpNeed()/12;else{took=hit(2);xp=xpNeed()/12;}}
+  else{note.push(rollTh(r));
+    if(r.ok){xp=xpNeed()/6;won=true;}
+    else{won=strike(check(key,foe.ac,{attack:1,prof:1,dis:1,label:`โจมตี${foe.th} · หลังเจรจาล้มเหลว`}));took=hit(won?0:2);xp=xpNeed()/(won?3:6);}}
+  xp*=mul;
+  if(won&&o.act!=='talk'){S.kills++;loot=dice(1+ENC_TIERS.indexOf(tier),6)*mul;S.gold+=loot;}
   if(took)damage(took,`${foe.hz}ของ${foe.th}`,true);
-  if(atk.ok)S.kills++;
-  const xp=xpNeed()/(atk.ok?3:6);
-  const note=[rollTh(atk)+(atk.ok?` · ดาเมจ ${nd}d${dd}${sgn(mod(S.ab[key]))} = ${dealt}`:''),
-    rollTh(sv)+(took?` · เสียเลือด ${took}`:' · ไม่เป็นอะไร')+` · +${fmt(xp)} XP`];
-  addLog(S.age,`การเผชิญหน้า: ${foe.th} — ${atk.ok?'ชนะ':'รอดมาได้แต่ไม่ชนะ'}${S.hp<=0?' แล้วล้มลง':''}`,note,true,S.hp<=0||!sv.ok);
+  if(sv)note.push(rollTh(sv)+(took?` · เสียเลือด ${took}`:' · ไม่เป็นอะไร'));
+  note.push(`+${fmt(xp)} XP`+(loot?` · ได้ของมีค่า ${gp(loot)}`:''));
+  const res=o.act==='flee'?(r.ok?'หนีรอดมาได้':'หนีไม่ทัน'):o.act==='talk'&&r.ok?'ตกลงกันได้โดยไม่ต้องสู้':won?'ชนะ':'รอดมาได้แต่ไม่ชนะ';
+  addLog(S.age,`การเผชิญหน้า: ${foe.th} — ${how} · ${res}${S.hp<=0?' แล้วล้มลง':''}`,note,true,S.hp<=0||(sv&&!sv.ok));
   gainXp(xp);
 }
 function tick(){
-  if(S.dead)return;
+  if(S.dead||S.busy)return;
   S.happy[S.age]=S.s;
   S.age++;S.year++;S.yearRolls=0;
   const f=focusSet().find(x=>x.id===S.focus)||focusSet()[0],fx=f.fx||{};
@@ -1838,16 +2206,22 @@ function tick(){
       addLog(S.age,e.t+(out?' — '+out.t:''),[rollTh(r),e.n],!!out,!r.ok&&!!out);
     }else addLog(S.age,e.t,e.n,false,(e.fx&&(e.fx.b||0)<-3));
   }
-  annualSave(f);
-  if(S.adv&&f.enc)encounter(f);
-  if(S.adv&&f.xp)gainXp(xpNeed()*f.xp*yearScale());
-  if(S.hp>0&&Math.random()<threatQ())runThreat();
-  oldAge();
-  if(S.age>=S.span+Math.round(S.span*.22)){perish('ชราภาพ');return;}
-  if(S.hp<=0){dying();return;}
-  renderLife();
-  const dec=nextDec();
-  if(dec){openDec(dec);}
+  /* the rest of the year may wait on a window, so it runs as a chain that a choice can resume */
+  S.busy=1;
+  const end=()=>{
+    S.busy=0;
+    oldAge();
+    if(S.age>=S.span+Math.round(S.span*.22)){perish('ชราภาพ');return;}
+    if(S.hp<=0){dying();return;}
+    renderLife();
+    const dec=opt.auto||canAsk()?nextDec():null;
+    if(dec){if(!opt.auto||dec.kind==='reflect')noteAsk();openDec(dec);}
+  };
+  const threat=()=>{
+    if(S.adv&&f.xp)gainXp(xpNeed()*f.xp*yearScale());
+    if(S.hp>0&&Math.random()<threatQ())runThreat(end);else end();
+  };
+  annualSave(f,()=>{if(S.adv&&f.enc)encounter(f,threat);else threat();});
 }
 function nextDec(){
   for(const k in S.plant){
@@ -1867,7 +2241,7 @@ function nextDec(){
     if(d.cond&&!d.cond(S))continue;
     if(d.id==='call'&&!callRolls()){S.done.call=1;continue;}
     if(d.id==='trade_pick'&&!S.done.call)continue;
-    if(Math.random()<.45&&d.at!=='mature')continue;
+    if(Math.random()<.45&&d.at!=='mature'&&!d.core)continue;
     return typeof d.ch==='function'?{...d,ch:d.ch(S)}:d;
   }
   return null;
@@ -1930,10 +2304,11 @@ function openDec(d){
   m.querySelector('button')?.focus();
 }
 function applyChoice(d,c){
+  S.decCtx=1;noteDecision(false);
   applyFx(c.fx||{},1);
   if(c.al)shiftAlign(c.al[0],c.al[1]);
   const notes=[];let extra='';
-  if(c.chk){const {r,out}=runChk(c.chk,1);notes.push(rollTh(r));if(out)extra=' — '+out.t;}
+  if(c.chk){const {r,out}=runChk(c.chk,1,forBond(c));notes.push(rollTh(r));if(out)extra=' — '+out.t;}
   if(c.half){
     const r=check('CHA',12,{skill:'persuasion',label:'โน้มน้าวญาติให้ช่วยหนี้'});notes.push(rollTh(r));
     if(r.ok){S.gold=S.gold<0?S.gold/2:S.gold;extra=' — ญาติยอมช่วยครึ่งหนึ่ง';}
@@ -1951,6 +2326,9 @@ function applyChoice(d,c){
     extra=back?` — กลับไปหา${D.th}อีกครั้ง`:` — ถือ${D.th}เป็นเทพประจำตัว`;
   }
   if(c.faith&&S.deity)S.faith=clamp(S.faith+c.faith,0,100);
+  if(c.ideal){S.ideal=c.ideal;extra=` — ${IDEALS[c.ideal].d}`;}
+  if(c.bond){S.bond=c.bond;extra=` — ผูกใจไว้กับ${c.bond.th}`;}
+  if(c.flaw){S.flaw=c.flaw;S.flawTh=c.t;}
   if(c.court)S.courting=1;
   if(c.marry){S.married=1;S.courting=0;S.spouse={name:S.partnerName,age:S.age-1+rnd(4),bond:72};}
   if(c.kids)for(let i=0;i<c.kids;i++)S.kids.push({name:nameFor(S.race.id).split(' ')[0]+' '+S.name.split(' ')[1],age:0,bond:75,school:0});
@@ -1991,6 +2369,8 @@ function applyChoice(d,c){
     else{S.r=clamp(S.r-10,0,100);S.s=clamp(S.s-6,0,100);addLog(S.age,'คนในบ้านไม่ผ่านฤดูนั้นไป',rollTh(r),true,true);}
   }
   addLog(S.age,`${d.h} — เลือก “${c.t}”${extra}`,notes.length?notes:null,true);
+  markTags(c);
+  S.decCtx=0;
   renderLife();
 }
 /* ---------------- death ---------------- */
@@ -2043,14 +2423,29 @@ function dying(){
     else paras.push(`${h.who}อยู่ข้าง ๆ แต่ทำอะไรไม่ถูก`);
   }else paras.push('ไม่มีใครอยู่ใกล้พอจะช่วย');
   S.dsNow=0;
-  if(!out){
+  if(out){finishDying(cause,rolls,paras,out);return;}
+  /* inspiration is the one thing the player can still spend once the blood is gone */
+  if(S.insp){
+    if(opt.auto){S.decCtx=1;noteDecision(true);deathSaves(cause,rolls,paras,h,true);return;}
+    noteAsk();
+    present({eyebrow:`เลือดหมด · อายุ ${S.age} ปี · ปี ${S.year} DR`,title:'ก่อนทอยรักษาชีวิต',paras:[...paras,'ยังมีแรงบันดาลใจเหลืออยู่หนึ่งครั้ง'],rolls,
+      buttons:[{t:'ใช้แรงบันดาลใจ',s:'ทอยรักษาชีวิตครั้งแรกแบบได้เปรียบ',fn:()=>{S.decCtx=1;noteDecision(false);deathSaves(cause,rolls,paras,h,true);}},
+               {t:'เก็บไว้',s:'ทอยตามปกติ',fn:()=>{noteDecision(false);deathSaves(cause,rolls,paras,h,false);}}]});
+    return;
+  }
+  deathSaves(cause,rolls,paras,h,false);
+}
+function deathSaves(cause,rolls,paras,h,insp){
+  let out='';
+  {
     S.dsEp++;S.dsNow=1;
+    if(insp){S.insp=0;S.inspDeath=(S.inspDeath||0)+1;}
     /* with nobody there the danger keeps working on you: one failure before the first roll */
     let fails=S.ongoing&&!h?1:0,succ=0;
     const g=faithBoon();let again=g&&g.boon.death?1:0;
     if(fails)paras.push('ภัยยังไม่จบ — นับเป็นความล้มเหลวหนึ่งครั้งตั้งแต่ก่อนทอย');
     while(!out){
-      let r=check(null,10,{death:1});
+      let r=check(null,10,{death:1,adv:insp,label:insp?'ทอยรักษาชีวิต · ใช้แรงบันดาลใจ':''});insp=false;S.decCtx=0;
       if(!r.ok&&again){again=0;rolls.push(r);r=check(null,10,{death:1,label:`ทอยรักษาชีวิตอีกครั้ง · ${g.th}`});r.boon=g.id;S.boonUsed=(S.boonUsed||0)+1;}
       rolls.push(r);
       if(r.d===20){out='revive';break;}
@@ -2059,6 +2454,9 @@ function dying(){
     }
     paras.push(out==='revive'?'ลืมตาขึ้นมาเองกลางความมืด':out==='stable'?'ลมหายใจกลับมาสม่ำเสมอ — รอดมาได้':'ลมหายใจสุดท้ายผ่านไป');
   }
+  finishDying(cause,rolls,paras,out);
+}
+function finishDying(cause,rolls,paras,out){
   const after=()=>{
     if(out==='dead'){S.dsDied=(S.dsDied||0)+1;perish(cause);return;}
     S.hp=1;S.stabilized++;gainExh(1,null,5);
@@ -2067,12 +2465,18 @@ function dying(){
   };
   addLog(S.age,out==='dead'?`ล้มลงเพราะ${cause} และไม่ได้ลุกขึ้นมาอีก`:`ล้มลงเพราะ${cause} แต่รอดมาได้`,rolls.map(rollTh),true,true);
   if(out==='stable'&&!S.dsNow){after();return;}
+  noteAsk();
   present({eyebrow:`เลือดหมด · อายุ ${S.age} ปี · ปี ${S.year} DR`,title:out==='dead'?'สิ้นใจ':'รอดจากความตาย',paras,rolls,
     lore:'ใน 5e คนที่เลือดหมดจะทอยรักษาชีวิต (death saving throw) ทุกตา ได้ 10 ขึ้นไปนับเป็นสำเร็จ สามสำเร็จรอด สามล้มเหลวตาย ทอยได้ 20 ฟื้นทันที ทอยได้ 1 นับเป็นล้มเหลวสองครั้ง',
     buttons:[{t:out==='dead'?'ไปยังฟิวก์เพลน':'ใช้ชีวิตต่อ',s:out==='dead'?'วิญญาณทุกดวงต้องไปยืนต่อหน้าเคเลมวอร์':'เลือด 1 · ความอ่อนล้า +1',fn:after}]});
 }
 /* Kelemvor's ruling, by the faith held at the moment of death */
 function verdict(){
+  const v=verdictOf();
+  if(S.ideal)v.text+=` · ในทะเบียนเขียนไว้ว่าอยู่ตามอุดมการณ์${IDEALS[S.ideal].th} ${S.idealKept||0} ครั้ง ทิ้งอุดมการณ์ ${S.idealBroke||0} ครั้ง`;
+  return v;
+}
+function verdictOf(){
   const D=S.deity&&deityOf(S.deity);
   if(D&&S.faith>=25){
     const far=Math.abs(S.law-D.law)+Math.abs(S.good-D.good)>=2;
@@ -2185,7 +2589,8 @@ function renderPast(){
 
 /* ---------------- loop + options ---------------- */
 function stop(){if(timer){clearInterval(timer);timer=null;}}
-function resume(){stop();if(S&&!S.dead&&speed>0)timer=setInterval(tick,Math.max(40,msPerYear()/speed));}
+/* never restart the clock under an open window: a choice can open the next one before it returns */
+function resume(){stop();if(document.querySelector('#modalHost .scrim'))return;if(S&&!S.dead&&speed>0)timer=setInterval(tick,Math.max(40,msPerYear()/speed));}
 function setSpeed(v){speed=v;document.querySelectorAll('[data-sp]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.sp===v)));if(v===0)stop();else resume();}
 function syncAuto(){$('#btnAuto').setAttribute('aria-pressed',String(!!opt.auto));}
 function applyTheme(){

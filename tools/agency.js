@@ -3,7 +3,8 @@
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const { load } = require('./harness');
-const T = load(path.join(ROOT, 'index.html'), 'birth,tick,applyChoice,finish,reveal,openDec,present,perish');
+const T = load(path.join(ROOT, 'index.html'), 'birth,tick,applyChoice,finish,reveal,openDec,openCope,present,perish,autoPick');
+T.set('openCope',(sit,cb)=>cb(T.autoPick(sit,'any'),false));
 T.set('reveal', () => {});
 let decs = [];
 T.set('openDec', d => {

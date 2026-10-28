@@ -191,6 +191,7 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 .paneclose{display:none}
 .nextcard{border-color:var(--verdigris)}
 .modal.wide{max-width:760px}
+.bagrow{display:grid;gap:1px;padding:6px 0;border-bottom:1px solid var(--rule)}.bagrow b{font-size:14px}
 .dreams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
 .dream{text-align:left;background:transparent;border:1px solid var(--rule);border-radius:2px;padding:8px 10px}
 .dream b{display:block;font-size:14px}.dream em{display:block;font-style:normal;font-size:11.5px;color:var(--ink-soft)}
@@ -650,6 +651,8 @@ function rankReqs(x){
   if(!p||p.id==='adv'||x.rank>=5)return out;
   const to=x.rank+1,ab=pathAb(p,x),need=to>=5?16:to>=3?14:0;
   if(need)out.push({t:`${ab} ${x.ab[ab]} / ${need}`,ok:x.ab[ab]>=need});
+  if(p.id==='craft'&&to>=2)out.push({t:'ชุดเครื่องมือช่าง',ok:x.bag.some(b=>b.id==='tools')});
+  if(p.id==='arcane'&&to>=2)out.push({t:'ตำราเวทเล่มแรก',ok:x.bag.some(b=>b.id==='spellbook')});
   if(p.id==='land'&&to===3)out.push(x.own.land?{t:'มีที่ดินของตัวเอง',ok:true}:{t:`ทอง ${Math.round(Math.max(0,x.gold))} / 110gp ซื้อที่ดิน`,ok:x.gold>=110});
   if(p.id==='trade'&&to===5)out.push({t:`ทอง ${Math.round(x.gold)} / 2,000gp`,ok:x.gold>=2000});
   if(p.id==='faith'&&to>=4)out.push({t:x.deity?`ศรัทธา ${Math.round(x.faith)} / ${to===5?90:70}`:'ไม่มีเทพประจำตัว',ok:!!x.deity&&x.faith>=(to===5?90:70)});
@@ -817,6 +820,7 @@ function hpMaxFor(x){
 }
 function acFor(x){
   x=x||S;const dx=mod(x.ab.DEX);
+  if(x.adv&&x.cls&&x.eq)return eqAc(x);
   if(x.adv&&x.cls){
     const c=x.cls.id;
     if(c==='fighter')return 16;
@@ -841,7 +845,7 @@ function rollMods(ab,o){
   const g=faithBoon();
   if(g&&((o.save&&g.boon.save===A)||(o.skill&&g.boon.skill===o.skill))){adv=true;boon=g.id;}
   const pr=o.death?0:(isProf(A,o)?S.prof:0);
-  const bonus=o.death?0:mod(S.ab[A])+pr+(o.bonus||0)-(S.raisePen||0);
+  const bonus=o.death?0:mod(S.ab[A])+pr+(o.bonus||0)+(o.save&&S.adv&&S.eq?eqSaveBonus():0)-(S.raisePen||0);
   return {A,g,boon,pr,bonus,mode:adv&&!dis?'adv':dis&&!adv?'dis':''};
 }
 function chanceOf(ab,dc,o){
@@ -1762,10 +1766,12 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    bag:[],eq:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
+  if(S.tier.lvl>=4)S.bag.push({id:'crest',uses:0});
+  else if(S.tier.lvl<=2&&Math.random()<.3)S.bag.push({id:'coin',uses:1});
   S.callWho=S.region.danger>1.4?'ไปเป็นคนคุ้มกันกองคาราวาน':(best==='INT'||best==='WIS'?'ไปเป็นลูกศิษย์ของผู้วิเศษในเมือง':'ไปลองเสี่ยงในซากเมืองเก่า');
   for(let i=0;i<4;i++)S.peers.push(makeSoul());
   addLog(0,`เกิดเป็น${S.race.th}ใน${S.region.kind}แห่ง${S.region.th} ใน${S.tier.th}`,null,true);
@@ -2011,6 +2017,19 @@ function ladderInto(el,p,rank,at){
   el.appendChild(ol);
 }
 function meritBar(v){const bar=ce('div');bar.className='bar';const i=ce('i');i.style.width=clamp(v,0,100)+'%';bar.appendChild(i);return bar;}
+function renderGear(){
+  const el=$('#lGear');el.textContent='';
+  if(S.adv&&S.eq){
+    const h=ce('p');h.className='eyebrow';h.style.marginBottom='8px';h.textContent=`สวมใส่ · AC ${acFor()}`;el.appendChild(h);
+    const dl=ce('dl');dl.className='kv';
+    SLOTS.forEach(([k,th])=>{const t=ce('dt');t.textContent=th;const d=ce('dd');d.textContent=eqName(S.eq[k]);dl.append(t,d);});
+    el.appendChild(dl);
+  }
+  const h=ce('p');h.className='eyebrow';h.style.margin=(S.adv?'14px':'0')+' 0 8px';h.textContent=`กระเป๋า · ${S.bag.length} / ${bagMax()}`;el.appendChild(h);
+  if(!S.bag.length){const p=ce('p');p.className='sm muted';p.textContent='ยังไม่มีของติดตัว · ซื้อได้ในแผงใช้เงิน';el.appendChild(p);return;}
+  S.bag.forEach(b=>{const g=GEAR[b.id],r=ce('div');r.className='bagrow';const t=ce('b');t.textContent=g.th+(b.uses?` ×${b.uses}`:'');
+    const d=ce('span');d.className='xs muted';d.textContent=g.d;r.append(t,d);el.appendChild(r);});
+}
 function renderPath(){
   const el=$('#lPath');el.textContent='';
   if(!S.path){
@@ -2061,7 +2080,7 @@ function setTab(k,toggle){
 function renderLife(){
   $('#lAge').textContent=S.age;
   $('#lMeta').textContent=`ปี ${S.year} DR · 1 ปี ≈ ${(msPerYear()/1000).toFixed(1)} วินาที`;
-  renderStrip();renderPath();renderNext();
+  renderStrip();renderPath();renderNext();renderGear();
   const job=S.adv?`${S.cls.th} (นักผจญภัย)`:(S.age<S.race.mature?'ยังไม่ถึงวัยทำงาน':(S.bizYears>0?S.trade+' (มีร้านของตัวเอง)':S.trade));
   const hob=S.hobbies.length?S.hobbies.map(h=>`${h.th} Lv.${h.lv}`).join(' · '):'ยังไม่มี';
   sheetInto($('#lSheet'),false);renderRolls();
@@ -2218,6 +2237,12 @@ function openSpend(){
     }
     const sug=suggested(),rest=ITEMS.filter(it=>itemAvailable(it)&&!sug.includes(it));
     body.appendChild(itemSection('สิ่งที่น่าทำตอนนี้',sug,rebuild));
+    if(S.bag.length<bagMax())body.appendChild(itemSection(`ข้าวของติดตัว · กระเป๋า ${S.bag.length}/${bagMax()}`,
+      Object.entries(GEAR).filter(([k,g])=>!g.gift&&!(hasGear(k)&&!g.uses)).map(([k,g])=>({id:'g_'+k,th:g.th,cost:g.cost,fx:g.d+(g.uses?` · ใช้ได้ ${g.uses} ครั้ง`:''),apply:()=>addGear(k),log:`ซื้อ${g.th}`})),rebuild));
+    if(S.adv&&S.eq)body.appendChild(itemSection('อาวุธและเกราะ',
+      Object.entries(EQUIP).filter(([k,e])=>eqOk(k)&&!(S.eq[e.slot]&&S.eq[e.slot].id===k)).map(([k,e])=>({id:'e_'+k,th:e.th,cost:e.cost,
+        fx:e.ac?`AC ${e.ac}${e.dex?(e.dex>5?' + DEX':' + DEX สูงสุด '+e.dex):''}${e.str?' · ต้องมี STR '+e.str:''}${e.stealth?' · เสียเปรียบลอบเร้น':''}`:e.acb?'AC +2':e.dmg?`${e.dmg[0]}d${e.dmg[1]}${e.fin?' · ใช้ DEX ได้':''}${e.two?' · สองมือ':''}`:'สื่อสำหรับร่ายเวท',
+        apply:()=>equip(k),log:`ซื้อ${e.th}`})),rebuild));
     if(rest.length){
       const wrap=ce('div');wrap.className='sect';
       const btn=ce('button');btn.className='chip';btn.type='button';btn.textContent=`ดูอย่างอื่นเพิ่ม (${rest.length})`;
@@ -2395,7 +2420,7 @@ function threatSit(t,dc,D){
     if(o.fee){x.cost=priestFee(S);x.s=`+5 · ผ่านแล้วไม่เสียเลือดเลย · ค่าบูชา ${x.cost} gp`;}
     if(t.poison&&o.save&&S.race.id==='dwarf')x.adv=1;
     return x;});
-  return {id:'threat_'+t.cope,kind:'threat',big:true,h:`ภัยถึงชีวิต: ${t.th}`,
+  return {id:'threat_'+t.cope,kind:'threat',big:true,poison:!!t.poison,h:`ภัยถึงชีวิต: ${t.th}`,
     b:`อาจเสียเลือดได้ถึง ${D} — ตอนนี้มีอยู่ ${Math.max(0,S.hp)}/${S.hpMax}${D>=S.hp?' · ถ้าไม่ผ่านอาจล้มลง':''}`,opts,
     resolve:(o,r,how)=>{
       let took=0,note=rollTh(r);
@@ -2596,6 +2621,8 @@ function noteAsk(){S.lastAskAge=S.age;S.nAsk++;}
 function noteDecision(stance){S.nDec++;if(stance)S.nStance++;S.lastDecAge=S.age;S.decAges.push(S.age);}
 function prepOpts(sit){
   sit.opts=sit.opts.filter(o=>!o.need||o.need(S));
+  gearOpts(sit);
+  sit.opts.forEach(o=>{if(o.gearTh)o.s=(o.s?o.s+' · ':'')+'ใช้'+o.gearTh;});
   sit.opts.forEach(o=>{if(forBond(o)){o.adv=1;o.bond=1;}o.p=chanceOf(o.ab,o.dc,o);o.can=!o.cost||S.gold>=o.cost;});
 }
 const tagUp=o=>!!(S.ideal&&o.tg&&o.tg.includes(S.ideal));
@@ -2617,6 +2644,7 @@ function askCope(sit,done){
 }
 function resolveCope(sit,o,insp,auto){
   S.decCtx=1;noteDecision(auto);
+  if(o.gear)o.gear.forEach(useGear);
   if(o.cost)S.gold-=o.cost;
   if(o.fx)applyFx(o.fx,1);
   if(insp)S.insp=0;
@@ -2744,6 +2772,7 @@ function becomeAdv(){
   S.lvl=1;S.xp=0;S.prof=profFor(1);S.saveProf=[...CLS_SAVE[S.cls.id]];
   CLS_SK[S.cls.id].forEach(k=>{if(!S.skills.includes(k))S.skills.push(k);});
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
+  startKit();
   enterPath('adv','ได้เข้าสมาคมนักผจญภัย');
 }
 function gainXp(n){
@@ -2789,14 +2818,15 @@ function encounter(f,done){
 function encSit(foe,tier,up){
   const key=S.cls.key,cast=CASTER[S.cls.id],talkDc=12+Math.ceil(tier/2);
   const sneak=S.skills.includes('stealth')&&!S.skills.includes('acrobatics')?'stealth':'acrobatics';
-  const opts=[{t:'สู้',act:'fight',ab:key,attack:1,prof:1,dc:foe.ac,st:'grit',s:'ทอยโจมตี vs AC แล้วทอยความเสียหาย · ได้ XP และของเต็ม',tg:['might']},
-    {t:'หนี',act:'flee',ab:'DEX',skill:sneak,dc:10+tier,st:'wits',s:'แข่งกับการสังเกตของศัตรู · ได้ XP น้อย · ไม่ผ่านแล้วโดนตี',tg:['coward']}];
+  const wpn=weapon(),wab=weaponAb(),clk=S.eq&&S.eq.cloak&&S.eq.cloak.stealth,arm=S.eq&&S.eq.armor&&EQUIP[S.eq.armor.id].stealth,bt=S.eq&&S.eq.feet&&S.eq.feet.flee;
+  const opts=[{t:'สู้',act:'fight',ab:wab,attack:1,prof:1,bonus:wpn.plus,dc:foe.ac,st:'grit',s:`${wpn.th||'มือเปล่า'} ${wpn.dmg[0]}d${wpn.dmg[1]}${wpn.plus?' +'+wpn.plus:''} vs AC · ได้ XP และของเต็ม`,tg:['might']},
+    {t:'หนี',act:'flee',ab:'DEX',skill:sneak,dc:10+tier,st:'wits',adv:clk||bt?1:0,dis:sneak==='stealth'&&arm&&!clk?1:0,s:'แข่งกับการสังเกตของศัตรู · ได้ XP น้อย · ไม่ผ่านแล้วโดนตี',tg:['coward']}];
   if(foe.kind==='beast')opts.push({t:'ทำให้มันสงบลง',act:'talk',ab:'WIS',skill:'animal',dc:talkDc,st:'kin',s:'ได้ XP ครึ่งหนึ่ง · ปลอดภัยกว่า · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',tg:['knowledge']});
   else if(foe.kind!=='undead'){
     opts.push({t:'เจรจา',act:'talk',ab:'CHA',skill:'persuasion',dc:talkDc,st:'kin',s:'ได้ XP ครึ่งหนึ่ง · ไปทางดี · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',al:[0,.03],tg:['charity','people']});
     opts.push({t:'ข่มขู่',act:'talk',ab:'CHA',skill:'intimidation',dc:talkDc+1,st:'shady',s:'ได้ XP ครึ่งหนึ่ง · ไปทางร้าย · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',al:[0,-.03],tg:['might']});
   }
-  if(cast)opts.push({t:cast.t,act:'spell',ab:key,attack:1,prof:1,dc:foe.ac-1,st:'wits',s:cast.s,tg:['knowledge']});
+  if(cast)opts.push({t:cast.t,act:'spell',ab:key,attack:1,prof:1,bonus:eqSpell(),dc:foe.ac-1,st:'wits',s:cast.s,tg:['knowledge']});
   const diff=up?'สูงกว่าเลเวลคุณ':'พอ ๆ กับเลเวลคุณ';
   return {id:'enc',kind:'enc',big:up||Math.random()<BIG_SHARE,h:`การเผชิญหน้า: ${foe.th}`,
     b:up?'สิ่งที่รออยู่ข้างหน้าแข็งแกร่งกว่าทุกอย่างที่เคยเจอ ชนะแล้วได้ XP สองเท่า':'คณะเดินทางหยุดอยู่ตรงหน้ามัน ทุกคนรอให้คุณตัดสินใจ',
@@ -2807,11 +2837,11 @@ function encOutcome(foe,tier,up,o,r,how){
   const key=S.cls.key,note=[],mul=up?2:1;
   let won=false,xp=0,took=0,sv=null,loot=0;
   const strike=atk=>{
-    const [n,dd]=CLS_DMG[S.cls.id];
+    const sp=atk.spell||o.act==='spell',[n,dd]=sp?CLS_DMG[S.cls.id]:weapon().dmg,dab=sp?key:weaponAb(),plus=sp?eqSpell():weapon().plus;
     let nd=n*(S.lvl>=5&&['fighter','barbarian','ranger'].includes(S.cls.id)?2:1)+(S.cls.id==='rogue'?Math.ceil(S.lvl/2):0);
     if(o.act==='spell')nd=1+Math.ceil(S.lvl/2);
-    const dealt=atk.ok?Math.max(1,dice(nd,dd)+mod(S.ab[key])):0;
-    note.push(rollTh(atk)+(atk.ok?` · ดาเมจ ${nd}d${dd}${sgn(mod(S.ab[key]))} = ${dealt}`:''));
+    const dealt=atk.ok?Math.max(1,dice(nd,dd)+mod(S.ab[dab])+plus):0;
+    note.push(rollTh(atk)+(atk.ok?` · ดาเมจ ${nd}d${dd}${sgn(mod(S.ab[dab])+plus)} = ${dealt}`:''));
     return atk.ok;
   };
   const hit=extra=>{
@@ -2823,9 +2853,10 @@ function encOutcome(foe,tier,up,o,r,how){
   else if(o.act==='flee'){note.push(rollTh(r));if(r.ok)xp=xpNeed()/12;else{took=hit(2);xp=xpNeed()/12;}}
   else{note.push(rollTh(r));
     if(r.ok){xp=xpNeed()/6;won=true;}
-    else{won=strike(check(key,foe.ac,{attack:1,prof:1,dis:1,label:`โจมตี${foe.th} · หลังเจรจาล้มเหลว`}));took=hit(won?0:2);xp=xpNeed()/(won?3:6);}}
+    else{won=strike(check(weaponAb(),foe.ac,{attack:1,prof:1,bonus:weapon().plus,dis:1,label:`โจมตี${foe.th} · หลังเจรจาล้มเหลว`}));took=hit(won?0:2);xp=xpNeed()/(won?3:6);}}
   xp*=mul*ENC_XP;
-  if(won&&o.act!=='talk'){S.kills++;loot=dice(1+ENC_TIERS.indexOf(tier),6)*mul;S.gold+=loot;}
+  if(won&&o.act!=='talk'){S.kills++;loot=dice(1+ENC_TIERS.indexOf(tier),6)*mul;S.gold+=loot;
+    const L=lootMagic(tier,up);if(L){if(L.got){note.push(`ได้ ${L.got}`);toast(`ของเวท: ${L.got}`);}else{S.gold+=L.sold;note.push(`พบ${L.m.th}ที่ไม่ได้ใช้ ขายได้ ${gp(L.sold)}`);}}}
   if(took)damage(took,`${foe.hz}ของ${foe.th}`,true);
   if(sv)note.push(rollTh(sv)+(took?` · เสียเลือด ${took}`:' · ไม่เป็นอะไร'));
   note.push(`+${fmt(xp)} XP`+(loot?` · ได้ของมีค่า ${gp(loot)}`:''));
@@ -2895,7 +2926,7 @@ function tick(){
     if(S.hp<=0){dying();return;}
     renderLife();
   };
-  const career=()=>{if(S.hp>0){gainMerit(f);examMaybe(end);}else end();};
+  const career=()=>{if(S.hp>0){gainMerit(f);advShop();examMaybe(end);}else end();};
   const threat=()=>{
     if(S.adv&&f.xp)gainXp(xpNeed()*f.xp*yearScale());
     if(S.hp>0&&Math.random()<threatQ())runThreat(career);else career();
@@ -2976,7 +3007,7 @@ function trainYear(f){
     if(S.mentorYears===3&&!S.certs[S.mentor]){
       S.certs[S.mentor]=1;const sk=p.skills.find(k=>!S.skills.includes(k));if(sk)S.skills.push(sk);
       addLog(S.age,`ได้ใบรับรองจาก${MENTORS[S.mentor].th}`,`${sk?'ได้ความชำนาญ'+SKILLS[sk].th+' · ':''}เป็นเงื่อนไขเข้าเส้นทาง${p.th}`,true);
-      toast(`ใบรับรอง: ${p.th}`);S.focusAsk='mentor';}
+      toast(`ใบรับรอง: ${p.th}`);S.focusAsk='mentor';addGear('letter','อาจารย์เขียนจดหมายแนะนำตัวให้');}
   }
   if(!ab)return;
   S.train[ab]=(S.train[ab]||0)+pts*yearScale();
@@ -3054,6 +3085,165 @@ const OPPS=[
       {t:'ไม่ไป',s:'ไม่อยากเป็นภาระใคร',fx:{s:-1},tg:['pride']}]}
 ];
 const OPP_P=.35;
+/* ---------------- gear: things carried that help in a given kind of trouble ----------------
+   tags name the situations an item answers (a situation's id, its kind, 'poison', or
+   'exam_<path>'). adv gives advantage, bonus adds to the roll; skills narrows either to
+   options that use those skills. uses marks a consumable. */
+const GEAR={
+ herbs:{th:'ชุดสมุนไพร',cost:5,tags:['threat_ill','haz_disease'],adv:1,skills:['medicine','survival'],d:'ได้เปรียบเวลาใช้การแพทย์หรือเอาตัวรอดรับมือโรค · คนในบ้านพยุงตอนเลือดหมดง่ายขึ้น'},
+ potion:{th:'ยารักษา',cost:50,tags:[],uses:1,d:'ดื่มตอนเลือดหมด ฟื้น 2d4+2 ทันที ไม่ต้องทอยรักษาชีวิต'},
+ antitoxin:{th:'ยาต้านพิษ',cost:50,tags:['poison'],adv:1,uses:1,d:'ได้เปรียบทอยป้องกันพิษหนึ่งครั้ง'},
+ rations:{th:'เสบียงแห้งหนึ่งฤดู',cost:2,tags:['haz_disease'],adv:1,bonus:3,uses:1,d:'ปีข้าวแล้งผ่านไปได้ง่ายขึ้นมากหนึ่งครั้ง'},
+ furs:{th:'เสื้อกันหนาวขนสัตว์',cost:3,tags:['threat_cold'],bonus:2,d:'+2 เวลารับมือความหนาว'},
+ rope:{th:'เชือกและตะขอ',cost:2,tags:['threat_fall','haz_accident'],adv:1,d:'ได้เปรียบเวลาปีน ตก หรือพลัดตกน้ำ'},
+ lamp:{th:'ตะเกียงและน้ำมัน',cost:1,tags:['enc','threat_fall'],bonus:1,uses:3,d:'+1 ในที่มืด ใช้ได้สามครั้ง'},
+ amulet:{th:'เครื่องรางเทพประจำตัว',cost:5,tags:['haz_despair','exam_faith'],bonus:1,d:'+1 เวลาสิ้นหวังและตอนสอบสายศรัทธา'},
+ tools:{th:'ชุดเครื่องมือช่าง',cost:10,tags:['haz_labor','exam_craft'],bonus:2,d:'+2 งานหนักและสอบสายช่าง · จำเป็นตั้งแต่สอบขั้น 2 ของสายช่าง'},
+ ledger:{th:'ตาชั่งและสมุดบัญชี',cost:4,tags:['haz_contract','haz_exploit','exam_trade'],adv:1,d:'ได้เปรียบเวลาถูกหลอกสัญญาหรือถูกเอาเปรียบ'},
+ spellbook:{th:'ตำราเวทเล่มแรก',cost:50,tags:['exam_arcane'],bonus:2,d:'+2 สอบสายวิชาเวท · จำเป็นตั้งแต่สอบขั้น 2 ของสายวิชาเวท'},
+ dagger:{th:'มีดสั้น',cost:2,tags:['threat_robbers','threat_beast'],bonus:1,d:'+1 เวลาโจรหรือสัตว์ร้ายเข้ามา'},
+ letter:{th:'จดหมายแนะนำตัว',cost:0,tags:['exam'],adv:1,uses:1,gift:1,d:'ได้เปรียบหนึ่งครั้งตอนสอบเลื่อนขั้น'},
+ crest:{th:'ตราประจำตระกูล',cost:0,tags:['exam','haz_exploit'],bonus:1,gift:1,d:'+1 ตอนสอบเลื่อนขั้นและเวลาถูกเอาเปรียบ'},
+ coin:{th:'เหรียญนำโชคของพ่อแม่',cost:0,tags:['any'],adv:1,uses:1,gift:1,d:'ได้เปรียบหนึ่งครั้ง ใช้เองเมื่อโอกาสผ่านต่ำกว่าครึ่ง'}
+};
+const bagMax=()=>Math.max(3,4+mod(S.ab.STR));
+const hasGear=id=>S.bag.some(b=>b.id===id);
+function addGear(id,why){
+  if(S.bag.length>=bagMax()){addLog(S.age,`ไม่มีที่ใส่${GEAR[id].th}`,'กระเป๋าเต็ม',false,true);return false;}
+  S.bag.push({id,uses:GEAR[id].uses||0});
+  if(why)addLog(S.age,`ได้${GEAR[id].th}`,why,true);
+  return true;
+}
+function useGear(b){
+  if(!b.uses)return;
+  b.uses--;if(b.uses<=0){S.bag.splice(S.bag.indexOf(b),1);S.gearUsed=(S.gearUsed||0)+1;}
+}
+function sitTags(sit){
+  const t=[sit.id,sit.kind];
+  if(sit.poison)t.push('poison');
+  if(sit.kind==='exam'&&S.path)t.push('exam_'+S.path);
+  return t;
+}
+/* fold the bag into each option before its odds are worked out */
+function gearOpts(sit){
+  const tags=sitTags(sit);
+  sit.opts.forEach(o=>{
+    const used=[];
+    S.bag.forEach(b=>{
+      const g=GEAR[b.id];
+      if(g.tags.includes('any')){if(sit.big&&!o.adv&&chanceOf(o.ab,o.dc,o)<.5&&!used.length){o.adv=1;used.push(b);}return;}
+      if(!g.tags.some(x=>tags.includes(x)))return;
+      if(g.skills&&!(o.skill&&g.skills.includes(o.skill)))return;
+      if(g.adv&&!o.adv){o.adv=1;used.push(b);}
+      if(g.bonus){o.bonus=(o.bonus||0)+g.bonus;if(!used.includes(b))used.push(b);}
+    });
+    if(used.length){o.gear=used;o.gearTh=[...new Set(used.map(b=>GEAR[b.id].th))].join(', ');}
+  });
+}
+
+/* ---------------- worn equipment: what an adventurer's AC and blows come from ---------------- */
+const EQUIP={
+ padded:{slot:'armor',th:'ชุดหนังบุนวม',cost:5,ac:11,dex:9,kind:'light',stealth:1},
+ leather:{slot:'armor',th:'เกราะหนัง',cost:10,ac:11,dex:9,kind:'light'},
+ studded:{slot:'armor',th:'เกราะหนังเสริมหมุด',cost:45,ac:12,dex:9,kind:'light'},
+ hide:{slot:'armor',th:'เกราะหนังสัตว์',cost:10,ac:12,dex:2,kind:'medium'},
+ scale:{slot:'armor',th:'เสื้อเกล็ด',cost:50,ac:14,dex:2,kind:'medium',stealth:1,metal:1},
+ half:{slot:'armor',th:'เสื้อเกราะครึ่งตัว',cost:750,ac:15,dex:2,kind:'medium',stealth:1,metal:1},
+ chain:{slot:'armor',th:'เกราะห่วงโซ่',cost:75,ac:16,dex:0,kind:'heavy',str:13,stealth:1,metal:1},
+ plate:{slot:'armor',th:'เกราะแผ่นเต็มตัว',cost:1500,ac:18,dex:0,kind:'heavy',str:15,stealth:1,metal:1},
+ shield:{slot:'off',th:'โล่',cost:10,acb:2,kind:'shield'},
+ longsword:{slot:'main',th:'ดาบยาว',cost:15,dmg:[1,8],kind:'martial'},
+ greatsword:{slot:'main',th:'ดาบใหญ่',cost:50,dmg:[2,6],kind:'martial',two:1},
+ greataxe:{slot:'main',th:'ขวานใหญ่',cost:30,dmg:[1,12],kind:'martial',two:1},
+ mace:{slot:'main',th:'กระบอง',cost:5,dmg:[1,6],kind:'simple'},
+ scimitar:{slot:'main',th:'ดาบโค้ง',cost:25,dmg:[1,6],kind:'martial',fin:1},
+ shortsword:{slot:'main',th:'ดาบสั้น',cost:10,dmg:[1,6],kind:'martial',fin:1},
+ rapier:{slot:'main',th:'ดาบเรเปียร์',cost:25,dmg:[1,8],kind:'martial',fin:1},
+ longbow:{slot:'main',th:'ธนูยาว',cost:50,dmg:[1,8],kind:'martial',fin:1,two:1},
+ staff:{slot:'focus',th:'ไม้เท้าเวท',cost:10,kind:'focus'},
+ symbol:{slot:'focus',th:'เครื่องรางศักดิ์สิทธิ์',cost:5,kind:'focus'},
+ totem:{slot:'focus',th:'กิ่งไม้ศักดิ์สิทธิ์',cost:5,kind:'focus'}
+};
+const SLOTS=[['main','อาวุธหลัก'],['off','มือรอง'],['armor','เกราะ'],['focus','สื่อเวท'],['cloak','ผ้าคลุม'],['ring','แหวน'],['feet','รองเท้าหรือสร้อย']];
+/* what each class may wear without penalty, and what it starts with: the starting kit
+   gives the same AC and damage as the fixed numbers it replaces */
+const CLS_GEAR={
+ fighter:{armor:['light','medium','heavy'],shield:1,weapons:['simple','martial'],kit:['chain','greatsword']},
+ rogue:{armor:['light'],weapons:['simple','martial'],kit:['leather','shortsword']},
+ cleric:{armor:['light','medium'],shield:1,weapons:['simple'],kit:['scale','shield','mace','symbol']},
+ wizard:{armor:[],weapons:['simple'],kit:['staff'],unarmored:x=>13+mod(x.ab.DEX)},
+ ranger:{armor:['light','medium'],shield:1,weapons:['simple','martial'],kit:['studded','longbow']},
+ bard:{armor:['light'],weapons:['simple','martial'],kit:['leather','rapier']},
+ barbarian:{armor:['light','medium'],shield:1,weapons:['simple','martial'],kit:['greataxe'],unarmored:x=>10+mod(x.ab.DEX)+mod(x.ab.CON)},
+ druid:{armor:['light','medium'],shield:1,noMetal:1,weapons:['simple'],kit:['hide','shield','scimitar','totem']}
+};
+/* magic finds, by the tier of the foe they came from */
+const MAGIC=[
+ {id:'w1',slot:'main',th:'+1',plus:1,tier:1},{id:'a1',slot:'armor',th:'+1',plus:1,tier:2},
+ {id:'cloakElv',slot:'cloak',th:'ผ้าคลุมพราง',stealth:1,tier:1},{id:'bootsTr',slot:'feet',th:'รองเท้าเดินไกล',flee:1,tier:1},
+ {id:'ringProt',slot:'ring',th:'แหวนป้องกัน',acb:1,save:1,tier:2},{id:'cloakProt',slot:'cloak',th:'ผ้าคลุมป้องกัน',acb:1,save:1,tier:2},
+ {id:'staffP',slot:'focus',th:'ไม้เท้าเวท +1',spell:1,tier:2},
+ {id:'w2',slot:'main',th:'+2',plus:2,tier:3},{id:'a2',slot:'armor',th:'+2',plus:2,tier:3},{id:'amuletH',slot:'feet',th:'สร้อยสุขภาพ',save:1,tier:3},
+ {id:'w3',slot:'main',th:'+3',plus:3,tier:4},{id:'a3',slot:'armor',th:'+3',plus:3,tier:4},{id:'staffM',slot:'focus',th:'Staff of the Magi',spell:3,tier:4}
+];
+function eqOk(id,x){
+  x=x||S;const e=EQUIP[id],c=CLS_GEAR[x.cls.id];
+  if(e.slot==='armor')return c.armor.includes(e.kind)&&!(c.noMetal&&e.metal);
+  if(e.slot==='off')return !!c.shield;
+  if(e.slot==='main')return c.weapons.includes(e.kind);
+  if(e.slot==='focus')return !!CASTER[x.cls.id];
+  return true;
+}
+function equip(id,why){
+  const e=EQUIP[id];
+  if(e.two&&S.eq.off)S.eq.off=null;
+  if(e.slot==='off'&&S.eq.main&&EQUIP[S.eq.main.id].two)return false;
+  S.eq[e.slot]={id,plus:0};
+  if(why)addLog(S.age,`ได้${e.th}`,why,true);
+  return true;
+}
+function startKit(){S.eq={};CLS_GEAR[S.cls.id].kit.forEach(id=>equip(id));}
+const eqName=it=>it?(it.magic?`${it.base?EQUIP[it.base].th+' ':''}${it.th}`:EQUIP[it.id].th+(it.plus?` +${it.plus}`:'')):'—';
+function eqAc(x){
+  x=x||S;const dx=mod(x.ab.DEX),c=CLS_GEAR[x.cls.id],a=x.eq.armor;
+  let ac=c.unarmored?c.unarmored(x):10+dx;
+  if(a){const e=EQUIP[a.id];ac=e.ac+Math.min(dx,e.dex)+(a.plus||0);}
+  if(x.eq.off&&EQUIP[x.eq.off.id]&&EQUIP[x.eq.off.id].acb)ac+=EQUIP[x.eq.off.id].acb+(x.eq.off.plus||0);
+  ['cloak','ring','feet'].forEach(k=>{const m=x.eq[k];if(m&&m.acb)ac+=m.acb;});
+  return ac;
+}
+function weapon(){const w=S.eq&&S.eq.main;return w?{...EQUIP[w.id],plus:w.plus||0}:{dmg:[1,4],plus:0,kind:'simple'};}
+function weaponAb(){const w=weapon();return w.fin&&S.ab.DEX>S.ab.STR?'DEX':'STR';}
+/* a find from a won fight: equipped if it beats what is worn, sold otherwise */
+function lootMagic(tier,up){
+  const t=clamp(1+Math.floor(ENC_TIERS.indexOf(tier)*1.1)+(up?1:0),1,4);
+  if(Math.random()>.10+.05*t)return null;
+  const pool=MAGIC.filter(m=>m.tier===t||(m.tier===t-1&&Math.random()<.4));
+  const m=pick(pool.length?pool:MAGIC.filter(x=>x.tier===1));
+  if(m.plus){
+    const cur=S.eq[m.slot];
+    if(!cur){return {sold:Math.round(60*Math.pow(3,m.plus)),m};}
+    if((cur.plus||0)>=m.plus)return {sold:Math.round(60*Math.pow(3,m.plus)),m};
+    cur.plus=m.plus;S.magicFound=(S.magicFound||[]);S.magicFound.push(`${EQUIP[cur.id].th} ${m.th}`);
+    return {got:`${EQUIP[cur.id].th} ${m.th}`};
+  }
+  const cur=S.eq[m.slot];
+  if(m.slot==='focus'&&!CASTER[S.cls.id])return {sold:120*m.tier,m};
+  if(cur&&cur.magic&&MAGIC.find(x=>x.id===cur.mid).tier>=m.tier)return {sold:120*m.tier,m};
+  S.eq[m.slot]={magic:1,mid:m.id,th:m.th,acb:m.acb||0,save:m.save||0,stealth:m.stealth||0,flee:m.flee||0,spell:m.spell||0,con:m.con||0};
+  S.magicFound=(S.magicFound||[]);S.magicFound.push(m.th);
+  return {got:m.th};
+}
+/* an adventurer with coin to spare buys the next armour up on the way through town */
+function advShop(){
+  if(!S.adv||!S.eq)return;
+  const cur=S.eq.armor,best=Object.entries(EQUIP).filter(([k,e])=>e.slot==='armor'&&eqOk(k)&&(!e.str||S.ab.STR>=e.str)&&S.gold>=e.cost*1.5)
+    .map(([k,e])=>({k,e,ac:e.ac+Math.min(mod(S.ab.DEX),e.dex)})).sort((a,b)=>b.ac-a.ac)[0];
+  const now=cur?EQUIP[cur.id].ac+Math.min(mod(S.ab.DEX),EQUIP[cur.id].dex)+(cur.plus||0):(CLS_GEAR[S.cls.id].unarmored?CLS_GEAR[S.cls.id].unarmored(S):10+mod(S.ab.DEX));
+  if(best&&best.ac>now){S.gold-=best.e.cost;S.eq.armor={id:best.k,plus:0};addLog(S.age,`ซื้อ${best.e.th}`,`AC ${acFor()}`,true);}
+}
+const eqSaveBonus=()=>['cloak','ring','feet'].reduce((a,k)=>a+((S.eq&&S.eq[k]&&S.eq[k].save)||0),0);
+const eqSpell=()=>(S.eq&&S.eq.focus&&S.eq.focus.spell)||0;
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
    One screen at maturity in place of the old call and trade questions. A path whose
    conditions are all met can be chosen; one that misses a single condition can be tried
@@ -3375,9 +3565,11 @@ function dying(){
   S.downs++;
   const cause=S.downBy||'บาดแผล',rolls=[],paras=[`${S.name}ล้มลงเพราะ${cause} เลือดหมดเหลือศูนย์`];
   let out='';
+  const pot=S.bag.find(b=>b.id==='potion');
+  if(pot){useGear(pot);S.potionHp=dice(2,4)+2;paras.push(`ดื่มยารักษาที่พกไว้ เลือดกลับมา ${S.potionHp}`);finishDying(cause,rolls,paras,'potion');return;}
   const h=helper();
   if(h){
-    const r=npcRoll(`${h.who} ทดสอบการแพทย์ (Medicine) เพื่อพยุงไว้`,h.b,10);rolls.push(r);
+    const r=npcRoll(`${h.who} ทดสอบการแพทย์ (Medicine) เพื่อพยุงไว้`,h.b,hasGear('herbs')?8:10);rolls.push(r);
     if(r.ok){out='stable';paras.push(`${h.who}ห้ามเลือดและประคองไว้ได้ทัน`);}
     else paras.push(`${h.who}อยู่ข้าง ๆ แต่ทำอะไรไม่ถูก`);
   }else paras.push('ไม่มีใครอยู่ใกล้พอจะช่วย');
@@ -3419,12 +3611,13 @@ function deathSaves(cause,rolls,paras,h,insp){
 function finishDying(cause,rolls,paras,out){
   const after=()=>{
     if(out==='dead'){S.dsDied=(S.dsDied||0)+1;perish(cause);return;}
+    if(out==='potion'){S.hp=Math.min(S.hpMax,S.potionHp);S.potions=(S.potions||0)+1;renderLife();resume();return;}
     S.hp=1;S.stabilized++;gainExh(1,null,5);
     if(S.deity)S.faith=clamp(S.faith+8,0,100);
     renderLife();resume();
   };
   addLog(S.age,out==='dead'?`ล้มลงเพราะ${cause} และไม่ได้ลุกขึ้นมาอีก`:`ล้มลงเพราะ${cause} แต่รอดมาได้`,rolls.map(rollTh),true,true);
-  if(out==='stable'&&!S.dsNow){after();return;}
+  if((out==='stable'||out==='potion')&&!S.dsNow){after();return;}
   noteAsk();
   present({eyebrow:`เลือดหมด · อายุ ${S.age} ปี · ปี ${S.year} DR`,title:out==='dead'?'สิ้นใจ':'รอดจากความตาย',paras,rolls,
     lore:'ใน 5e คนที่เลือดหมดจะทอยรักษาชีวิต (death saving throw) ทุกตา ได้ 10 ขึ้นไปนับเป็นสำเร็จ สามสำเร็จรอด สามล้มเหลวตาย ทอยได้ 20 ฟื้นทันที ทอยได้ 1 นับเป็นล้มเหลวสองครั้ง',

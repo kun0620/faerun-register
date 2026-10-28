@@ -17,7 +17,7 @@ T.set('openDec', (d, done) => { if (d.id) T.S.done[d.id] = 1; (T.S.shown = T.S.s
 T.set('openCope', (sit, cb) => { const o = T.autoPick(sit, 'any'); cb(o, !!T.S.insp && o.p < .5); });
 T.set('present', o => { o.buttons[o.buttons.length - 1].fn(); });
 
-const CORE = new Set(['deity', 'call', 'trade_farm', 'trade_city', 'trade_craft', 'ideal', 'bond', 'flaw', 'pause_mid', 'pause_end']);
+const CORE = new Set(T.DECS.map(d => d.id));   // the core is whatever sits in DECS, not a copied list
 const QIDS = new Set([...T.DECS.map(d => d.id), ...T.BANK.map(d => d.id)]);
 const BIDS = new Set(T.BANK.map(d => d.id));
 

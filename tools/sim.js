@@ -19,7 +19,7 @@ const byRace={},hum=[],advAges=[],lv=[];let adv=0,ds=0,dsDeaths=0,faithless=0,fa
   elig=0,paid=0,years=0,yearsNoRoll=0,raised=0,downs=0,oldAge=0,lives=0,dsLives=0,maxDs=0,ages=[];
 const causes={};
 for(let i=0;i<N;i++){
-  T.set('_callRoll',null);firstPerish=true;T.birth();const S=T.S;lives++;
+  firstPerish=true;T.birth();const S=T.S;lives++;
   while(!S.dead){T.tick();if(!S.dead||S.age>0){years++;if(S.yearRolls<1)yearsNoRoll++;}}
   (byRace[S.race.id]=byRace[S.race.id]||[]).push(S.age/S.race.span*72);
   if(S.race.id==='human')hum.push(S.age);

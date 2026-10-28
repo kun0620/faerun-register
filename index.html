@@ -1057,7 +1057,7 @@ function sceneCaption(){
 
 /* ---------------- state ---------------- */
 const opt={pace:12,basis:'born',era:'now',cmp:'',pauses:1,soften:0,auto:0,theme:'system'};
-let S=null,timer=null,speed=1,_callRoll=null;
+let S=null,timer=null,speed=1;
 const raceList=()=>opt.basis==='living'?RACES.map(r=>({...r,w:r.w*r.span/72})):RACES;
 const era=()=>ERAS.find(e=>e.id===opt.era)||ERAS[1];
 const lsOpt=(gid,id)=>LIFESTYLE.find(g=>g.id===gid).o.find(o=>o.id===id);
@@ -1872,15 +1872,17 @@ function nextDec(){
   }
   return null;
 }
+/* rolled once per soul and kept on the soul: a module-level flag outlived the life
+   that rolled it, so every later life in the same page inherited the first one's answer */
 function callRolls(){
-  if(_callRoll===null){
+  if(S.callRoll==null){
     let p=.11;
     p+=(S.ab[S.best]-12)*.018;
     p+=(S.region.danger-1)*.05;
     p+=(S.tier.lvl<=2?.03:0);
-    _callRoll=Math.random()<clamp(p,.04,.5);
+    S.callRoll=Math.random()<clamp(p,.04,.5);
   }
-  return _callRoll;
+  return S.callRoll;
 }
 
 /* ---------------- decision modal ---------------- */
@@ -2226,9 +2228,9 @@ function renderDist(){
   });
   $('#themeBtn').onclick=cycleTheme;
   $('#btnTheme2').onclick=cycleTheme;
-  $('#btnBirth').onclick=()=>{_callRoll=null;birth();};
+  $('#btnBirth').onclick=()=>{birth();};
   $('#btnLive').onclick=()=>{show('s-life');renderLife();syncAuto();setSpeed(1);};
-  $('#btnAgain').onclick=()=>{_callRoll=null;stop();show('s-title');};
+  $('#btnAgain').onclick=()=>{stop();show('s-title');};
   $('#btnQuit').onclick=()=>{stop();if(S&&!S.dead)finish('ปิดทะเบียนกลางคัน');};
   $('#btnSkip').onclick=()=>setSpeed(16);
   $('#btnAuto').onclick=()=>{opt.auto=opt.auto?0:1;syncAuto();};

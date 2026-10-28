@@ -56,7 +56,8 @@ const dH = avg(H, x => x.dec), gapH = med(H, x => x.gap), wH = winMin(H);
 
 console.log(`มนุษย์ ${H.length} ชีวิต · อายุกลาง ${med(H, x => x.age)} ปี · ความยาวชีวิต ${PACE} นาที${E.length ? ` · เอลฟ์ ${E.length} ชีวิต` : ''}\n`);
 console.log('ตัวชี้วัด                                         วัดได้          เป้า');
-console.log(`การตัดสินใจต่อชีวิต (หน้าต่าง + ทางรับมือ)        ${dH.toFixed(1).padEnd(6)} กลาง ${med(H, x => x.dec)}   25–35  ${ok(dH >= 25 && dH <= 35)}`);
+// careers (docs/plan-careers.md) add the crossroads, childhood focus, chances, exams and quests on purpose; the bound that matters is windows per minute
+console.log(`การตัดสินใจต่อชีวิต (หน้าต่าง + ทางรับมือ)        ${dH.toFixed(1).padEnd(6)} กลาง ${med(H, x => x.dec)}   30–45  ${ok(dH >= 30 && dH <= 45)}`);
 console.log(`   · กดเลือกเองในหน้าต่าง ${avg(H, x => x.modal).toFixed(1)} (คำถามจากคลัง ${avg(H, x => x.bank).toFixed(1)}) · ท่าทีเลือกให้ ${avg(H, x => x.stance).toFixed(1)}`);
 { const A = H.filter(x => x.adv), C = H.filter(x => !x.adv);
   console.log(`   · คนธรรมดา ${avg(C, x => x.dec).toFixed(1)} · นักผจญภัย ${A.length ? avg(A, x => x.dec).toFixed(1) : '—'} (มีการเผชิญหน้าให้เลือกทาง)`);

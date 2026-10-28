@@ -633,8 +633,8 @@ const PATHS=[
   ['Legend','เลเวล 20','ตำนานที่บาร์ดยังร้องอีกร้อยปี']]}
 ];
 const pathOf=id=>PATHS.find(p=>p.id===id);
-const RANK_MUL=[1,1,1.3,1.7,2.3,3.5];
-const RANK_DC=[0,10,13,16,19,24];          // DC to reach rank n
+const RANK_MUL=[1,1,1.15,1.4,1.75,2.5];
+const RANK_DC=[0,10,13,16,19,25];          // DC to reach rank n
 const advRank=lv=>lv>=20?5:lv>=17?4:lv>=11?3:lv>=5?2:1;
 function rankMul(){return S.path&&S.path!=='adv'?RANK_MUL[S.rank]||1:1;}
 function pathAb(p,x){x=x||S;return p.ab?p.ab.reduce((a,b)=>x.ab[b]>x.ab[a]?b:a):x.cls?x.cls.key:'STR';}
@@ -3196,7 +3196,7 @@ const CLS_GEAR={
 };
 /* magic finds, by the tier of the foe they came from */
 const MAGIC=[
- {id:'w1',slot:'main',th:'+1',plus:1,tier:1},{id:'a1',slot:'armor',th:'+1',plus:1,tier:2},
+ {id:'w1',slot:'main',th:'+1',plus:1,tier:1},{id:'a1',slot:'armor',th:'+1',plus:1,tier:1},
  {id:'cloakElv',slot:'cloak',th:'ผ้าคลุมพราง',stealth:1,tier:1},{id:'bootsTr',slot:'feet',th:'รองเท้าเดินไกล',flee:1,tier:1},
  {id:'ringProt',slot:'ring',th:'แหวนป้องกัน',acb:1,save:1,tier:2},{id:'cloakProt',slot:'cloak',th:'ผ้าคลุมป้องกัน',acb:1,save:1,tier:2},
  {id:'staffP',slot:'focus',th:'ไม้เท้าเวท +1',spell:1,tier:2},
@@ -3254,7 +3254,7 @@ function lootMagic(tier,up){
 /* an adventurer with coin to spare buys the next armour up on the way through town */
 function advShop(){
   if(!S.adv||!S.eq)return;
-  const cur=S.eq.armor,best=Object.entries(EQUIP).filter(([k,e])=>e.slot==='armor'&&eqOk(k)&&(!e.str||S.ab.STR>=e.str)&&S.gold>=e.cost*1.5)
+  const cur=S.eq.armor,best=Object.entries(EQUIP).filter(([k,e])=>e.slot==='armor'&&eqOk(k)&&(!e.str||S.ab.STR>=e.str)&&S.gold>=e.cost*1.2)
     .map(([k,e])=>({k,e,ac:e.ac+Math.min(mod(S.ab.DEX),e.dex)})).sort((a,b)=>b.ac-a.ac)[0];
   const now=cur?EQUIP[cur.id].ac+Math.min(mod(S.ab.DEX),EQUIP[cur.id].dex)+(cur.plus||0):(CLS_GEAR[S.cls.id].unarmored?CLS_GEAR[S.cls.id].unarmored(S):10+mod(S.ab.DEX));
   if(best&&best.ac>now){S.gold-=best.e.cost;S.eq.armor={id:best.k,plus:0};addLog(S.age,`ซื้อ${best.e.th}`,`AC ${acFor()}`,true);}
@@ -3482,7 +3482,7 @@ function nextDec(){
    that rolled it, so every later life in the same page inherited the first one's answer */
 function callRolls(){
   if(S.callRoll==null){
-    let p=.11;
+    let p=.10;
     p+=(S.ab[S.best]-12)*.018;
     p+=(S.region.danger-1)*.05;
     p+=(S.tier.lvl<=2?.03:0);

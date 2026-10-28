@@ -716,7 +716,6 @@ function rollTh(r){
   return `${rollName(r)} ${vs} ${r.dc} — d20 ${die} ${sgn(r.bonus)} = ${r.total} · ${r.ok?'ผ่าน':'ไม่ผ่าน'}`;
 }
 /* the ledger only keeps rolls worth remembering, so it never drowns */
-function logRoll(r,t,force){if(force||!r.ok||r.d===20||r.d===1)addLog(S.age,t||rollName(r),rollTh(r),false,!r.ok);}
 /* Everyday hardship tops out at level 2; only falling (5) and old age (6) go further,
    otherwise a 720-year elf would grind itself down ten times as often as a human. */
 function gainExh(n,why,cap){
@@ -3075,12 +3074,6 @@ function renderDist(){
   document.querySelectorAll('[data-sp]').forEach(b=>{b.onclick=()=>setSpeed(+b.dataset.sp);});
   applyTheme();renderDist();
 })();
-try{
-  const boot=d=>{if(d&&d.S){S=d.S;Object.assign(opt,d.opt||{});applyTheme();
-    if(S.dead){renderDeath();show('s-death');}else{show('s-life');renderLife();syncAuto();setSpeed(1);}}};
-  window.claude?.hot?.snapshot?.(()=>({S,opt}));
-  if(window.claude?.hot?.ready)window.claude.hot.ready(boot);
-}catch(e){}
 })();
 </script>
 </body>

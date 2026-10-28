@@ -204,8 +204,8 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 .toast{background:var(--ink);color:var(--vellum);padding:9px 14px;border-radius:3px;font-size:14px;box-shadow:0 6px 18px var(--shadow);animation:toastIn .25s ease-out}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}}
 @media (max-width:880px){#toasts{bottom:calc(60px + env(safe-area-inset-bottom,0px));left:16px}}
-.schools{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:6px}
-.schools .chip:disabled{opacity:.45}
+.focus button.ro{cursor:default}
+.focus button.ro:disabled{opacity:.4}
 .nexttitle{margin-bottom:8px}.nexttitle b{font-family:var(--f-display);font-size:19px;letter-spacing:.03em}
 .reqs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .req{font-size:12.5px;padding:2px 8px;border-radius:2px;border:1px solid var(--rule);font-family:var(--f-mono)}
@@ -1748,7 +1748,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    focus:FOCUS_DEFAULT_CHILD,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -2084,6 +2084,7 @@ function renderKin(){
     k.append(a,b);el.appendChild(k);});
 }
 const bondTh=b=>b>=75?'สนิทกันมาก':b>=50?'เข้ากันได้ดี':b>=30?'ห่าง ๆ กัน':'ห่างเหินกัน';
+const FOCUS_DEFAULT_CHILD='play';
 const focusSet=()=>S.age<S.race.mature?(S.mentor?[FOCUS_MENTOR,...FOCUS_CHILD]:FOCUS_CHILD):(S.adv?FOCUS_ADV:FOCUS_ADULT);
 function renderStance(){
   const el=$('#lStance');el.textContent='';
@@ -2104,15 +2105,12 @@ function renderFocus(){
     const ab=f.id==='mentor'&&S.mentor?pathAb(pathOf(S.mentor)):f.train;
     if(ab&&S.age<S.race.mature){const t=ce('em');t.className='mono';const v=Math.min(3,Math.floor(S.train[ab]||0));
       t.textContent=canGrow(ab)?`${ab} ${S.ab[ab]} ${'▰'.repeat(v)}${'▱'.repeat(3-v)}`:`${ab} ${S.ab[ab]} · ฝึกเต็มแล้ว`;b.appendChild(t);}
-    b.onclick=()=>{S.focus=f.id;renderFocus();};el.appendChild(b);});
-  if(S.age<S.race.mature&&S.focus==='learn'){
-    const row=ce('div');row.className='schools';const now=schoolNow();
-    const cap=ce('p');cap.className='xs muted';cap.style.width='100%';cap.textContent=`ที่เรียน · เงินครอบครัว ${gp(Math.max(0,Math.round(S.gold)))}`;row.appendChild(cap);
-    schoolsOpen().forEach(c=>{const x=ce('button');x.type='button';x.className='chip';x.setAttribute('aria-pressed',String(now.id===c.id));
-      const yrs=c.cost?Math.floor(Math.max(0,S.gold)/c.cost):null;
-      x.textContent=`${c.th} · ${c.cost?gp(c.cost)+'/ปี · เรียนได้อีก '+yrs+' ปี':'ฟรี'}`;x.disabled=!!c.cost&&S.gold<c.cost;
-      x.onclick=()=>{S.school=c.id;renderFocus();};row.appendChild(x);});
-    el.appendChild(row);
+    if(S.age<S.race.mature){b.disabled=S.focus!==f.id;b.classList.add('ro');}else b.onclick=()=>{S.focus=f.id;renderFocus();};
+    el.appendChild(b);});
+  if(S.age<S.race.mature){
+    const n=ce('p');n.className='xs muted';n.style.width='100%';n.style.marginTop='4px';
+    n.textContent=(S.focus==='learn'?`เรียนที่${schoolNow().th} · เงินครอบครัว ${gp(Math.max(0,Math.round(S.gold)))} · `:'')+'จะถามอีกครั้งเมื่อฝึกเต็ม เงินค่าเรียนหมด หรือครบเวลากับอาจารย์';
+    el.appendChild(n);
   }
 }
 
@@ -2932,9 +2930,11 @@ function takeMentor(id){
 }
 function trainYear(f){
   if(S.age>=S.race.mature)return;
+  if(!S.focusAsked&&S.age>=S.race.mature*.25){S.focusAsked=1;S.focusAsk='start';}
   let ab=f.train,pts=1;
   if(f.id==='learn'){
     const sc=schoolNow();pts=sc.pts;
+    if(S.school&&sc.id!==S.school&&!S.focusAsk){S.focusAsk='money';S.school=null;}
     if(sc.cost)S.gold-=sc.cost;
     S.schoolYears[sc.id]=(S.schoolYears[sc.id]||0)+1;
     if(sc.id==='temple'&&S.schoolYears.temple===4&&!S.skills.includes('religion')){S.skills.push('religion');addLog(S.age,'เรียนจบโรงเรียนวิหาร','ได้ความชำนาญศาสนา',true);}
@@ -2946,15 +2946,37 @@ function trainYear(f){
     if(S.mentorYears===3&&!S.certs[S.mentor]){
       S.certs[S.mentor]=1;const sk=p.skills.find(k=>!S.skills.includes(k));if(sk)S.skills.push(sk);
       addLog(S.age,`ได้ใบรับรองจาก${MENTORS[S.mentor].th}`,`${sk?'ได้ความชำนาญ'+SKILLS[sk].th+' · ':''}เป็นเงื่อนไขเข้าเส้นทาง${p.th}`,true);
-      toast(`ใบรับรอง: ${p.th}`);}
+      toast(`ใบรับรอง: ${p.th}`);S.focusAsk='mentor';}
   }
   if(!ab)return;
   S.train[ab]=(S.train[ab]||0)+pts*yearScale();
   if(S.train[ab]<3)return;
-  if(!canGrow(ab)){S.train[ab]=3;return;}
+  if(!canGrow(ab)){S.train[ab]=3;if(!S.focusAsk)S.focusAsk='capped';return;}
   const r=check(ab,S.ab[ab],{label:`ฝึก${ABIL_TH[ab]}`});
-  if(r.ok){S.train[ab]=0;growAb(ab,1,`ฝึกจนเห็นผล · ${rollTh(r)}`);}else S.train[ab]=1.5;
+  if(r.ok){S.train[ab]=0;growAb(ab,1,`ฝึกจนเห็นผล · ${rollTh(r)}`);if(!canGrow(ab)&&!S.focusAsk)S.focusAsk='capped';}else S.train[ab]=1.5;
 }
+/* A child's focus is asked, not set: once when the child is old enough to help,
+   again when the ability it trains can rise no more, and when school fees run out. */
+const FOCUS_WHY={start:['วันเวลาของเด็กคนหนึ่ง','โตพอจะช่วยงานบ้านได้แล้ว พ่อแม่ถามว่าจะให้ใช้วันเวลาไปกับอะไร'],
+  capped:['ฝึกจนสุดทางแล้ว','สิ่งที่ฝึกมาไปได้ไกลที่สุดเท่าที่วัยเด็กจะพาไปได้แล้ว จะใช้เวลาที่เหลือกับอะไรต่อ'],
+  money:['เงินค่าเรียนหมด','เงินในบ้านไม่พอจ่ายค่าเรียนอีกแล้ว จะเรียนต่อที่ไหน หรือเปลี่ยนไปทำอย่างอื่น'],
+  mentor:['เลิกฝึกกับอาจารย์','ครบสามปีกับอาจารย์แล้ว จะฝึกต่อหรือกลับไปทำอย่างอื่น']};
+function focusDec(why){
+  const W=FOCUS_WHY[why]||FOCUS_WHY.start,ch=[];
+  focusSet().forEach(f=>{
+    const ab=f.id==='mentor'&&S.mentor?pathAb(pathOf(S.mentor)):f.train;
+    if(ab&&!canGrow(ab))return;
+    const tr=ab?` · ${ab} ${S.ab[ab]} ฝึกได้อีก +${Math.min(GROW_EACH-(S.grownAb[ab]||0),GROW_TOTAL-(S.grown||0),GROW_MAX-S.ab[ab])}`:'';
+    if(f.id==='learn'){
+      schoolsOpen().filter(c=>S.gold>=c.cost).forEach(c=>ch.push({t:`เรียนหนังสือ · ${c.th}`,
+        s:`${c.cost?gp(c.cost)+'/ปี · เรียนได้อีก '+Math.floor(S.gold/c.cost)+' ปี':'ฟรี'} · แต้มฝึก ×${c.pts}${tr}`,setFocus:'learn',school:c.id,tg:['knowledge']}));
+      return;}
+    ch.push({t:f.th,s:f.hint+tr,setFocus:f.id,tg:FOCUS_TG[f.id]||[]});
+  });
+  return {id:'focus_'+S.age,kind:'focus',h:W[0],b:W[1]+(S.grown>=GROW_TOTAL?' · สเตตัสโตครบสามขั้นของวัยเด็กแล้ว':''),ch};
+}
+const FOCUS_TG={work:['might','tradition'],play:['freedom'],help:['people','tradition'],elders:['faith','tradition'],
+  people:['people'],hobby:['freedom','independence'],mentor:['aspiration','knowledge']};
 /* the master you ask for yourself: everyone you qualify for, with what it costs */
 const ASK_MENTOR={id:'ask_mentor',at:'c',cond:x=>x.age>=x.race.mature*.5&&!x.mentor,h:'ฝากตัวเป็นศิษย์',
   b:x=>{const no=Object.entries(MENTORS).filter(([,m])=>!m.min(x)).map(([,m])=>`${m.th} (ต้องมี ${m.minTh})`);
@@ -3084,6 +3106,7 @@ function loadSeen(){try{SEEN=JSON.parse(localStorage.getItem('faerun_seen_v1')||
 function saveSeen(){try{const ids=Object.keys(S.done).filter(k=>BANK.some(d=>d.id===k));
   localStorage.setItem('faerun_seen_v1',JSON.stringify([ids,...(SEEN||[])].slice(0,4)));}catch(e){}}
 function nextDec(){
+  if(S.focusAsk&&S.age<S.race.mature){const w=S.focusAsk;S.focusAsk=null;const d=focusDec(w);if(d.ch.length>1)return d;}
   for(const k in S.plant){
     if(S.plant[k]<=S.age){const d={...PLANTS[k],id:'plant_'+k+'_'+S.age};delete S.plant[k];return d;}
   }
@@ -3216,6 +3239,7 @@ function applyChoice(d,c){
     else{S.r=clamp(S.r-4,0,100);extra=' — ญาติไม่ยอมช่วย และพูดถึงเรื่องนี้ไปอีกนาน';}
   }
   if(c.heal)S.gold-=(S.life.ward==='full'?12:30);
+  if(c.setFocus){S.focus=c.setFocus;if(c.school)S.school=c.school;}
   if(c.cross||c.stay)crossResolve(c,notes);
   if(c.path&&!S.adv)enterPath(c.path);
   if(c.mentor&&(!cr||cr.ok))takeMentor(c.mentor);

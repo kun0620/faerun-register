@@ -73,10 +73,6 @@ select{font:inherit;font-size:13.5px;background:var(--vellum);color:var(--ink);b
 .abil b{display:block;font-family:var(--f-mono);font-size:18px;font-weight:500;line-height:1.1}
 .abil span{display:block;font-size:10px;color:var(--ink-soft)}
 .abil .hi{border-color:var(--verdigris);color:var(--verdigris)}
-table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
-table.cmp th,table.cmp td{text-align:right;padding:5px 4px;border-bottom:1px solid var(--rule)}
-table.cmp th:first-child,table.cmp td:first-child{text-align:left;color:var(--ink-soft)}
-table.cmp thead th{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;color:var(--ink-soft)}
 
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--vellum);border-bottom:1px solid var(--rule);margin-bottom:18px}
 .topbar .in{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:9px;display:flex;flex-wrap:wrap;gap:8px 13px;align-items:baseline}
@@ -283,13 +279,9 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
       </div>
       <p class="hint">ใช้เวลาจริงเท่ากันทุกเผ่า เอลฟ์ที่มีอายุขัย 720 ปีจึงผ่านหนึ่งปีเร็วกว่าครึ่งออร์คที่มี 62 ปีราวสิบเท่า</p>
     </div>
-    <div class="set"><span class="lbl">เผ่าที่อยากใช้เทียบ (ไม่บังคับ)</span>
-      <div class="row"><select id="cmpRace"></select></div>
-    </div>
     <div class="set"><span class="lbl">เนื้อหาและจังหวะ</span>
       <div class="row">
         <button class="chip" data-opt="pauses" data-v="1" aria-pressed="true">ช่วงหยุดให้เขียนความคิด</button>
-        <button class="chip" data-opt="soften" data-v="1">เลี่ยงรายละเอียดที่หนัก</button>
         <button class="chip" id="themeBtn">โหมดหน้าจอ: ตามอุปกรณ์</button>
       </div>
     </div>
@@ -316,10 +308,6 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
         <div class="sigil" id="recSigil"></div>
         <div class="abil" id="recAbil"></div>
         <p class="xs muted" style="margin-top:11px" id="recAbilNote"></p>
-      </div>
-      <div class="plate" id="recCmpBox">
-        <p class="eyebrow" style="margin-bottom:4px">ถ้าเกิดวันเดียวกัน</p>
-        <div style="overflow-x:auto"><table class="cmp" id="recCmp"></table></div>
       </div>
     </div>
     <div class="col">
@@ -871,7 +859,7 @@ const EVENTS=[
  {st:'c',w:7,t:'แม่สอนให้จำชื่อเทพประจำบ้านให้ครบ',fx:{l:1.5,r:1},chk:{skill:'religion',dc:10,ok:{t:'จำได้ครบทุกองค์ แม่ยิ้มอยู่ทั้งวัน',fx:{s:1.5}}}},
  {st:'c',w:7,t:'ขบวนพ่อค้าผ่านหมู่บ้าน ได้ยืนมองล้อเกวียนจนลับตา',fx:{s:2}},
  {st:'c',w:6,t:'พ่อให้ถือมีดเป็นครั้งแรก มือยังสั่นอยู่',fx:{b:1.5},chk:{ab:'DEX',dc:10,no:{t:'มีดบาดนิ้วเป็นแผลยาว',hurt:1}}},
- {st:'c',w:5,t:'เพื่อนบ้านหายไปกลางฤดูเกี่ยว ไม่มีใครพูดถึงอีกเลย',n:'สัตว์ร้ายและโจรเป็นสาเหตุการหายตัวที่พบบ่อยที่สุดนอกกำแพงเมือง',fx:{s:-3,r:-1},hard:1},
+ {st:'c',w:5,t:'เพื่อนบ้านหายไปกลางฤดูเกี่ยว ไม่มีใครพูดถึงอีกเลย',n:'สัตว์ร้ายและโจรเป็นสาเหตุการหายตัวที่พบบ่อยที่สุดนอกกำแพงเมือง',fx:{s:-3,r:-1}},
  {st:'c',w:6,t:'นักบวชเร่ร่อนแวะพัก สอนให้เขียนชื่อตัวเองได้',n:'คนในแฟรูนที่อ่านออกเขียนได้มีไม่ถึงหนึ่งในห้า นอกกำแพงเมืองใหญ่ยิ่งน้อยกว่านั้น',fx:{l:4},chk:{ab:'INT',dc:11,ok:{t:'จำตัวอักษรได้ทั้งแถว นักบวชทิ้งแผ่นหนังไว้ให้',fx:{l:4}},no:{t:'เขียนได้แค่ตัวแรกของชื่อ',fx:{l:-2}}}},
  {st:'c',w:5,t:'เก็บหินสีประหลาดได้ก้อนหนึ่ง พกติดตัวไว้ตั้งแต่นั้น',fx:{s:2}},
  {st:'cy',w:6,t:'ฤดูเก็บเกี่ยวล้มเหลว ทั้งบ้านกินข้าวต้มใสมาทั้งฤดูหนาว',fx:{b:-2.5,g:-4},chk:{ab:'CON',save:1,dc:12,no:{t:'ผอมลงจนซี่โครงโผล่',exh:1}}},
@@ -879,7 +867,7 @@ const EVENTS=[
  {st:'y',w:8,t:'เริ่มออกแรงเต็มวันเหมือนผู้ใหญ่ ฝ่ามือด้านขึ้นทั้งสองข้าง',fx:{b:1.6,g:4},chk:{skill:'athletics',dc:11,ok:{t:'ยกได้มากกว่าผู้ใหญ่บางคน ค่าแรงขึ้น',fx:{g:4}},no:{t:'หลังเจ็บไปหลายสัปดาห์',hurt:1}}},
  {st:'y',w:7,t:'มีคนหนึ่งที่พอเดินผ่านแล้วหัวใจเต้นผิดจังหวะ',fx:{s:3,r:2},chk:{skill:'persuasion',dc:12,ok:{t:'กล้าเข้าไปพูดด้วย และเขาก็ยิ้มกลับ',fx:{s:2,r:2}},no:{t:'พูดอะไรไม่ออกสักคำ',fx:{s:-2}}}},
  {st:'y',w:6,t:'ทะเลาะกับพ่อเรื่องอนาคต แล้วไม่พูดกันไปสามวัน',fx:{s:-2,r:-2},chk:{skill:'insight',dc:12,ok:{t:'วันที่สี่ได้เข้าใจว่าพ่อกลัวอะไร แล้วคืนดีกัน',fx:{r:3,s:1}}}},
- {st:'y',w:6,t:'ได้ยินข่าวว่ามีคนจากหมู่บ้านข้าง ๆ ไปตายในดันเจี้ยนเพราะหวังสมบัติ',n:'คนที่ออกผจญภัยในวัยหนุ่มสาวราวครึ่งหนึ่งไม่ได้กลับมาถึงปีที่สาม',fx:{s:-1.5},hard:1},
+ {st:'y',w:6,t:'ได้ยินข่าวว่ามีคนจากหมู่บ้านข้าง ๆ ไปตายในดันเจี้ยนเพราะหวังสมบัติ',n:'คนที่ออกผจญภัยในวัยหนุ่มสาวราวครึ่งหนึ่งไม่ได้กลับมาถึงปีที่สาม',fx:{s:-1.5}},
  {st:'y',w:5,t:'ลงแข่งวิ่งพนันกันในงานฉลองกลางฤดูร้อน',fx:{r:1},chk:{skill:'athletics',dc:13,ok:{t:'เข้าเส้นชัยก่อนทุกคน ได้เหรียญทองแดงมาหนึ่งกำมือ',fx:{s:2.5,g:5}},no:{t:'ล้มกลางทาง เสียเงินพนันไปหมด',fx:{g:-3,s:-1.5}}}},
  {st:'ya',w:6,t:'ทหารเกณฑ์ผ่านมา เรียกชายฉกรรจ์ไปขึ้นทะเบียน',fx:{s:-2,b:-1},chk:{skill:'stealth',dc:12,ok:{t:'หลบอยู่ในยุ้งข้าวจนขบวนผ่านไป',fx:{s:2,b:1}},no:{t:'ถูกจับไปขุดคูค่ายอยู่หนึ่งฤดู',exh:1}}},
  {st:'a',w:8,t:'ปีนี้ทำงานได้ดี มีเงินเหลือเก็บเป็นครั้งแรก',fx:{g:12,s:2}},
@@ -889,10 +877,10 @@ const EVENTS=[
  {st:'a',w:5,t:'ฝันถึงที่ที่ไม่เคยไป ตื่นมาแล้วจำกลิ่นได้',fx:{s:1.5,l:1}},
  {st:'a',w:5,t:'หัวหน้างานเห็นฝีมือ ค่าแรงรายวันจึงขึ้น',fx:{g:14,s:2}},
  {st:'am',w:7,t:'ไข้ระบาดเข้าเมือง วิหารเปิดประตูรับคนไข้จนล้น',n:'โรคระบาดคร่าชีวิตชาวแฟรูนมากกว่าสัตว์ร้ายทุกชนิดรวมกันหลายเท่า',fx:{b:-4,s:-2},chk:{ab:'CON',save:1,dc:12,no:{t:'ติดไข้ไปด้วย นอนซมอยู่เกือบเดือน',hurt:2,exh:1}}},
- {st:'am',w:6,t:'สงครามชายแดนปะทุ ราคาข้าวขึ้นเท่าตัว',fx:{g:-10,s:-2},chk:{skill:'survival',dc:12,ok:{t:'ตุนเสบียงไว้ทันก่อนราคาขึ้น',fx:{g:6}}},hard:1},
+ {st:'am',w:6,t:'สงครามชายแดนปะทุ ราคาข้าวขึ้นเท่าตัว',fx:{g:-10,s:-2},chk:{skill:'survival',dc:12,ok:{t:'ตุนเสบียงไว้ทันก่อนราคาขึ้น',fx:{g:6}}}},
  {st:'am',w:6,t:'ได้เป็นคนที่คนอื่นในละแวกเดินมาปรึกษาเวลามีเรื่อง',fx:{r:3,s:2}},
  {st:'m',w:7,t:'หลังเริ่มมีเสียงเวลาลุกตอนเช้า',fx:{b:-2}},
- {st:'m',w:6,t:'คนรุ่นก่อนในบ้านจากไป งานศพจัดตามธรรมเนียมของเผ่า',fx:{s:-4,r:-2},hard:1},
+ {st:'m',w:6,t:'คนรุ่นก่อนในบ้านจากไป งานศพจัดตามธรรมเนียมของเผ่า',fx:{s:-4,r:-2}},
  {st:'m',w:6,t:'สอนงานให้เด็กรุ่นใหม่ เขาเรียนได้เร็วกว่าที่เคยคิด',fx:{r:2.5,s:2,l:1}},
  {st:'m',w:5,t:'ซ่อมหลังคาบ้านใหม่ทั้งหลัง ปีนี้ฝนไม่รั่วแล้ว',fx:{g:-11,s:2.5}},
  {st:'mo',w:6,t:'เริ่มจำชื่อคนที่เพิ่งเจอไม่ค่อยได้',fx:{l:-1.5},chk:{ab:'INT',save:1,dc:10,ok:{t:'แต่ยังจำทุกเรื่องในตำราได้',fx:{l:1.5}}}},
@@ -902,7 +890,7 @@ const EVENTS=[
  {st:'a',adv:1,w:9,t:'ลงไปในซากปราสาทเก่า ได้เหรียญเก่ามาหนึ่งถุงกับแผลเป็นที่แขน',fx:{g:45,b:-2.5},chk:{skill:'investigation',dc:13,ok:{t:'เจอช่องลับหลังผนัง มีเหรียญอีกถุง',fx:{g:25}}}},
  {st:'a',adv:1,w:7,t:'เจอกับอาวล์แบร์กลางทางป่า วิ่งหนีได้ทันแค่เส้นยาแดง',n:'สัตว์ร้ายในป่าเหนือฆ่าคนเดินทางมากกว่ามังกรหลายร้อยเท่า เพราะมังกรนั้นหายาก',fx:{b:-5,s:-2},chk:{ab:'DEX',save:1,dc:13,ok:{t:'กระโดดหลบกรงเล็บได้หวุดหวิด',fx:{b:5}},no:{t:'กรงเล็บฉีกไหล่เป็นแผลลึก',hurt:4}}},
  {st:'a',adv:1,w:6,t:'แบ่งสมบัติกับเพื่อนร่วมทางอย่างยุติธรรม ไม่มีใครบ่นสักคน',fx:{r:3,g:20}},
- {st:'am',adv:1,w:6,t:'เพื่อนร่วมทางคนหนึ่งไม่ได้กลับขึ้นมาจากชั้นล่าง',fx:{s:-6,r:-3},hard:1},
+ {st:'am',adv:1,w:6,t:'เพื่อนร่วมทางคนหนึ่งไม่ได้กลับขึ้นมาจากชั้นล่าง',fx:{s:-6,r:-3}},
  {st:'am',adv:1,w:5,t:'ชื่อเริ่มถูกเอ่ยถึงในโรงเตี๊ยมที่ไม่เคยไป',fx:{s:2.5,r:2,g:12}},
  {st:'mo',adv:1,w:6,t:'แขวนดาบไว้เหนือเตาผิง แล้วไม่หยิบลงมาอีกเลย',fx:{s:2,b:1}}
 ];
@@ -1518,7 +1506,7 @@ function sceneCaption(){
 }
 
 /* ---------------- state ---------------- */
-const opt={pace:12,basis:'born',era:'now',cmp:'',pauses:1,soften:0,auto:0,theme:'system'};
+const opt={pace:12,basis:'born',era:'now',pauses:1,auto:0,theme:'system'};
 let S=null,timer=null,speed=1;
 const raceList=()=>opt.basis==='living'?RACES.map(r=>({...r,w:r.w*r.span/72})):RACES;
 const era=()=>ERAS.find(e=>e.id===opt.era)||ERAS[1];
@@ -1678,7 +1666,6 @@ function soulsInto(el,arr,empty){
     const b=ce('span');b.className='st';b.textContent=p.alive===false?`${p.race.th} · จากไปเมื่อ ${p.age} ปี`:`${p.race.th} · ${p.region.th} · ${p.age} ปี`;
     d.append(a,b);el.appendChild(d);});
 }
-function pctOf(r){const rl=raceList(),t=rl.reduce((a,x)=>a+x.w,0);return (rl.find(x=>x.id===r.id).w/t*100).toFixed(1);}
 const regionRows=()=>[['ความอันตรายของถนน',S.region.danger.toFixed(2)+'×'],['ความมั่งคั่ง',S.region.wealth.toFixed(2)+'×'],
   ['คนที่อ่านออกเขียนได้',Math.round(S.region.lit*100)+'%'],['วิหารที่ประกอบพิธีได้',S.region.temple>=1?'มีทั่วถึง':'หายาก'],['ยุค',era().th]];
 function renderRecord(){
@@ -1693,19 +1680,6 @@ function renderRecord(){
     const s=ce('span');s.textContent=`${a} ${sgn(mod(S.ab[a]))}`;const t=ce('span');t.textContent=ABIL_TH[a];d.append(b,s,t);ab.appendChild(d);});
   const bonus=ABIL.filter(a=>S.ab[a]!==S.raw[a]).map(a=>`${a} +${S.ab[a]-S.raw[a]}`).join(' ');
   $('#recAbilNote').textContent=`ทอย 4d6 ตัดลูกต่ำสุด แล้วบวกโบนัสเผ่า${S.race.th} (${bonus||'—'}) · ${RACE_TRAIT[S.race.id]} · คนธรรมดาเลเวล 0 เลือด ${S.hpMax} · AC ${acFor()} · ทุกค่าในนี้จะถูกทอยใช้จริงตลอดชีวิต`;
-  const cmp=RACES.find(r=>r.id===opt.cmp);
-  $('#recCmpBox').hidden=!cmp;
-  if(cmp){
-    const t=$('#recCmp');t.textContent='';
-    const th=ce('thead'),tr=ce('tr');
-    ['',cmp.th,S.race.th].forEach(a=>{const h=ce('th');h.textContent=a;tr.appendChild(h);});
-    th.appendChild(tr);t.appendChild(th);
-    const tb=ce('tbody');
-    [['อายุขัย',cmp.span+' ปี',S.race.span+' ปี'],['บรรลุนิติภาวะ',cmp.mature+' ปี',S.race.mature+' ปี'],
-     ['สัดส่วนการเกิด',pctOf(cmp)+'%',pctOf(S.race)+'%']].forEach(row=>{
-      const r=ce('tr');row.forEach(c=>{const d=ce('td');d.textContent=c;r.appendChild(d);});tb.appendChild(r);});
-    t.appendChild(tb);
-  }
   $('#recPName').textContent=S.name;
   $('#recPSub').textContent=`${S.race.th} · ${S.region.th} · แรกเกิด`;
   drawPortrait($('#recPortrait'),S);
@@ -2587,7 +2561,11 @@ function tick(){
     if(Math.random()<p){S.chronic=1;addLog(S.age,'หมอบอกว่ามีโรคประจำตัวที่จะอยู่ไปจนวันสุดท้าย','โรคเรื้อรังอย่างความดันและเบาหวานพบมากขึ้นตามอายุ และเกิดเร็วกว่านี้ในคนที่กินไม่ระวัง',true,true);}
   }
   if(S.gold<-80&&S.kids.some(k=>k.school)){S.kids.forEach(k=>{k.school=0;});addLog(S.age,'ค่าเล่าเรียนสูงเกินจะแบกไหว จึงให้ลูกออกมาช่วยงานที่บ้าน',null,true,true);}
-  if(S.spouse){S.spouse.age++;S.spouse.bond=clamp(S.spouse.bond+(f.id==='kin'?2:-.7)+(Math.random()<.1?rnd(7)-3:0),0,100);}
+  if(S.spouse){S.spouse.age++;S.spouse.bond=clamp(S.spouse.bond+(f.id==='kin'?2:-.7)+(Math.random()<.1?rnd(7)-3:0),0,100);
+    // the spouse ages on the same curve as the souls born alongside you, so most long marriages end in a widowing
+    const sf=S.spouse.age/S.race.span;
+    const sq=.004*Math.pow(72/S.race.span,.82)*Math.exp(Math.max(0,sf-.55)*7.2)*S.region.danger;
+    if(Math.random()<sq||S.spouse.age>S.race.span*1.22)loseSpouse(S);}
   S.kids.forEach(k=>{k.age++;k.bond=clamp(k.bond+(f.id==='kin'?2:-.9)+(Math.random()<.12?rnd(9)-4:0),0,100);});
   S.friends.forEach(fr=>{fr.bond=clamp(fr.bond+(f.id==='kin'?1.5:-.6),0,100);});
   S.peers.forEach(p=>{
@@ -2619,7 +2597,7 @@ function tick(){
   const year=()=>{
     S.copeNow=copeYear();
     const sk=stageKey(),asked=dec&&dec.kind!=='reflect';
-    const pool=EVENTS.filter(e=>e.st.includes(sk)&&(!e.adv||S.adv)&&(!opt.soften||!e.hard));
+    const pool=EVENTS.filter(e=>e.st.includes(sk)&&(!e.adv||S.adv));
     if(!S.copeNow&&!asked&&pool.length&&Math.random()<.55){
       const e=wpick(pool),gm=S.region.wealth*yearScale();
       applyFx(e.fx||{},gm);
@@ -3049,14 +3027,10 @@ function renderDist(){
   ERAS.forEach(e=>{const b=ce('button');b.className='chip';b.type='button';b.dataset.opt='era';b.dataset.v=e.id;
     b.textContent=e.th;b.setAttribute('aria-pressed',String(e.id===opt.era));er.appendChild(b);});
   $('#eraHint').textContent=era().hint;
-  const sel=$('#cmpRace');
-  const none=ce('option');none.value='';none.textContent='ไม่ต้องเทียบ';sel.appendChild(none);
-  RACES.forEach(r=>{const o=ce('option');o.value=r.id;o.textContent=`${r.th} · อายุขัย ${r.span} ปี`;sel.appendChild(o);});
-  sel.onchange=()=>{opt.cmp=sel.value;};
   document.addEventListener('click',ev=>{
     const b=ev.target.closest&&ev.target.closest('[data-opt]');if(!b)return;
     const k=b.dataset.opt,v=b.dataset.v;
-    if(k==='pauses'||k==='soften'){opt[k]=opt[k]?0:1;b.setAttribute('aria-pressed',String(!!opt[k]));return;}
+    if(k==='pauses'){opt[k]=opt[k]?0:1;b.setAttribute('aria-pressed',String(!!opt[k]));return;}
     opt[k]=(k==='pace')?+v:v;
     document.querySelectorAll(`[data-opt="${k}"]`).forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===v)));
     if(k==='basis')renderDist();

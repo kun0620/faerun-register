@@ -190,6 +190,18 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 .pane[hidden]{display:none}
 .paneclose{display:none}
 .nextcard{border-color:var(--verdigris)}
+.nexttitle{margin-bottom:8px}.nexttitle b{font-family:var(--f-display);font-size:19px;letter-spacing:.03em}
+.reqs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.req{font-size:12.5px;padding:2px 8px;border-radius:2px;border:1px solid var(--rule);font-family:var(--f-mono)}
+.req.ok{color:var(--verdigris);border-color:var(--verdigris)}
+.req.no{color:var(--rust,#a4472f);border-color:currentColor}
+.ladder{list-style:none;margin:0;padding:0;display:grid;gap:4px;counter-reset:rk}
+.ladder li{display:grid;grid-template-columns:22px 1fr;column-gap:8px;padding:6px 8px;border:1px solid var(--rule);border-radius:2px;opacity:.55;counter-increment:rk}
+.ladder li::before{content:counter(rk);grid-row:span 2;font-family:var(--f-mono);font-size:12px;color:var(--ink-soft)}
+.ladder li b{font-family:var(--f-display);font-size:15px;letter-spacing:.03em}
+.ladder li span{font-size:12.5px;color:var(--ink-soft)}
+.ladder li.past{opacity:.85}
+.ladder li.now{opacity:1;border-color:var(--verdigris);background:color-mix(in srgb,var(--verdigris) 10%,transparent)}
 @media (max-width:880px){
   .cols .main{order:-1}
   .side .tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--vellum);border-top:1px solid var(--rule);border-bottom:0;
@@ -554,6 +566,100 @@ const CLASSES=[
  {id:'ranger',th:'พรานป่า',key:'DEX',risk:1.3,pay:1.1},{id:'bard',th:'กวี',key:'CHA',risk:1,pay:1.2},
  {id:'barbarian',th:'คนเถื่อน',key:'STR',risk:1.7,pay:1.1},{id:'druid',th:'ดรูอิด',key:'WIS',risk:1.1,pay:.9}
 ];
+/* ---------------- paths: seven ladders of five ranks ----------------
+   ab is the ability the path leans on (the better of the two counts); the exam for a
+   rank needs that ability at 14 for rank 3 and 16 for rank 5. Adventurers climb by level. */
+const PATHS=[
+ {id:'land',th:'ผืนดิน',ab:['WIS','CON'],skills:['nature','animal','survival'],ranks:[
+  ['Fieldhand','ลูกมือในนา','แรงงานในนาของคนอื่น'],['Tenant','ชาวนาเช่าที่','มีแปลงให้ดูแลเอง แต่ยังต้องส่งส่วนแบ่ง'],
+  ['Freeholder','เจ้าของนา','ที่ดินเป็นของตัวเอง ไม่ต้องก้มหัวให้ใคร'],['Reeve','ผู้ใหญ่บ้าน','คนทั้งหมู่บ้านมาให้ตัดสินข้อพิพาท'],
+  ['Landlord','เจ้าที่ดิน','ที่ดินกว้างจนมีคนเช่าทำกินหลายครัวเรือน']]},
+ {id:'craft',th:'ช่างฝีมือ',ab:['INT','DEX'],skills:['sleight','history','investigation'],ranks:[
+  ['Apprentice','เด็กฝึกงาน','กวาดร้าน ยกของ และแอบดูมือช่าง'],['Journeyman','ช่างฝึกหัด','รับงานเองได้แล้ว แต่ยังไม่มีร้าน'],
+  ['Master','ช่างครู','มีร้านและลูกศิษย์ของตัวเอง'],['Guildmaster','หัวหน้าสมาคมช่าง','ช่างทั้งเมืองฟังเสียงคุณ'],
+  ['Royal Artisan','ช่างหลวง','งานของคุณประดับวังและวิหาร']]},
+ {id:'trade',th:'การค้า',ab:['CHA','WIS'],skills:['persuasion','insight','deception'],ranks:[
+  ['Errand','ลูกจ้างร้าน','วิ่งส่งของ จดบัญชี และฟังราคา'],['Peddler','พ่อค้าเร่','มีของเป็นของตัวเองบนหลังลา'],
+  ['Merchant','เจ้าของร้าน','มีหน้าร้านในตลาด'],['Caravan Master','นายกองคาราวาน','ขบวนเกวียนของคุณข้ามแคว้น'],
+  ['Magnate','สมาชิกสภาพ่อค้า','ราคาข้าวในเมืองขยับตามคำของคุณ']]},
+ {id:'faith',th:'ศรัทธา',ab:['WIS','CHA'],skills:['religion','medicine','insight'],ranks:[
+  ['Acolyte','ผู้ช่วยวิหาร','จุดเทียน กวาดลาน และท่องบทสวด'],['Novice','นักบวชฝึกหัด','ได้ยืนข้างแท่นบูชาในพิธี'],
+  ['Priest','นักบวช','นำพิธีและรักษาคนป่วยได้เอง'],['High Priest','หัวหน้าวิหาร','วิหารทั้งหลังอยู่ในมือคุณ'],
+  ['Chosen','ผู้ถูกเลือกของเทพ','เทพมองมาที่คุณโดยตรง']]},
+ {id:'arcane',th:'วิชาเวท',ab:['INT','WIS'],skills:['arcana','history','investigation'],ranks:[
+  ['Scribe','เด็กรับใช้หอสมุด','คัดลอกตำราที่ยังอ่านไม่ออก'],['Initiate','ลูกศิษย์','ร่ายเวทเล็ก ๆ ได้สำเร็จเป็นครั้งแรก'],
+  ['Magus','ผู้วิเศษ','คนในเมืองมาจ้างให้แก้เรื่องที่ไม่มีใครแก้ได้'],['Loremaster','อาจารย์สำนัก','ลูกศิษย์ของคุณกระจายไปทั่วแคว้น'],
+  ['Archmage','อาร์คเมจ','ชื่อของคุณอยู่ในตำราที่คนรุ่นหลังจะคัดลอก']]},
+ {id:'arms',th:'ดาบและโล่',ab:['STR','CON'],skills:['athletics','intimidation','perception'],ranks:[
+  ['Levy','ทหารเกณฑ์','ถือหอกยืนแถวหลัง'],['Watchman','ยามประจำเมือง','เดินตรวจกำแพงยามค่ำ'],
+  ['Sergeant','นายสิบ','มีคนสิบคนที่รอคำสั่งคุณ'],['Captain','ผู้บังคับกอง','กองทั้งกองเดินตามธงของคุณ'],
+  ['Knight-Commander','อัศวินแห่งแคว้น','เจ้าแคว้นมอบดาบให้ด้วยมือตัวเอง']]},
+ {id:'adv',th:'ผจญภัย',ab:null,skills:[],ranks:[
+  ['Wanderer','เลเวล 1–4','วีรชนที่คนแถวบ้านรู้จัก'],['Vanguard','เลเวล 5–10','ชื่อที่คนทั้งแคว้นเริ่มรู้จัก'],
+  ['Champion','เลเวล 11–16','คนที่เจ้าแคว้นเรียกเมื่อทุกทางหมด'],['Paragon','เลเวล 17–19','เรื่องของคุณถูกเล่าข้ามทวีป'],
+  ['Legend','เลเวล 20','ตำนานที่บาร์ดยังร้องอีกร้อยปี']]}
+];
+const pathOf=id=>PATHS.find(p=>p.id===id);
+const RANK_MUL=[1,1,1.3,1.7,2.3,3.5];
+const RANK_DC=[0,10,13,16,19,22];          // DC to reach rank n
+const advRank=lv=>lv>=20?5:lv>=17?4:lv>=11?3:lv>=5?2:1;
+function rankMul(){return S.path&&S.path!=='adv'?RANK_MUL[S.rank]||1:1;}
+function pathAb(p,x){x=x||S;return p.ab?p.ab.reduce((a,b)=>x.ab[b]>x.ab[a]?b:a):x.cls?x.cls.key:'STR';}
+function pathSkill(p,x){x=x||S;return p.skills.find(k=>x.skills.includes(k))||p.skills[0];}
+function rankName(x){x=x||S;if(!x.path||!x.rank)return '';return pathOf(x.path).ranks[x.rank-1][0];}
+function enterPath(id,why){
+  if(S.path===id)return;
+  if(S.path&&S.rank)S.pastPaths.push({path:S.path,rank:S.rank});
+  S.path=id;S.merit=0;
+  S.rank=id==='adv'?advRank(S.lvl||1):1;
+  const p=pathOf(id),r=p.ranks[S.rank-1];
+  S.rankAt=[S.age];
+  addLog(S.age,`เข้าเส้นทาง${p.th} — ${r[0]}`,`${r[1]} · ${why||r[2]}`,true);
+}
+/* what still stands between you and the next rank besides the exam itself */
+function rankReqs(x){
+  x=x||S;const p=pathOf(x.path),out=[];
+  if(!p||p.id==='adv'||x.rank>=5)return out;
+  const to=x.rank+1,ab=pathAb(p,x),need=to>=5?16:to>=3?14:0;
+  if(need)out.push({t:`${ab} ${x.ab[ab]} / ${need}`,ok:x.ab[ab]>=need});
+  if(p.id==='land'&&to===3)out.push({t:'มีที่ดินของตัวเอง',ok:!!x.own.land});
+  if(p.id==='trade'&&to===5)out.push({t:`ทอง ${Math.round(x.gold)} / 2,000gp`,ok:x.gold>=2000});
+  if(p.id==='faith'&&to>=4)out.push({t:x.deity?`ศรัทธา ${Math.round(x.faith)} / ${to===5?90:70}`:'ไม่มีเทพประจำตัว',ok:!!x.deity&&x.faith>=(to===5?90:70)});
+  if(p.id==='faith'&&to===5)out.push({t:'ไม่เคยทิ้งเทพ',ok:!x.formerDeity});
+  if(p.id==='arcane'&&to===5)out.push({t:`การศึกษา ${Math.round(x.l)} / 80`,ok:x.l>=80});
+  return out;
+}
+/* merit fills over working years; trade focus fills it fastest */
+function gainMerit(f){
+  if(!S.path||S.path==='adv'||S.rank>=5||S.age<S.race.mature)return;
+  const p=pathOf(S.path),m={trade:1.7,balance:1,work:1.2}[f.id]||.55;
+  S.merit=Math.min(100,S.merit+7.5*m*(1+mod(S.ab[pathAb(p)])*.12)*yearScale());
+}
+function examSit(){
+  const p=pathOf(S.path),to=S.rank+1,dc=RANK_DC[to],ab=pathAb(p),sk=pathSkill(p),R=p.ranks[to-1];
+  const fee=Math.round(8*Math.pow(2.4,to-1));
+  const opts=[
+    {t:'พิสูจน์ฝีมือ',ab:SKILLS[sk].ab,skill:sk,dc,st:'grit',s:`ทดสอบ${SKILLS[sk].th}ต่อหน้าผู้ตัดสิน`,tg:['aspiration','knowledge']},
+    {t:'หาผู้อุปถัมภ์',ab:'CHA',skill:'persuasion',dc:dc+1,st:'kin',s:'ให้คนที่นับถือคุณช่วยพูด · ต้องมีสายสัมพันธ์ 50 ขึ้นไป',need:x=>x.r>=50,tg:['people','tradition']},
+    {t:'จ่ายเพื่อให้ได้ตำแหน่ง',ab,dc:dc-4,st:'shady',cost:fee,s:`${gp(fee)} · ง่ายกว่า แต่ไปทางร้าย`,al:[0,-.06],tg:['greed']},
+    {t:'รอให้ถึงคิว',ab,dc:1,st:'wits',wait:1,s:'ไม่ต้องลุ้น · ผลงานกลับไปครึ่งหนึ่ง แล้วค่อยสอบใหม่',tg:['tradition']}];
+  return {id:'exam',kind:'exam',big:true,h:`สอบเลื่อนขั้น: ${R[0]}`,
+    b:`${p.th} · จาก ${p.ranks[S.rank-1][0]} สู่ ${R[0]} (${R[1]}) — ${R[2]}`,
+    card:[['ขั้นที่',`${to} จาก 5`],['DC',String(dc)],['สเตตัสหลัก',`${ab} ${S.ab[ab]}`]],opts,
+    resolve:(o,r)=>{
+      if(o.wait){S.merit=50;addLog(S.age,`รอคิวสอบเป็น ${R[0]} ต่อไป`,null);return;}
+      S.exams++;
+      if(r.ok){S.rank=to;S.merit=0;S.rankAt.push(S.age);
+        addLog(S.age,`ได้เป็น ${R[0]}`,[rollTh(r),`${R[1]} · ${R[2]}`],true);}
+      else if(r.d===1&&S.rank>1){S.rank--;S.merit=0;S.rankAt.pop();
+        addLog(S.age,'สอบไม่ผ่าน และเกิดเรื่องอื้อฉาว',[rollTh(r),`ขั้นตกกลับไปเป็น ${p.ranks[S.rank-1][0]}`],true,true);}
+      else{S.merit=50;addLog(S.age,`สอบเป็น ${R[0]} ไม่ผ่าน`,rollTh(r),false,true);}
+    }};
+}
+function examMaybe(done){
+  if(S.path&&S.path!=='adv'&&S.rank<5&&S.merit>=100&&S.hp>0&&rankReqs().every(q=>q.ok)){askCope(examSit(),done);return;}
+  done();
+}
 const ABIL=['STR','DEX','CON','INT','WIS','CHA'];
 const ABIL_TH={STR:'พละ',DEX:'คล่อง',CON:'ทน',INT:'ปัญญา',WIS:'หยั่งรู้',CHA:'เสน่ห์'};
 
@@ -956,27 +1062,27 @@ const DECS=[
       {t:'ไม่ไป อยู่ทำมาหากินที่นี่',s:'ปลอดภัย ชีวิตเดิม',fx:{r:4,g:6},tg:['people','tradition']}]},
  {id:'trade_farm',at:'mature',cond:x=>x.done.call&&tradeKind(x)==='farm',h:'ถึงเวลาเลือกทางทำกิน',
   b:x=>`ไม่มีใครมาชวนไปไหน ทุ่งรอบ${x.region.th}กว้างพอให้ทุกคนได้ทำกิน ถ้ายอมทำงานหนักพอ`,
-  ch:[{t:'สืบทอดที่นาของพ่อแม่',s:'มั่นคง · สายสัมพันธ์ +6 · ทดสอบธรรมชาติ',fx:{g:10,r:6},tg:['tradition','people'],
+  ch:[{t:'สืบทอดที่นาของพ่อแม่',path:'land',s:'มั่นคง · สายสัมพันธ์ +6 · ทดสอบธรรมชาติ',fx:{g:10,r:6},tg:['tradition','people'],
        chk:{skill:'nature',dc:11,ok:{t:'อ่านฟ้าอ่านดินได้แม่นจนพ่อยอมยกแปลงดีให้',fx:{g:4}},no:{t:'ปีแรกหว่านผิดฤดูไปแปลงหนึ่ง',fx:{s:-1}}}},
-      {t:'รับจ้างต้อนสัตว์ให้ฟาร์มใหญ่',s:'ทอง +20 · ทดสอบจัดการสัตว์',fx:{g:16,s:-1},tg:['independence'],
+      {t:'รับจ้างต้อนสัตว์ให้ฟาร์มใหญ่',path:'land',s:'ทอง +20 · ทดสอบจัดการสัตว์',fx:{g:16,s:-1},tg:['independence'],
        chk:{skill:'animal',dc:11,ok:{t:'เจ้าของฟาร์มขึ้นค่าแรงให้ตั้งแต่ปีแรก',fx:{g:6}}}},
-      {t:'ไปหางานในเมือง',s:'ทอง +20 · สายสัมพันธ์ −6 · ทดสอบโน้มน้าว',fx:{g:18,r:-6,s:-2},tg:['aspiration','freedom'],
+      {t:'ไปหางานในเมือง',path:'trade',s:'ทอง +20 · สายสัมพันธ์ −6 · ทดสอบโน้มน้าว',fx:{g:18,r:-6,s:-2},tg:['aspiration','freedom'],
        chk:{skill:'persuasion',dc:12,ok:{t:'ได้งานตั้งแต่วันที่สองที่เข้าเมือง',fx:{g:6}},no:{t:'นอนใต้สะพานอยู่หลายคืนกว่าจะได้งาน',fx:{s:-2}}}}]},
  {id:'trade_city',at:'mature',cond:x=>x.done.call&&tradeKind(x)==='city',h:'ถึงเวลาเลือกทางทำกิน',
   b:x=>`${x.region.th}มีงานให้ทำทุกมุมถนน แต่ทุกงานก็มีคนแย่งกันอยู่แล้ว`,
-  ch:[{t:'ทำงานท่าเรือและโกดัง',s:'ทอง +18 · ทดสอบกรีฑา',fx:{g:14},tg:['independence'],
+  ch:[{t:'ทำงานท่าเรือและโกดัง',path:'arms',s:'ทอง +18 · ทดสอบกรีฑา',fx:{g:14},tg:['independence'],
        chk:{skill:'athletics',dc:11,ok:{t:'หัวหน้าคนงานเลือกคุณก่อนทุกเช้า',fx:{g:6}}}},
-      {t:'ขอเป็นลูกมือช่างฝีมือ',s:'การศึกษา +9 · ทอง +16 · ทดสอบมือไว',fx:{l:9,g:14,s:-2},tg:['knowledge','aspiration'],
+      {t:'ขอเป็นลูกมือช่างฝีมือ',path:'craft',s:'การศึกษา +9 · ทอง +16 · ทดสอบมือไว',fx:{l:9,g:14,s:-2},tg:['knowledge','aspiration'],
        chk:{skill:'sleight',dc:11,ok:{t:'ช่างยอมสอนเคล็ดลับที่ไม่สอนใคร',fx:{l:3,g:2}},no:{t:'ถูกใช้แต่งานกวาดร้านอยู่ปีกว่า',fx:{s:-1}}}},
-      {t:'ช่วยงานร้านของญาติ',s:'สายสัมพันธ์ +6 · ทอง +12 · ทดสอบหยั่งใจ',fx:{g:10,r:6},tg:['people','tradition'],
+      {t:'ช่วยงานร้านของญาติ',path:'trade',s:'สายสัมพันธ์ +6 · ทอง +12 · ทดสอบหยั่งใจ',fx:{g:10,r:6},tg:['people','tradition'],
        chk:{skill:'insight',dc:11,ok:{t:'อ่านลูกค้าออกจนญาติยกหน้าร้านให้ดูแล',fx:{g:4}},no:{t:'ทะเลาะกับลูกพี่ลูกน้องเรื่องเงินทอน',fx:{r:-2}}}}]},
  {id:'trade_craft',at:'mature',cond:x=>x.done.call&&tradeKind(x)==='craft',h:'ถึงเวลาเลือกทางทำกิน',
   b:x=>`${x.tier.th}มีทางวางไว้ให้แล้ว เหลือแค่ว่าจะเดินตามหรือไม่`,
-  ch:[{t:'รับช่วงงานของตระกูล',s:'มั่นคง · สายสัมพันธ์ +6 · ทดสอบประวัติศาสตร์',fx:{g:12,r:6},tg:['tradition','people'],
+  ch:[{t:'รับช่วงงานของตระกูล',path:'craft',s:'มั่นคง · สายสัมพันธ์ +6 · ทดสอบประวัติศาสตร์',fx:{g:12,r:6},tg:['tradition','people'],
        chk:{skill:'history',dc:11,ok:{t:'จำได้ทุกชื่อในบัญชีลูกค้าเก่าของตระกูล',fx:{g:4}},no:{t:'ลูกค้าเก่าบางรายหายไปกับคนรุ่นก่อน',fx:{s:-1}}}},
-      {t:'ไปเรียนต่อกับปรมาจารย์ในเมืองใหญ่',s:'การศึกษา +12 · ทอง +8 · ทดสอบปัญญา',fx:{l:10,g:8,r:-3},tg:['knowledge','aspiration'],
+      {t:'ไปเรียนต่อกับปรมาจารย์ในเมืองใหญ่',path:'craft',s:'การศึกษา +12 · ทอง +8 · ทดสอบปัญญา',fx:{l:10,g:8,r:-3},tg:['knowledge','aspiration'],
        chk:{ab:'INT',dc:12,ok:{t:'ปรมาจารย์รับเป็นศิษย์ใกล้ชิด',fx:{l:4}},no:{t:'ตามบทเรียนไม่ทันอยู่หลายเดือน',fx:{s:-2}}}},
-      {t:'เปิดทางของตัวเอง',s:'ทดสอบโน้มน้าว · ผ่านแล้วได้มาก',tg:['independence','freedom','pride'],
+      {t:'เปิดทางของตัวเอง',path:'trade',s:'ทดสอบโน้มน้าว · ผ่านแล้วได้มาก',tg:['independence','freedom','pride'],
        chk:{skill:'persuasion',dc:13,ok:{t:'ลูกค้ากลุ่มแรกตามมาเอง',fx:{g:26}},no:{t:'ปีแรกขาดทุน',fx:{g:4,s:-3}}}}]},
  {id:'ideal',at:'any',core:1,cond:x=>!!x.bg&&!x.ideal,h:'สิ่งที่ยึดถือ',
   b:x=>`ชีวิตแบบ${BGS.find(b=>b.id===x.bg).th}สอนอะไรบางอย่างไว้ ถึงวันหนึ่งก็ต้องรู้ว่าตัวเองยืนอยู่ข้างไหน`,
@@ -1593,7 +1699,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -1648,7 +1754,7 @@ function baseIncome(){
   if(S.age>S.span*.82)return 7;
   let v=S.adv?70:30;
   v*=(focusSet().find(x=>x.id===S.focus)||focusSet()[0]).mul||1;
-  v*=S.region.wealth*(1+S.l/160)*S.jobMul;
+  v*=S.region.wealth*(1+S.l/160)*S.jobMul*rankMul();
   if(S.own.mule)v*=1.05;
   if(S.own.horse)v*=1.15;
   if(S.own.cart)v*=1.3;
@@ -1817,10 +1923,42 @@ function renderRolls(){
     rest.forEach(x=>{const q=ce('div');if(!x.ok)q.className='no';q.textContent=`${x.age} ปี · ${rollTh(x)}`;h.appendChild(q);});
     el.appendChild(h);}
 }
+function reqChip(q){const c=ce('span');c.className='req '+(q.ok?'ok':'no');c.textContent=(q.ok?'✓ ':'✗ ')+q.t;return c;}
+function ladderInto(el,p,rank,at){
+  const ol=ce('ol');ol.className='ladder';
+  p.ranks.forEach((R,i)=>{const li=ce('li');li.className=i+1<rank?'past':i+1===rank?'now':'';
+    const en=ce('b');en.textContent=R[0];const th=ce('span');th.textContent=R[1]+(at&&at[i]!=null?` · อายุ ${at[i]}`:'');
+    li.append(en,th);ol.appendChild(li);});
+  el.appendChild(ol);
+}
+function meritBar(v){const bar=ce('div');bar.className='bar';const i=ce('i');i.style.width=clamp(v,0,100)+'%';bar.appendChild(i);return bar;}
+function renderPath(){
+  const el=$('#lPath');el.textContent='';
+  if(!S.path){const p=ce('p');p.className='sm muted';p.textContent=S.age<S.race.mature?'ยังเด็กเกินจะเลือกทางเดิน':'ยังไม่ได้เข้าเส้นทางใด';el.appendChild(p);return;}
+  const p=pathOf(S.path),h=ce('p');h.className='eyebrow';h.style.marginBottom='8px';h.textContent='เส้นทาง'+p.th;el.appendChild(h);
+  ladderInto(el,p,S.rank,S.rankAt);
+  if(S.pastPaths.length){const q=ce('p');q.className='xs muted';q.style.marginTop='10px';
+    q.textContent='เคยเดิน: '+S.pastPaths.map(x=>`${pathOf(x.path).th} ถึง ${pathOf(x.path).ranks[x.rank-1][0]}`).join(' · ');el.appendChild(q);}
+}
+/* the card above the dice: how close the next rank is, and what still stands in the way */
+function renderNext(){
+  const el=$('#lNext');el.textContent='';
+  if(!S.path||S.rank>=5){el.hidden=true;return;}
+  el.hidden=false;const p=pathOf(S.path),R=p.ranks[S.rank];
+  const h=ce('p');h.className='eyebrow';h.style.marginBottom='6px';h.textContent='ขั้นต่อไป';
+  const t=ce('div');t.className='nexttitle';const b=ce('b');b.textContent=R[0];const sp=ce('span');sp.className='sm muted';sp.textContent=' '+R[1];t.append(b,sp);
+  el.append(h,t);
+  if(S.path==='adv'){const n=ce('p');n.className='sm muted';n.textContent=`${R[1].replace('เลเวล ','ถึงเลเวล ')} · ตอนนี้เลเวล ${S.lvl}`;el.appendChild(n);return;}
+  const row=ce('div');row.className='stat';const a=ce('span');a.textContent='ผลงาน';const v=ce('span');v.className='mono';v.style.textAlign='right';v.textContent=Math.floor(S.merit);
+  row.append(a,meritBar(S.merit),v);el.appendChild(row);
+  const reqs=rankReqs(),wrap=ce('div');wrap.className='reqs';
+  wrap.appendChild(reqChip({t:S.merit>=100?`พร้อมสอบ DC ${RANK_DC[S.rank+1]}`:`ผลงานครบ 100 แล้วสอบ DC ${RANK_DC[S.rank+1]}`,ok:S.merit>=100}));
+  reqs.forEach(q=>wrap.appendChild(reqChip(q)));el.appendChild(wrap);
+}
 /* the one line that stays on screen: who, what rank, how hurt, how much */
 function renderStrip(){
   const el=$('#lStrip');el.textContent='';
-  const job=S.adv?`${S.cls.th} เลเวล ${S.lvl}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
+  const job=S.rank?`${rankName()} · ${S.adv?S.cls.th+' เลเวล '+S.lvl:pathOf(S.path).th}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
   [[S.name,''],[job,'rk'],[`HP ${S.hp}/${S.hpMax}`,''],[(S.gold<0?'−':'')+gp(Math.abs(S.gold)),'']].forEach(([t,c])=>{
     const b=ce('b');if(c)b.className=c;b.textContent=t;el.appendChild(b);});
 }
@@ -1838,7 +1976,7 @@ function setTab(k,toggle){
 function renderLife(){
   $('#lAge').textContent=S.age;
   $('#lMeta').textContent=`ปี ${S.year} DR · 1 ปี ≈ ${(msPerYear()/1000).toFixed(1)} วินาที`;
-  renderStrip();
+  renderStrip();renderPath();renderNext();
   const job=S.adv?`${S.cls.th} (นักผจญภัย)`:(S.age<S.race.mature?'ยังไม่ถึงวัยทำงาน':(S.bizYears>0?S.trade+' (มีร้านของตัวเอง)':S.trade));
   const hob=S.hobbies.length?S.hobbies.map(h=>`${h.th} Lv.${h.lv}`).join(' · '):'ยังไม่มี';
   sheetInto($('#lSheet'),false);renderRolls();
@@ -2509,6 +2647,7 @@ function becomeAdv(){
   S.lvl=1;S.xp=0;S.prof=profFor(1);S.saveProf=[...CLS_SAVE[S.cls.id]];
   CLS_SK[S.cls.id].forEach(k=>{if(!S.skills.includes(k))S.skills.push(k);});
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
+  enterPath('adv','ได้เข้าสมาคมนักผจญภัย');
 }
 function gainXp(n){
   if(!S.adv||n<=0)return;
@@ -2517,6 +2656,7 @@ function gainXp(n){
   if(L>S.lvl){
     const old=S.hpMax;S.lvl=L;S.prof=profFor(L);S.hpMax=hpMaxFor();S.hp=Math.max(1,S.hp+S.hpMax-old);
     addLog(S.age,`ขึ้นเลเวล ${L} — ${S.cls.th}เลเวล ${L}`,`เลือดสูงสุด ${S.hpMax} · โบนัสความชำนาญ ${sgn(S.prof)}`,true);
+    const rk=advRank(L);if(S.path==='adv'&&rk>S.rank){S.rank=rk;S.rankAt.push(S.age);const R=PATHS[6].ranks[rk-1];addLog(S.age,`ได้ชื่อว่า ${R[0]}`,R[2],true);}
   }
 }
 const xpNeed=()=>XP_LV[S.lvl]-XP_LV[S.lvl-1];
@@ -2657,9 +2797,10 @@ function tick(){
     if(S.hp<=0){dying();return;}
     renderLife();
   };
+  const career=()=>{if(S.hp>0){gainMerit(f);examMaybe(end);}else end();};
   const threat=()=>{
     if(S.adv&&f.xp)gainXp(xpNeed()*f.xp*yearScale());
-    if(S.hp>0&&Math.random()<threatQ())runThreat(end);else end();
+    if(S.hp>0&&Math.random()<threatQ())runThreat(career);else career();
   };
   const year=()=>{
     S.copeNow=copeYear();
@@ -2789,6 +2930,7 @@ function applyChoice(d,c){
     else{S.r=clamp(S.r-4,0,100);extra=' — ญาติไม่ยอมช่วย และพูดถึงเรื่องนี้ไปอีกนาน';}
   }
   if(c.heal)S.gold-=(S.life.ward==='full'?12:30);
+  if(c.path&&!S.adv)enterPath(c.path);
   if(c.takehobby)S.hobbies.push({th:S.hobbyOffer,lv:2});
   if(c.friend)S.friends.push({name:nameFor(S.race.id),bond:70});
   if(c.pet)S.pet={kind:S.petOffer[0],name:S.petOffer[1]};
@@ -2825,8 +2967,8 @@ function applyChoice(d,c){
       :check('STR',17,{skill:'athletics',label:'ทดสอบเข้าสมาคมนักผจญภัย'});
     notes.push(rollTh(r));
     if(!r.ok){S.s=clamp(S.s-4,0,100);addLog(S.age,'สมัครแล้วเขาไม่รับ',['คนที่สอบเข้าสำนักเวทในแฟรูนได้มีไม่ถึงหนึ่งในยี่สิบของผู้สมัคร',rollTh(r)],true,true);}
-    else if(c.apply==='wizard'){S.l=clamp(S.l+22,0,100);S.jobMul*=1.5;addLog(S.age,'ได้เข้าสำนักเวทในเมือง',rollTh(r),true);}
-    else if(c.apply==='temple'){S.life.ward='full';S.donated=1;S.r=clamp(S.r+8,0,100);if(S.deity)S.faith=clamp(S.faith+20,0,100);addLog(S.age,'ได้เข้าวิหาร และได้การคุ้มครองตลอดชีพ',rollTh(r),true);}
+    else if(c.apply==='wizard'){S.l=clamp(S.l+22,0,100);S.jobMul*=1.5;enterPath('arcane','ได้เข้าสำนักเวท');addLog(S.age,'ได้เข้าสำนักเวทในเมือง',rollTh(r),true);}
+    else if(c.apply==='temple'){enterPath('faith','ได้เข้าวิหาร');S.life.ward='full';S.donated=1;S.r=clamp(S.r+8,0,100);if(S.deity)S.faith=clamp(S.faith+20,0,100);addLog(S.age,'ได้เข้าวิหาร และได้การคุ้มครองตลอดชีพ',rollTh(r),true);}
     else{becomeAdv();addLog(S.age,'ได้เข้าสมาคมนักผจญภัย',`${S.cls.th}เลเวล 1 · เลือด ${S.hpMax} · AC ${acFor()}`,true);}
   }
   if(c.migrate){

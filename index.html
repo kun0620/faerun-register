@@ -628,7 +628,7 @@ const PATHS=[
 ];
 const pathOf=id=>PATHS.find(p=>p.id===id);
 const RANK_MUL=[1,1,1.3,1.7,2.3,3.5];
-const RANK_DC=[0,10,13,16,19,22];          // DC to reach rank n
+const RANK_DC=[0,10,13,16,19,24];          // DC to reach rank n
 const advRank=lv=>lv>=20?5:lv>=17?4:lv>=11?3:lv>=5?2:1;
 function rankMul(){return S.path&&S.path!=='adv'?RANK_MUL[S.rank]||1:1;}
 function pathAb(p,x){x=x||S;return p.ab?p.ab.reduce((a,b)=>x.ab[b]>x.ab[a]?b:a):x.cls?x.cls.key:'STR';}
@@ -642,7 +642,7 @@ function enterPath(id,why){
   S.rank=id==='adv'?advRank(S.lvl||1):1;
   const p=pathOf(id),r=p.ranks[S.rank-1];
   S.rankAt=[S.age];
-  S.seatAge=Math.random()<.6?S.age+Math.round((8+rnd(40))/yearScale()):0;
+  S.seatAge=Math.random()<.8?S.age+Math.round((8+rnd(40))/yearScale()):0;
   addLog(S.age,`เข้าเส้นทาง${p.th} — ${r[0]}`,`${r[1]} · ${why||r[2]}`,true);
 }
 /* what still stands between you and the next rank besides the exam itself */
@@ -651,6 +651,9 @@ function rankReqs(x){
   if(!p||p.id==='adv'||x.rank>=5)return out;
   const to=x.rank+1,ab=pathAb(p,x),need=to>=5?16:to>=3?14:0;
   if(need)out.push({t:`${ab} ${x.ab[ab]} / ${need}`,ok:x.ab[ab]>=need});
+  if(p.id==='land'&&to===4)out.push({t:`สายสัมพันธ์ ${Math.round(x.r)} / 60`,ok:x.r>=60});
+  if(p.id==='land'&&to===5)out.push({t:`ทอง ${Math.round(Math.max(0,x.gold))} / 600gp ซื้อที่ดินเพิ่ม`,ok:x.gold>=600});
+  if(p.id==='arms'&&to===5)out.push({t:`CHA ${x.ab.CHA} / 13 นำคนได้`,ok:x.ab.CHA>=13});
   if(p.id==='craft'&&to>=2)out.push({t:'ชุดเครื่องมือช่าง',ok:x.bag.some(b=>b.id==='tools')});
   if(p.id==='arcane'&&to>=2)out.push({t:'ตำราเวทเล่มแรก',ok:x.bag.some(b=>b.id==='spellbook')});
   if(p.id==='land'&&to===3)out.push(x.own.land?{t:'มีที่ดินของตัวเอง',ok:true}:{t:`ทอง ${Math.round(Math.max(0,x.gold))} / 110gp ซื้อที่ดิน`,ok:x.gold>=110});
@@ -658,7 +661,7 @@ function rankReqs(x){
   if(p.id==='faith'&&to>=4)out.push({t:x.deity?`ศรัทธา ${Math.round(x.faith)} / ${to===5?90:70}`:'ไม่มีเทพประจำตัว',ok:!!x.deity&&x.faith>=(to===5?90:70)});
   if(p.id==='faith'&&to===5)out.push({t:'ไม่เคยทิ้งเทพ',ok:!x.formerDeity});
   if(p.id==='arcane'&&to===5)out.push({t:`การศึกษา ${Math.round(x.l)} / 80`,ok:x.l>=80});
-  if(to===5)out.push({t:x.age>=x.seatAge?'ที่นั่งสูงสุดว่างอยู่':`ที่นั่งมีคนครอง · ท้าชิงได้ DC +3`,ok:true,soft:x.age<x.seatAge});
+  if(to===5)out.push({t:x.age>=x.seatAge?'ที่นั่งสูงสุดว่างอยู่':`ที่นั่งมีคนครอง · ท้าชิงได้ DC +4`,ok:true,soft:x.age<x.seatAge});
   return out;
 }
 /* merit fills over working years; trade focus fills it fastest */
@@ -670,19 +673,19 @@ function gainMerit(f){
 function examSit(){
   const p=pathOf(S.path),to=S.rank+1,dc=RANK_DC[to],ab=pathAb(p),sk=pathSkill(p),R=p.ranks[to-1];
   /* years on the path count: each rank held adds +1 to proving yourself, half that to a patron */
-  const fee=Math.round(8*Math.pow(2.4,to-1)),held=to===5&&S.age<S.seatAge,up=held?3:0;
+  const fee=Math.round(8*Math.pow(2.4,to-1)),held=to===5&&S.age<S.seatAge,up=held?4:0;
   const opts=[
     {t:held?'ท้าชิงที่นั่ง':'พิสูจน์ฝีมือ',ab:SKILLS[sk].ab,skill:sk,bonus:S.rank,dc:dc+up,st:'grit',s:held?`แข่ง${SKILLS[sk].th}กับคนที่นั่งอยู่`:`ทดสอบ${SKILLS[sk].th}ต่อหน้าผู้ตัดสิน`,tg:['aspiration','knowledge']},
     {t:'หาผู้อุปถัมภ์',ab:'CHA',skill:'persuasion',bonus:Math.floor(S.rank/2),dc:dc+1+up,st:'kin',s:'ให้คนที่นับถือคุณช่วยพูด · ต้องมีสายสัมพันธ์ 50 ขึ้นไป',need:x=>x.r>=50,tg:['people','tradition']},
     {t:'จ่ายเพื่อให้ได้ตำแหน่ง',ab,dc:dc-4+up,st:'shady',cost:fee,s:`${gp(fee)} · ง่ายกว่า แต่ไปทางร้าย`,al:[0,-.06],tg:['greed']},
-    {t:'รอให้ถึงคิว',ab,dc:1,st:'wits',wait:1,s:'ไม่ต้องลุ้น · ผลงานกลับไปครึ่งหนึ่ง แล้วค่อยสอบใหม่',tg:['tradition']}];
+    {t:'รอให้ถึงคิว',ab,dc:1,st:'wits',wait:1,last:1,s:'ไม่ต้องลุ้น · ผลงานกลับไปครึ่งหนึ่ง แล้วค่อยสอบใหม่',tg:['tradition']}];
   return {id:'exam',kind:'exam',big:true,h:`สอบเลื่อนขั้น: ${R[0]}`,
     b:`${p.th} · จาก ${p.ranks[S.rank-1][0]} สู่ ${R[0]} (${R[1]}) — ${R[2]}`,
     card:[['ขั้นที่',`${to} จาก 5`],['DC',String(dc)],['สเตตัสหลัก',`${ab} ${S.ab[ab]}`]],opts,
     resolve:(o,r)=>{
       if(o.wait){S.merit=50;addLog(S.age,`รอคิวสอบเป็น ${R[0]} ต่อไป`,null);return;}
       S.exams++;
-      if(r.ok){S.rank=to;S.merit=0;S.rankAt.push(S.age);if(p.id==='land'&&to===3&&!S.own.land){S.gold-=110;S.own.land=1;}if(held)addLog(S.age,'ชนะคนที่ครองที่นั่งอยู่',null);toast(`${R[0]} · ${R[1]}`);
+      if(r.ok){S.rank=to;S.merit=0;S.rankAt.push(S.age);if(p.id==='land'&&to===3&&!S.own.land){S.gold-=110;S.own.land=1;}if(p.id==='land'&&to===5)S.gold-=600;if(held)addLog(S.age,'ชนะคนที่ครองที่นั่งอยู่',null);toast(`${R[0]} · ${R[1]}`);
         addLog(S.age,`ได้เป็น ${R[0]}`,[rollTh(r),`${R[1]} · ${R[2]}`],true);}
       else if(r.d===1&&S.rank>1){S.rank--;S.merit=0;S.rankAt.pop();
         addLog(S.age,'สอบไม่ผ่าน และเกิดเรื่องอื้อฉาว',[rollTh(r),`ขั้นตกกลับไปเป็น ${p.ranks[S.rank-1][0]}`],true,true);}
@@ -1766,7 +1769,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    bag:[],eq:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -1823,7 +1826,7 @@ function baseIncome(){
   if(S.age>S.span*.82)return 7;
   let v=S.adv?70:30;
   v*=(focusSet().find(x=>x.id===S.focus)||focusSet()[0]).mul||1;
-  v*=S.region.wealth*(1+S.l/160)*S.jobMul*rankMul();
+  v*=S.region.wealth*(1+S.l/160)*S.jobMul*rankMul()*(1-(S.awayNow||0));
   if(S.own.mule)v*=1.05;
   if(S.own.horse)v*=1.15;
   if(S.own.cart)v*=1.3;
@@ -2629,7 +2632,8 @@ const tagUp=o=>!!(S.ideal&&o.tg&&o.tg.includes(S.ideal));
 const tagDown=o=>!!(S.ideal&&o.tg&&IDEALS[S.ideal].anti.some(t=>o.tg.includes(t)));
 /* the stance picks the best odds among its own kind of answer, leaning toward the ideal */
 function autoPick(sit,stance){
-  const st=stance||S.stance||'grit',ok=sit.opts.filter(o=>o.can);
+  /* waiting and walking away cost no roll, so they would always look safest; take them only when nothing else stands a chance */
+  const st=stance||S.stance||'grit',all=sit.opts.filter(o=>o.can),real=all.filter(o=>!o.last),ok=real.some(o=>o.p>=.25)?real:all;
   let pool=ok.filter(o=>st==='any'||o.st===st);
   if(!pool.length)pool=ok.filter(o=>o.st!=='shady');
   if(!pool.length)pool=ok.length?ok:sit.opts;
@@ -2808,7 +2812,7 @@ const CASTER={wizard:{t:'ร่ายเวทใส่จุดอ่อน',s:
  druid:{t:'เรียกพลังของป่าเข้าใส่',s:'ทอยโจมตีด้วยเวท vs AC −1 · ความเสียหายสูง'},
  bard:{t:'ร่ายเพลงที่ทำให้มันเสียขวัญ',s:'ทอยโจมตีด้วยเวท vs AC −1 · ความเสียหายสูง'}};
 function encounter(f,done){
-  if(Math.random()>f.enc*scaleQ()){done();return;}
+  if(Math.random()>f.enc*.5*scaleQ()){done();return;}
   const ti=S.lvl>=9?3:S.lvl>=5?2:S.lvl>=3?1:0,up=ti<3&&Math.random()<ENC_UP,tier=ENC_TIERS[ti+(up?1:0)];
   const foe=pick(FOES.filter(x=>x.lv===tier));
   S.encounters++;
@@ -2876,6 +2880,11 @@ function tick(){
   if(f.rest)healExh(1);
   S.hit=0;S.relent=0;
   if(S.raisePen>0)S.raisePen--;
+  S.awayNow=Math.min(4,S.awayLeft||0)/4;
+  if(S.awayLeft){S.awayLeft=Math.max(0,S.awayLeft-4);
+    if(S.spouse)S.spouse.bond=clamp(S.spouse.bond-4*S.awayNow,0,100);
+    S.kids.forEach(k=>{k.bond=clamp(k.bond-3*S.awayNow,0,100);});
+    if(!S.awayLeft)addLog(S.age,'กลับถึงบ้าน',`ใช้ชีวิตบนถนนมาแล้วรวม ${S.awaySeasons} ฤดู`);}
   if(S.age<=S.race.mature)S.focusYears[f.id]=(S.focusYears[f.id]||0)+1;
   trainYear(f);
   if(S.home==='parents'&&(S.married||S.age>S.race.mature*2)){S.home='own';addLog(S.age,'พ่อแม่แก่ลงจนดูแลบ้านไม่ไหว ค่ากินค่าอยู่ทั้งหลังตกมาอยู่กับคุณแทน',null,true);}
@@ -2945,7 +2954,9 @@ function tick(){
     }
     oldAge();
     if(S.hp<=0){end();return;}
-    annualSave(f,()=>{if(S.hp<=0)end();else if(S.adv&&f.enc)encounter(f,threat);else threat();});
+    const save=()=>annualSave(f,()=>{if(S.hp<=0)end();else if(S.adv&&f.enc&&!S.awayLeft)encounter(f,threat);else threat();});
+    if(S.pendingQuest){const j=S.pendingQuest;S.pendingQuest=null;runQuest(j,()=>{if(S.hp<=0)end();else save();});}
+    else save();
   };
   if(dec){renderLife();if(!opt.auto||dec.kind==='reflect')noteAsk();openDec(dec,year);}
   else year();
@@ -3244,6 +3255,108 @@ function advShop(){
 }
 const eqSaveBonus=()=>['cloak','ring','feet'].reduce((a,k)=>a+((S.eq&&S.eq[k]&&S.eq[k].save)||0),0);
 const eqSpell=()=>(S.eq&&S.eq.focus&&S.eq.focus.spell)||0;
+/* ---------------- quests: a job off the board, scenes on the road, a boss at the end ----------------
+   Ordinary scenes are met the way the standing approach says (no window); the boss is a big
+   matter and asks. Scenes passed make the boss easier; a scene failed costs blood and can cost
+   a companion. A quest takes seasons, and while away the work at home pays nothing. */
+const QTYPES={
+ bounty:{th:'ล่าค่าหัว',scenes:['track','ambush'],client:['สภาเมือง','กองยามแคว้น','พ่อค้าที่ถูกปล้น'],what:['หัวหน้าโจรแห่งช่องเขา','คนทรยศที่หนีไปทางเหนือ','นักฆ่าที่สภาตั้งค่าหัว']},
+ delve:{th:'สำรวจดันเจี้ยน',scenes:['trap','puzzle','ambush'],client:['หอสมุดแห่งแคนเดิลคีป','สมาคมนักผจญภัย','ขุนนางที่อยากได้ของโบราณ'],what:['สุสานใต้หอคอยร้าง','เหมืองคนแคระที่ถูกทิ้ง','ชั้นบนสุดของอันเดอร์เมาน์เทน']},
+ escort:{th:'คุ้มกันขบวน',scenes:['travel','ambush','client'],client:['กองคาราวานจากอัมน์','วิหารที่ส่งของบูชา','ครอบครัวพ่อค้าที่ย้ายเมือง'],what:['ขบวนเกวียนข้ามซอร์ดโคสต์','ขบวนผู้แสวงบุญสู่วิหาร','เรือสินค้าตามลำน้ำ']}
+};
+const QSCENES={
+ track:{th:'ตามรอย',opts:[{t:'อ่านรอยเท้าบนดิน',ab:'WIS',skill:'survival',st:'wits'},{t:'ถามคนในหมู่บ้านระหว่างทาง',ab:'CHA',skill:'persuasion',st:'kin'},{t:'เดินตามถนนใหญ่ไปเรื่อย ๆ',ab:'CON',save:1,st:'grit'}]},
+ ambush:{th:'ถูกซุ่มโจมตี',opts:[{t:'ตั้งรับแล้วสู้',ab:'STR',skill:'athletics',st:'grit'},{t:'มองเห็นก่อนแล้วหลบ',ab:'WIS',skill:'perception',st:'wits'},{t:'ให้เพื่อนร่วมทางคุ้มกัน',ab:'CHA',skill:'persuasion',st:'kin',party:1}]},
+ trap:{th:'กับดัก',opts:[{t:'สังเกตก่อนก้าว',ab:'WIS',skill:'perception',st:'wits'},{t:'ปลดกับดักด้วยมือ',ab:'DEX',skill:'sleight',st:'wits'},{t:'เดินผ่านไปเลย',ab:'DEX',save:1,st:'grit'}]},
+ puzzle:{th:'ปริศนาที่ประตูหิน',opts:[{t:'ไขเอง',ab:'INT',skill:'investigation',st:'wits'},{t:'นึกถึงตำนานเก่า',ab:'INT',skill:'history',st:'wits'},{t:'พังประตู',ab:'STR',skill:'athletics',st:'grit',loud:1}]},
+ travel:{th:'ทางไกล',opts:[{t:'ทางลัดผ่านป่า',ab:'WIS',skill:'survival',st:'wits'},{t:'ถนนหลวง',ab:'CON',save:1,st:'grit',d:-2,slow:1},{t:'จ้างคนนำทาง',ab:'CHA',skill:'persuasion',st:'kin',cost:10}]},
+ client:{th:'ลูกค้าเรื่องมาก',opts:[{t:'พูดให้ใจเย็น',ab:'CHA',skill:'persuasion',st:'kin'},{t:'อ่านว่าเขาซ่อนอะไรไว้',ab:'WIS',skill:'insight',st:'wits'},{t:'ทำงานไปเงียบ ๆ',ab:'CON',save:1,st:'grit'}]}
+};
+const QRANK_TH=['Wanderer','Vanguard','Champion','Paragon','Legend'];
+const QSEASONS={bounty:[2,3,4,5],delve:[2,3,5,7],escort:[3,4,5,7]};
+function qTier(){return Math.min(3,Math.max(0,(S.rank||1)-1));}
+function makeJob(up){
+  const id=pick(Object.keys(QTYPES)),T=QTYPES[id],ti=Math.min(3,qTier()+(up?1:0));
+  const seasons=QSEASONS[id][ti]+(Math.random()<.4?1:0);
+  const pay=Math.round((40+90*Math.pow(2.6,ti))*(up?2:1)*(.8+Math.random()*.4));
+  return {type:id,th:`${T.th}: ${pick(T.what)}`,client:pick(T.client),ti,up,seasons,pay,danger:1+ti+(up?1:0),scenes:T.scenes};
+}
+function boardDec(){
+  const jobs=[makeJob(false),makeJob(false),makeJob(true)];
+  S.nextBoard=S.age+Math.max(1,Math.round((2+rnd(3))/yearScale()));
+  const yrs=j=>j.seasons>=4?`${Math.round(j.seasons/4*10)/10} ปี`:`${j.seasons} ฤดู`;
+  const home=[];if(S.kids.some(k=>k.age<5))home.push('ลูกยังเล็ก');if(S.spouse)home.push(`${S.spouse.name}รออยู่ที่บ้าน`);
+  return {id:'board_'+S.age,kind:'board',h:'กระดานประกาศในโรงเตี๊ยม',
+    b:`มีงานติดอยู่สามใบ งานยาวทำให้ต้องห่างบ้าน${home.length?' · '+home.join(' · '):''}`,
+    ch:[...jobs.map(j=>({t:j.th,s:`${QRANK_TH[j.ti]}${j.up?' (สูงกว่าคุณหนึ่งขั้น)':''} · ผู้จ้าง ${j.client} · ${gp(j.pay)} · ${yrs(j)} · อันตราย ${'●'.repeat(j.danger)}${'○'.repeat(5-j.danger)}`,
+      quest:j,tg:j.up?['aspiration','rash']:['aspiration']})),
+      {t:'ไม่รับงาน',s:'อยู่กับคณะไปก่อน',tg:['tradition','people']}]};
+}
+function partyHelps(skill){return (S.party||[]).filter(p=>p.alive).find(p=>(CLS_SK[p.cls]||[]).includes(skill));}
+function makeCompanion(){const c=pick(CLASSES);return {name:nameFor(pick(RACES).id).split(' ')[0],cls:c.id,th:c.th,alive:true,bond:60};}
+function sceneSit(job,key,i){
+  const Sc=QSCENES[key],dc=11+job.ti*2+(job.up?2:0);
+  const opts=Sc.opts.map(o=>{const x={...o,dc:dc+(o.d||0),tg:[]};
+    const h=o.skill&&partyHelps(o.skill);if(h){x.adv=1;x.s=`${h.name} (${h.th}) ช่วย`;}
+    if(o.party&&!(S.party||[]).some(p=>p.alive))x.need=()=>false;
+    return x;});
+  return {id:'quest_'+key,kind:'quest',big:false,h:`${job.th} · ฉากที่ ${i+1}: ${Sc.th}`,opts,
+    resolve:(o,r)=>{
+      const note=[rollTh(r)];
+      if(o.loud)job.loud=1;
+      if(o.slow)job.seasons++;
+      if(r.ok){job.won++;}
+      else{const D=dice(1+job.ti,6);damage(D,`${Sc.th}ระหว่าง${job.th}`,true);note.push(`เสียเลือด ${D}`);
+        const pal=(S.party||[]).filter(p=>p.alive);
+        if(pal.length&&Math.random()<.06+.025*job.ti){const p=pick(pal);p.alive=false;S.r=clamp(S.r-6,0,100);S.s=clamp(S.s-8,0,100);
+          note.push(`${p.name}ไม่ได้กลับมา`);job.lost.push(p.name);}}
+      job.log.push(`${Sc.th}: ${o.t} — ${r.ok?'ผ่าน':'ไม่ผ่าน'} (${note.join(' · ')})`);
+    }};
+}
+function bossSit(job){
+  const tier=ENC_TIERS[Math.min(3,job.ti+1)],foe=pick(FOES.filter(x=>x.lv===tier)),dc=foe.ac+(job.loud?2:0);
+  const prep=job.won>=Math.ceil(job.scenes.length/2),key=S.cls.key,cast=CASTER[S.cls.id];
+  const opts=[{t:'บุกเข้าไปจัดการ',ab:weaponAb(),attack:1,prof:1,bonus:weapon().plus,dc,adv:prep?1:0,st:'grit',s:`ทอยโจมตี vs AC ${dc}${prep?' · ได้เปรียบจากฉากก่อน ๆ':''}${job.loud?' · ศัตรูรู้ตัวแล้ว':''}`,tg:['might','aspiration']},
+    {t:'บีบให้ยอมจำนน',ab:'CHA',skill:'intimidation',dc:dc+1,adv:prep?1:0,st:'shady',s:'ได้ค่าจ้างครึ่งเดียวถ้าเขาหนีไปได้',al:[0,-.03],tg:['power']},
+    {t:'ถอยกลับ',ab:'CON',save:1,dc:1,st:'wits',retreat:1,last:1,s:'ไม่ได้ค่าจ้าง · ชื่อเสียงลด · แต่รอด',tg:['coward']}];
+  if(cast)opts.splice(1,0,{t:cast.t,ab:key,attack:1,prof:1,bonus:eqSpell(),dc:dc-1,adv:prep?1:0,st:'wits',s:cast.s,tg:['knowledge']});
+  return {id:'quest_boss',kind:'quest',big:true,h:`${job.th} · ตอนจบ: ${foe.th}`,
+    b:`ผ่านมา ${job.won} จาก ${job.scenes.length} ฉาก${job.lost.length?` · เสีย${job.lost.join(', ')}ไประหว่างทาง`:''} · เลือด ${Math.max(0,S.hp)}/${S.hpMax}`,
+    card:[['ศัตรู',foe.th],['AC',String(foe.ac)],['ค่าจ้าง',gp(job.pay)]],opts,
+    resolve:(o,r)=>{
+      if(o.retreat){job.result='retreat';S.fame=(S.fame||0)-1;return;}
+      if(r.ok){job.result=o.skill==='intimidation'?'half':'win';}
+      else{job.result='fail';const D=dice(2+job.ti*2,6);damage(D,`${foe.hz}ของ${foe.th}`,true);job.log.push(`พ่ายต่อ${foe.th} เสียเลือด ${D}`);}
+      job.log.push(`ตอนจบ: ${o.t} — ${rollTh(r)}`);
+    }};
+}
+/* the whole quest, scene by scene, then pay, finds, and the seasons it took */
+function runQuest(job,done){
+  job.won=0;job.lost=[];job.log=[];
+  if(!S.party||!S.party.some(p=>p.alive))S.party=[makeCompanion(),makeCompanion()];
+  let i=0;
+  const next=()=>{
+    if(S.hp<=0){finish();return;}
+    if(i<job.scenes.length){const k=job.scenes[i];askCope(sceneSit(job,k,i++),next);return;}
+    askCope(bossSit(job),finish);
+  };
+  const finish=()=>{
+    S.quests=(S.quests||0)+1;
+    const res=S.hp<=0?'down':job.result||'fail',ok=res==='win'||res==='half';
+    if(ok){S.questWins=(S.questWins||0)+1;const pay=res==='half'?Math.round(job.pay/2):job.pay;S.gold+=pay;
+      gainXp(xpNeed()*(.6+.25*job.ti)*(job.up?1.6:1));S.fame=(S.fame||0)+1+job.ti;
+      const L=Math.random()<.5?lootMagic(ENC_TIERS[Math.min(3,job.ti+1)],job.up):null;
+      if(L){if(L.got)job.log.push(`ได้ ${L.got}`);else{S.gold+=L.sold;job.log.push(`ขาย${L.m.th}ได้ ${gp(L.sold)}`);}}
+      job.log.push(`ได้ค่าจ้าง ${gp(pay)}`);}
+    S.awaySeasons=(S.awaySeasons||0)+job.seasons;
+    S.awayLeft=(S.awayLeft||0)+job.seasons;
+    const head={win:'สำเร็จ',half:'ได้ค่าจ้างครึ่งเดียว',retreat:'ถอยกลับมามือเปล่า',fail:'ล้มเหลว',down:'ล้มลงกลางทาง'}[res];
+    addLog(S.age,`ภารกิจ: ${job.th} — ${head}`,[`${job.seasons} ฤดู · ผู้จ้าง ${job.client}`,...job.log],true,!ok);
+    if(ok)toast(`ภารกิจสำเร็จ · ${gp(res==='half'?Math.round(job.pay/2):job.pay)}`);
+    done();
+  };
+  next();
+}
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
    One screen at maturity in place of the old call and trade questions. A path whose
    conditions are all met can be chosen; one that misses a single condition can be tried
@@ -3326,6 +3439,7 @@ function loadSeen(){try{SEEN=JSON.parse(localStorage.getItem('faerun_seen_v1')||
 function saveSeen(){try{const ids=Object.keys(S.done).filter(k=>BANK.some(d=>d.id===k));
   localStorage.setItem('faerun_seen_v1',JSON.stringify([ids,...(SEEN||[])].slice(0,4)));}catch(e){}}
 function nextDec(){
+  if(S.adv&&!S.awayLeft&&S.age>=S.nextBoard&&(focusSet().find(x=>x.id===S.focus)||{}).enc)return boardDec();
   if(S.focusAsk&&S.age<S.race.mature){const w=S.focusAsk;S.focusAsk=null;const d=focusDec(w);if(d.ch.length>1)return d;}
   for(const k in S.plant){
     if(S.plant[k]<=S.age){const d={...PLANTS[k],id:'plant_'+k+'_'+S.age};delete S.plant[k];return d;}
@@ -3459,6 +3573,7 @@ function applyChoice(d,c){
     else{S.r=clamp(S.r-4,0,100);extra=' — ญาติไม่ยอมช่วย และพูดถึงเรื่องนี้ไปอีกนาน';}
   }
   if(c.heal)S.gold-=(S.life.ward==='full'?12:30);
+  if(c.quest)S.pendingQuest=c.quest;
   if(c.setFocus){S.focus=c.setFocus;if(c.school)S.school=c.school;}
   if(c.cross||c.stay)crossResolve(c,notes);
   if(c.path&&!S.adv)enterPath(c.path);

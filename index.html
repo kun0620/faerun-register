@@ -178,6 +178,31 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 .autolist button{border:1px solid var(--rule);background:transparent;border-radius:2px;padding:5px 10px;font-size:12.5px}
 .autolist button[aria-pressed="true"]{background:var(--verdigris);border-color:var(--verdigris);color:var(--vellum)}
 
+.strip{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--ink-soft)}
+.strip b{color:var(--ink);font-weight:600}
+.strip .rk{font-family:var(--f-display);letter-spacing:.04em;color:var(--verdigris)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule)}
+.tab{flex:1;background:transparent;border:0;border-bottom:2px solid transparent;padding:8px 4px;font-size:13.5px;color:var(--ink-soft);margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--verdigris);font-weight:600}
+.tab:focus-visible{outline:2px solid var(--verdigris);outline-offset:2px}
+.panes{display:grid;gap:18px}
+.pane{display:grid;gap:18px}
+.pane[hidden]{display:none}
+.paneclose{display:none}
+.nextcard{border-color:var(--verdigris)}
+@media (max-width:880px){
+  .cols .main{order:-1}
+  .side .tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--vellum);border-top:1px solid var(--rule);border-bottom:0;
+    padding:0 max(8px,env(safe-area-inset-left,0px)) env(safe-area-inset-bottom,0px)}
+  .side .tab{border-bottom:0;border-top:2px solid transparent;padding:11px 4px;margin:0}
+  .side .tab[aria-selected="true"]{border-top-color:var(--verdigris)}
+  .side .panes{position:fixed;left:0;right:0;bottom:calc(46px + env(safe-area-inset-bottom,0px));z-index:39;max-height:72vh;overflow-y:auto;
+    background:var(--vellum);border-top:1px solid var(--rule);padding:12px 16px 16px;box-shadow:0 -8px 24px rgba(0,0,0,.18)}
+  .side:not(.open) .panes{display:none}
+  .side:not(.open) .tab{border-top-color:transparent!important;font-weight:400;color:var(--ink-soft)}
+  .paneclose{display:block;justify-self:end;background:transparent;border:1px solid var(--rule);border-radius:2px;padding:4px 10px;font-size:13px;color:var(--ink-soft)}
+  #s-life{padding-bottom:64px}
+}
 .prog{height:5px;background:var(--rule);position:relative}
 .prog i{display:block;height:100%;background:var(--candle);width:0}
 .prog b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-soft)}
@@ -334,6 +359,7 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 <section id="s-life" hidden>
   <div class="topbar"><div class="in">
     <span class="age"><span id="lAge">0</span> <span style="font-size:14px;font-weight:400">ปี</span></span>
+    <span class="strip" id="lStrip"></span>
     <span class="sm muted mono" id="lMeta"></span>
     <span class="ctrls">
       <button class="chip" data-sp="0">❚❚</button>
@@ -347,33 +373,56 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
     </span>
   </div><div class="prog"><i id="progFill"></i><b id="progMark"></b></div></div>
   <div class="cols">
-    <div class="col">
-      <div class="plate">
-        <div class="phead">
-          <canvas class="portrait" id="lPortrait" width="184" height="184"></canvas>
-          <div class="who"><p class="eyebrow">ทะเบียนประวัติ</p><div class="nm" id="lPName"></div><p class="xs muted" id="lPSub"></p></div>
+    <div class="col side" id="lSide">
+      <div class="tabs" role="tablist" aria-label="แผ่นข้อมูลของชีวิตนี้">
+        <button role="tab" class="tab" data-tab="me" aria-selected="true">ตัวละคร</button>
+        <button role="tab" class="tab" data-tab="path" aria-selected="false">เส้นทาง</button>
+        <button role="tab" class="tab" data-tab="gear" aria-selected="false">ข้าวของ</button>
+        <button role="tab" class="tab" data-tab="kin" aria-selected="false">คนรอบตัว</button>
+      </div>
+      <div class="panes">
+        <button class="paneclose" id="paneClose" type="button" aria-label="ปิด">ปิด ✕</button>
+        <div class="pane" data-pane="me" role="tabpanel">
+          <div class="plate">
+            <div class="phead">
+              <canvas class="portrait" id="lPortrait" width="184" height="184"></canvas>
+              <div class="who"><p class="eyebrow">ทะเบียนประวัติ</p><div class="nm" id="lPName"></div><p class="xs muted" id="lPSub"></p></div>
+            </div>
+            <dl class="kv" id="lKv"></dl>
+            <div class="sigil" id="lSigil"></div>
+            <div id="lSheet"></div>
+            <div id="lStats" style="display:grid;gap:7px;margin-top:14px"></div>
+          </div>
         </div>
-        <dl class="kv" id="lKv"></dl>
-        <div class="sigil" id="lSigil"></div>
-        <div id="lSheet"></div>
-        <div id="lStats" style="display:grid;gap:7px;margin-top:14px"></div>
-        <div class="money" id="lMoney"></div>
-        <button class="openspend" id="btnSpend">ใช้เงิน · ลงทุน</button>
-      </div>
-      <div class="plate">
-        <p class="eyebrow" style="margin-bottom:10px">ครอบครัวและมิตร</p>
-        <div class="kin" id="lKin"></div>
-      </div>
-      <div class="plate">
-        <p class="eyebrow" style="margin-bottom:10px">เกิดพร้อมกัน</p>
-        <div class="souls" id="lSouls"></div>
+        <div class="pane" data-pane="path" role="tabpanel" hidden>
+          <div class="plate"><div id="lPath"><p class="sm muted">ยังไม่ได้เลือกเส้นทาง</p></div></div>
+        </div>
+        <div class="pane" data-pane="gear" role="tabpanel" hidden>
+          <div class="plate">
+            <p class="eyebrow" style="margin-bottom:10px">เงิน</p>
+            <div class="money" id="lMoney"></div>
+            <button class="openspend" id="btnSpend">ใช้เงิน · ลงทุน</button>
+          </div>
+          <div class="plate"><div id="lGear"><p class="sm muted">ยังไม่มีข้าวของติดตัว</p></div></div>
+          <div class="plate">
+            <p class="eyebrow" style="margin-bottom:11px">รายได้ไปอยู่ที่ไหนบ้าง (ต่อปี)</p>
+            <dl class="ind" id="lBudget"></dl>
+          </div>
+        </div>
+        <div class="pane" data-pane="kin" role="tabpanel" hidden>
+          <div class="plate">
+            <p class="eyebrow" style="margin-bottom:10px">ครอบครัวและมิตร</p>
+            <div class="kin" id="lKin"></div>
+          </div>
+          <div class="plate">
+            <p class="eyebrow" style="margin-bottom:10px">เกิดพร้อมกัน</p>
+            <div class="souls" id="lSouls"></div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="col">
-      <div class="plate">
-        <canvas class="scene" id="lScene" width="700" height="230"></canvas>
-        <p class="scenecap" id="lSceneCap"></p>
-      </div>
+    <div class="col main">
+      <div class="plate nextcard" id="lNext" hidden></div>
       <div class="plate">
         <p class="eyebrow" style="margin-bottom:10px">ลูกเต๋าบนโต๊ะ</p>
         <div class="dice" id="lRoll"></div>
@@ -382,9 +431,7 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
         <p class="eyebrow" style="margin-bottom:3px">จุดเน้นของปีนี้</p>
         <p class="xs muted" id="lFocusCtx" style="margin-bottom:11px"></p>
         <div class="focus" id="lFocus"></div>
-      </div>
-      <div class="plate">
-        <p class="eyebrow" style="margin-bottom:3px">ท่าทีประจำตัว</p>
+        <p class="eyebrow" style="margin:16px 0 3px">ท่าทีประจำตัว</p>
         <p class="xs muted" style="margin-bottom:11px">เรื่องเล็กจะรับมือตามท่าทีนี้โดยไม่ถาม · เรื่องใหญ่จะเปิดให้เลือกเองพร้อมโอกาสผ่าน</p>
         <div class="focus" id="lStance"></div>
       </div>
@@ -393,13 +440,13 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
         <div class="log" id="lLog"></div>
       </div>
       <div class="plate">
+        <canvas class="scene" id="lScene" width="700" height="230"></canvas>
+        <p class="scenecap" id="lSceneCap"></p>
+      </div>
+      <div class="plate">
         <p class="eyebrow" style="margin-bottom:11px">แผนที่ชีวิต</p>
         <div class="grid" id="lGrid"></div>
         <div class="legend" id="lLegend"></div>
-      </div>
-      <div class="plate">
-        <p class="eyebrow" style="margin-bottom:11px">รายได้ไปอยู่ที่ไหนบ้าง (ต่อปี)</p>
-        <dl class="ind" id="lBudget"></dl>
       </div>
     </div>
   </div>
@@ -1770,9 +1817,28 @@ function renderRolls(){
     rest.forEach(x=>{const q=ce('div');if(!x.ok)q.className='no';q.textContent=`${x.age} ปี · ${rollTh(x)}`;h.appendChild(q);});
     el.appendChild(h);}
 }
+/* the one line that stays on screen: who, what rank, how hurt, how much */
+function renderStrip(){
+  const el=$('#lStrip');el.textContent='';
+  const job=S.adv?`${S.cls.th} เลเวล ${S.lvl}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
+  [[S.name,''],[job,'rk'],[`HP ${S.hp}/${S.hpMax}`,''],[(S.gold<0?'−':'')+gp(Math.abs(S.gold)),'']].forEach(([t,c])=>{
+    const b=ce('b');if(c)b.className=c;b.textContent=t;el.appendChild(b);});
+}
+/* left-hand tabs; on a phone they sit at the bottom and open as a sheet */
+function setTab(k,toggle){
+  const side=$('#lSide'),cur=side.dataset.tab||'me';
+  if(toggle&&matchMedia('(max-width:880px)').matches){
+    if(side.classList.contains('open')&&cur===k){side.classList.remove('open');return;}
+    side.classList.add('open');
+  }
+  side.dataset.tab=k;
+  side.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===k)));
+  side.querySelectorAll('.pane').forEach(p=>{p.hidden=p.dataset.pane!==k;});
+}
 function renderLife(){
   $('#lAge').textContent=S.age;
-  $('#lMeta').textContent=`ปี ${S.year} DR · ${S.name} · 1 ปี ≈ ${(msPerYear()/1000).toFixed(1)} วินาที`;
+  $('#lMeta').textContent=`ปี ${S.year} DR · 1 ปี ≈ ${(msPerYear()/1000).toFixed(1)} วินาที`;
+  renderStrip();
   const job=S.adv?`${S.cls.th} (นักผจญภัย)`:(S.age<S.race.mature?'ยังไม่ถึงวัยทำงาน':(S.bizYears>0?S.trade+' (มีร้านของตัวเอง)':S.trade));
   const hob=S.hobbies.length?S.hobbies.map(h=>`${h.th} Lv.${h.lv}`).join(' · '):'ยังไม่มี';
   sheetInto($('#lSheet'),false);renderRolls();
@@ -3046,6 +3112,9 @@ function renderDist(){
   $('#btnSkip').onclick=()=>setSpeed(16);
   $('#btnAuto').onclick=()=>{opt.auto=opt.auto?0:1;syncAuto();};
   $('#btnSpend').onclick=openSpend;
+  document.querySelectorAll('#lSide .tab').forEach(b=>{b.onclick=()=>setTab(b.dataset.tab,true);});
+  $('#paneClose').onclick=()=>$('#lSide').classList.remove('open');
+  document.addEventListener('keydown',ev=>{if(ev.key==='Escape')$('#lSide').classList.remove('open');});
   document.querySelectorAll('[data-sp]').forEach(b=>{b.onclick=()=>setSpeed(+b.dataset.sp);});
   applyTheme();renderDist();
 })();

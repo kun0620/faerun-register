@@ -5,7 +5,7 @@ const T = load(require('path').join(__dirname, '..', 'index.html'),
 T.set('reveal', () => {});
 T.set('openCope', (sit, cb) => { const o = T.autoPick(sit, 'any'); cb(o, !!T.S.insp && o.p < .5); });
 T.set('openDec', (d, done) => { const S = T.S; if (d.id) S.done[d.id] = 1;
-  if (d.kind !== 'reflect') { let c = d.ch[Math.floor(Math.random() * d.ch.length)]; if (d.id === 'call') c = d.ch[0]; T.applyChoice(d, c); }
+  if (d.kind !== 'reflect') { let c = d.ch[Math.floor(Math.random() * d.ch.length)]; if (d.id === 'cross') c = d.ch.find(x => x.adv) || d.ch.find(x => x.row && x.row.state === 'open') || c; T.applyChoice(d, c); }
   done(); });
 T.set('present', o => o.buttons[0].fn());
 

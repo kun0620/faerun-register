@@ -190,6 +190,16 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 .pane[hidden]{display:none}
 .paneclose{display:none}
 .nextcard{border-color:var(--verdigris)}
+.modal.wide{max-width:760px}
+.crosslist{display:grid;gap:8px;margin:12px 0;max-height:60vh;overflow-y:auto}
+.crossrow{border:1px solid var(--rule);border-radius:3px;padding:10px 12px}
+.crossrow.open{border-color:var(--verdigris)}
+.crossrow.shut{opacity:.55}
+.crossrow .ct{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.crossrow .ct b{font-size:16px}
+.crossrow .cs{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-soft)}
+.crossrow.open .cs{color:var(--verdigris)}
+.crossrow .crossgo{margin-top:9px;width:100%;text-align:left}
 #toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:grid;gap:8px;pointer-events:none}
 .toast{background:var(--ink);color:var(--vellum);padding:9px 14px;border-radius:3px;font-size:14px;box-shadow:0 6px 18px var(--shadow);animation:toastIn .25s ease-out}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}}
@@ -2086,7 +2096,7 @@ function renderFocus(){
   const el=$('#lFocus');el.textContent='';
   const set=focusSet();
   if(!set.find(f=>f.id===S.focus))S.focus=set[0].id;
-  $('#lFocusCtx').textContent=S.adv?`${S.cls.th} · ${S.region.th} · ${era().th}`:(S.age<S.race.mature?`วัยเด็กของ${S.race.th} · ${S.region.th}`:`${S.trade} · ${S.region.th}`);
+  $('#lFocusCtx').textContent=S.adv?`${S.cls.th} · ${S.region.th} · ${era().th}`:(S.age<S.race.mature?`วัยเด็กของ${S.race.th} · ${S.region.th}`:`${S.rank?rankName()+' · '+pathOf(S.path).ranks[S.rank-1][1]:S.trade} · ${S.region.th}`);
   set.forEach(f=>{
     const b=ce('button');b.type='button';b.setAttribute('aria-pressed',String(S.focus===f.id));
     const n=ce('b');n.textContent=f.th;const e=ce('em');e.textContent=f.hint;
@@ -2992,7 +3002,80 @@ const OPPS=[
       {t:'ไม่ไป',s:'ไม่อยากเป็นภาระใคร',fx:{s:-1},tg:['pride']}]}
 ];
 const OPP_P=.35;
+/* ---------------- the crossroads: every path, what it asks, what you have ----------------
+   One screen at maturity in place of the old call and trade questions. A path whose
+   conditions are all met can be chosen; one that misses a single condition can be tried
+   at disadvantage and DC +3; two or more misses are shown but shut. A master's
+   certificate stands in for the skill and the "other" condition of its path. */
+const CROSS={
+ land:{min:10,roll:null,tg:['tradition','people'],
+  other:x=>x.tier.lvl===2?{t:'ลูกชาวนา',ok:true}:{t:`ค่าเช่าที่ ${gp(30)}`,ok:x.gold>=30,cost:30}},
+ craft:{min:12,roll:{ab:'INT',dc:11},tg:['knowledge','aspiration'],
+  other:x=>({t:`การศึกษา ${Math.round(x.l)} / 20`,ok:x.l>=20})},
+ trade:{min:12,roll:{ab:'CHA',skill:'persuasion',dc:12},tg:['greed','aspiration'],
+  other:x=>x.tier.lvl>=3?{t:'มีญาติเปิดร้าน',ok:true}:{t:`ทุน ${Math.round(Math.max(0,x.gold))} / 50gp`,ok:x.gold>=50,cost:50}},
+ faith:{min:12,roll:{ab:'INT',skill:'religion',dc:12},tg:['faith','tradition'],
+  other:x=>({t:x.deity?`ศรัทธา ${Math.round(x.faith)} / 40`:'ยังไม่มีเทพประจำตัว',ok:!!x.deity&&x.faith>=40})},
+ arcane:{min:13,roll:{ab:'INT',skill:'arcana',dc:13},tg:['knowledge','aspiration'],
+  other:x=>({t:`การศึกษา ${Math.round(x.l)} / 35 · ค่าเรียน ${gp(25)}`,ok:x.l>=35&&x.gold>=25,cost:25})},
+ arms:{min:12,roll:{ab:'STR',skill:'athletics',dc:12},tg:['might','tradition'],
+  other:x=>({t:'แคว้นมีกองยาม หรือยุคสงคราม',ok:x.region.danger>=1||era().id==='war'})}
+};
+function crossRow(id,x){
+  x=x||S;const p=pathOf(id),reqs=[];
+  if(id==='adv'){
+    const ab=x.best||'STR';
+    reqs.push({t:`${ab} ${x.ab[ab]} / 13`,ok:x.ab[ab]>=13});
+    reqs.push({t:callRolls()?`มีคนมาชวน${x.callWho}`:'ไม่มีใครมาชวนออกเดินทาง',ok:callRolls()});
+    const miss=reqs.filter(q=>!q.ok).length;
+    return {id,p,reqs,state:miss?'shut':'open',roll:null};
+  }
+  const C=CROSS[id],ab=pathAb(p,x),cert=!!x.certs[id];
+  reqs.push({t:`${ab} ${x.ab[ab]} / ${C.min}`,ok:x.ab[ab]>=C.min});
+  const sk=p.skills.filter(k=>x.skills.includes(k));
+  reqs.push(cert?{t:'ใบรับรองจากอาจารย์',ok:true}:{t:sk.length?SKILLS[sk[0]].th:'ความชำนาญ: '+p.skills.map(k=>SKILLS[k].th).join(' / '),ok:sk.length>0});
+  const o=cert?{t:'อาจารย์รับรองแล้ว',ok:true}:C.other(x);reqs.push(o);
+  const miss=reqs.filter(q=>!q.ok).length;
+  const roll=C.roll||(miss?{ab,dc:10}:null);
+  return {id,p,reqs,cost:o.ok?(o.cost||0):0,state:miss===0?'open':miss===1?'try':'shut',
+    roll:roll&&{...roll,dc:roll.dc+(miss?3:0),dis:!!miss}};
+}
+function crossDec(again){
+  const ids=PATHS.map(p=>p.id).filter(id=>!again||(id!=='adv'&&id!==S.path));
+  const rows=ids.map(id=>crossRow(id));
+  const order={open:0,try:1,shut:2};rows.sort((a,b)=>order[a.state]-order[b.state]);
+  const ch=rows.filter(r=>r.state!=='shut').map(r=>{
+    const rl=r.roll?`${r.roll.skill?SKILLS[r.roll.skill].th:ABIL_TH[r.roll.ab]} DC ${r.roll.dc}${r.roll.dis?' · เสียเปรียบ':''} · โอกาสผ่าน ${Math.round(chanceOf(r.roll.ab,r.roll.dc,{skill:r.roll.skill,dis:r.roll.dis})*100)}%`:'ไม่ต้องทอย';
+    return {t:r.state==='try'?`ลอง${r.p.th}ทั้งที่ยังไม่ครบ`:`เลือก${r.p.th}`,s:`${r.cost?gp(r.cost)+' · ':''}${rl}`,
+      cross:r.id,row:r,adv:r.id==='adv'?1:0,fx:r.id==='adv'?{s:5,b:2}:null,tg:r.id==='adv'?['aspiration','freedom','rash']:CROSS[r.id].tg};});
+  const fall=tradeKind(S)==='farm'?'land':'trade';
+  if(again)ch.push({t:'อยู่ทางเดิม',s:'ไม่เสียอะไร',stay:1,tg:['tradition','stubborn']});
+  else ch.push({t:'รับจ้างทั่วไป',s:`เข้า${pathOf(fall).th}ที่ขั้นแรก · ไม่ต้องทอย`,cross:fall,plain:1,tg:['tradition']});
+  return {id:again?'cross2':'cross',kind:'cross',h:again?'ทางแยกอีกครั้ง':'ถึงทางแยก',
+    b:again?`อายุ ${S.age} แล้ว ยังเปลี่ยนทางได้อีกครั้งเดียว · เปลี่ยนแล้วเริ่มขั้นแรกใหม่ และจิตใจ −10`:'ถึงวัยที่ต้องเลือกว่าจะใช้ชีวิตไปทางไหน · เส้นทางที่ขาดตั้งแต่สองข้อขึ้นไปยังเลือกไม่ได้ แต่ดูได้ว่าขาดอะไร',
+    rows,ch};
+}
+function crossResolve(c,notes){
+  if(c.stay){addLog(S.age,`เลือกอยู่บน${pathOf(S.path).th}ต่อไป`,null);return;}
+  if(c.adv)return;               // the old adventure branch in applyChoice takes it from here
+  const again=!!S.path;
+  if(again){S.s=clamp(S.s-10,0,100);}
+  if(c.plain){enterPath(c.cross,'ทำงานที่หาได้');return;}
+  const r=c.row;if(r.cost)S.gold-=r.cost;
+  if(!r.roll){enterPath(c.cross);return;}
+  const k=check(r.roll.ab,r.roll.dc,{skill:r.roll.skill,dis:r.roll.dis,label:`คัดเลือกเข้า${r.p.th}`});
+  notes.push(rollTh(k));
+  if(k.ok){enterPath(c.cross,r.roll.dis?'ผ่านทั้งที่ยังไม่ครบ':null);return;}
+  if(again){addLog(S.age,`คัดเลือกเข้า${r.p.th}ไม่ผ่าน`,'อยู่ทางเดิมต่อไป',false,true);return;}
+  const fall=tradeKind(S)==='farm'?'land':'trade';
+  addLog(S.age,`คัดเลือกเข้า${r.p.th}ไม่ผ่าน`,null,false,true);
+  enterPath(fall,'ทำงานที่หาได้ไปก่อน');
+}
 DECS.splice(DECS.findIndex(d=>d.id==='pause_mid'),0,ASK_MENTOR);
+/* the crossroads takes the place of the call and the three trade questions */
+['call','trade_farm','trade_city','trade_craft'].forEach(id=>{const i=DECS.findIndex(d=>d.id===id);if(i>=0)DECS.splice(i,1);});
+DECS.splice(1,0,{id:'cross',at:'mature',core:1,make:()=>crossDec(false)},
+  {id:'cross2',at:'middle',cond:x=>!!x.path&&x.path!=='adv'&&x.rank<2&&PATHS.some(p=>p.id!=='adv'&&p.id!==x.path&&crossRow(p.id,x).state==='open'),make:()=>crossDec(true)});
 const BANK_P=.11;
 /* lives seen recently, so the bank leans away from what the last few lives already asked */
 function seenW(id){let n=0;(SEEN||[]).forEach((l,i)=>{if(l.includes(id))n=Math.max(n,i===0?2:1);});return n===2?.35:n===1?.65:1;}
@@ -3016,7 +3099,7 @@ function nextDec(){
     if(d.cond&&!d.cond(S))continue;
     if(d.id==='call'&&!callRolls()){S.done.call=1;continue;}
     if(Math.random()<.45&&d.at!=='mature'&&!d.core)continue;
-    return typeof d.ch==='function'?{...d,ch:d.ch(S)}:d;
+    return d.make?d.make():typeof d.ch==='function'?{...d,ch:d.ch(S)}:d;
   }
   /* in childhood, a few chances that come once and go */
   if(S.age<S.race.mature&&S.age>=S.race.mature*.35&&S.oppN<3&&Math.random()<OPP_P*yearScale()){
@@ -3070,6 +3153,7 @@ function openDec(d,done){
     foot.appendChild(off);m.appendChild(foot);
   }else{
     const p=ce('p');p.textContent=typeof d.b==='function'?d.b(S):d.b;m.appendChild(p);
+    if(d.kind==='cross'){m.classList.add('wide');crossInto(m,d,scrim,done);scrim.appendChild(m);$('#modalHost').appendChild(scrim);m.querySelector('button')?.focus();return;}
     if(d.lore){const l=ce('div');l.className='lore';l.textContent=d.lore;m.appendChild(l);}
     const wrap=ce('div');wrap.className='choices';
     d.ch.forEach((c,i)=>{
@@ -3089,8 +3173,33 @@ function openDec(d,done){
   scrim.appendChild(m);$('#modalHost').appendChild(scrim);
   m.querySelector('button')?.focus();
 }
+function crossInto(m,d,scrim,done){
+  const pick=c=>{scrim.remove();applyChoice(d,c);done();resume();};
+  const list=ce('div');list.className='crosslist';
+  d.rows.forEach(r=>{
+    const c=d.ch.find(x=>x.row===r);
+    const box=ce('div');box.className='crossrow '+r.state;
+    const top=ce('div');top.className='ct';
+    const h=ce('b');h.textContent=r.p.th+(r.id===S.dream?' ★':'');
+    const st=ce('span');st.className='cs';st.textContent=r.state==='open'?'เลือกได้':r.state==='try'?'ขาด 1 · ลองได้':`ขาด ${r.reqs.filter(q=>!q.ok).length}`;
+    top.append(h,st);box.appendChild(top);
+    const lad=ce('p');lad.className='xs muted';lad.textContent=r.p.ranks.map(R=>R[0]).join(' → ');box.appendChild(lad);
+    const rq=ce('div');rq.className='reqs';r.reqs.forEach(q=>rq.appendChild(reqChip(q)));box.appendChild(rq);
+    if(c){const b=ce('button');b.type='button';b.className='chip crossgo';b.textContent=`${c.t} · ${c.s}`;b.onclick=()=>pick(c);box.appendChild(b);}
+    list.appendChild(box);});
+  m.appendChild(list);
+  const wrap=ce('div');wrap.className='choices';
+  d.ch.filter(c=>!c.row).forEach((c,i)=>{const b=ce('button');b.type='button';const n=ce('span');n.className='n';n.textContent='→';
+    const inner=ce('span');const t=ce('b');t.textContent=c.t;const e=ce('em');e.textContent=c.s;inner.append(t,e);b.append(n,inner);
+    b.onclick=()=>pick(c);wrap.appendChild(b);});
+  m.appendChild(wrap);
+}
 /* auto mode answers a question the way the ideal would, and at random when the ideal has nothing to say */
 function autoChoice(d){
+  if(d.kind==='cross'){
+    const sc=c=>c.stay?0:c.plain?1:(c.row.state==='open'?100:40)+S.ab[c.row.id==='adv'?S.best:pathAb(c.row.p)]+(c.row.id===S.dream?30:0)+(c.row.id==='adv'?8:0);
+    return d.ch.reduce((a,b)=>sc(b)>sc(a)?b:a);
+  }
   const up=d.ch.filter(c=>tagUp(c)&&!tagDown(c));
   return up.length?pick(up):pick(d.ch.filter(c=>!tagDown(c)).length?d.ch.filter(c=>!tagDown(c)):d.ch);
 }
@@ -3107,6 +3216,7 @@ function applyChoice(d,c){
     else{S.r=clamp(S.r-4,0,100);extra=' — ญาติไม่ยอมช่วย และพูดถึงเรื่องนี้ไปอีกนาน';}
   }
   if(c.heal)S.gold-=(S.life.ward==='full'?12:30);
+  if(c.cross||c.stay)crossResolve(c,notes);
   if(c.path&&!S.adv)enterPath(c.path);
   if(c.mentor&&(!cr||cr.ok))takeMentor(c.mentor);
   if(c.takehobby)S.hobbies.push({th:S.hobbyOffer,lv:2});

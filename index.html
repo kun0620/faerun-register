@@ -191,6 +191,11 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
 .paneclose{display:none}
 .nextcard{border-color:var(--verdigris)}
 .modal.wide{max-width:760px}
+.dreams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
+.dream{text-align:left;background:transparent;border:1px solid var(--rule);border-radius:2px;padding:8px 10px}
+.dream b{display:block;font-size:14px}.dream em{display:block;font-style:normal;font-size:11.5px;color:var(--ink-soft)}
+.dream[aria-pressed="true"]{border-color:var(--verdigris);background:var(--verdigris);color:var(--vellum)}
+.dream[aria-pressed="true"] em{color:var(--vellum);opacity:.8}
 .crosslist{display:grid;gap:8px;margin:12px 0;max-height:60vh;overflow-y:auto}
 .crossrow{border:1px solid var(--rule);border-radius:3px;padding:10px 12px}
 .crossrow.open{border-color:var(--verdigris)}
@@ -378,6 +383,11 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
         <p class="eyebrow">แผนที่ชีวิต</p>
         <p class="sm muted" style="margin:7px 0 13px">หนึ่งช่องคือหนึ่งปี ช่องเส้นประคืออายุขัยของเผ่าคุณ — <b id="recSpan"></b></p>
         <div class="grid" id="recGrid"></div>
+      </div>
+      <div class="plate">
+        <p class="eyebrow">ความหวังที่ฝากไว้กับชีวิตนี้ <span class="muted" style="letter-spacing:0;text-transform:none">· ไม่บังคับ</span></p>
+        <p class="sm muted" style="margin:7px 0 12px">เลือกได้หนึ่งเส้นทาง ตลอดวัยเด็กแท็บ "เส้นทาง" จะบอกว่าเงื่อนไขของมันครบแค่ไหน และคำถามที่พาไปทางนั้นจะโผล่บ่อยขึ้น</p>
+        <div class="dreams" id="recDream"></div>
       </div>
       <button class="big" id="btnLive">เริ่มชีวิตนี้</button>
     </div>
@@ -625,11 +635,13 @@ function pathSkill(p,x){x=x||S;return p.skills.find(k=>x.skills.includes(k))||p.
 function rankName(x){x=x||S;if(!x.path||!x.rank)return '';return pathOf(x.path).ranks[x.rank-1][0];}
 function enterPath(id,why){
   if(S.path===id)return;
+  if(S.dream&&id!==S.dream&&!S.dreamLost&&S.dream!=='adv'){S.dreamLost=1;S.s=clamp(S.s-6,0,100);addLog(S.age,`ทิ้งความฝันที่จะเป็น${pathOf(S.dream).ranks[4][0]}`,'จิตใจ −6',false,true);}
   if(S.path&&S.rank)S.pastPaths.push({path:S.path,rank:S.rank});
   S.path=id;S.merit=0;
   S.rank=id==='adv'?advRank(S.lvl||1):1;
   const p=pathOf(id),r=p.ranks[S.rank-1];
   S.rankAt=[S.age];
+  S.seatAge=Math.random()<.6?S.age+Math.round((8+rnd(40))/yearScale()):0;
   addLog(S.age,`เข้าเส้นทาง${p.th} — ${r[0]}`,`${r[1]} · ${why||r[2]}`,true);
 }
 /* what still stands between you and the next rank besides the exam itself */
@@ -638,26 +650,28 @@ function rankReqs(x){
   if(!p||p.id==='adv'||x.rank>=5)return out;
   const to=x.rank+1,ab=pathAb(p,x),need=to>=5?16:to>=3?14:0;
   if(need)out.push({t:`${ab} ${x.ab[ab]} / ${need}`,ok:x.ab[ab]>=need});
-  if(p.id==='land'&&to===3)out.push({t:'มีที่ดินของตัวเอง',ok:!!x.own.land});
+  if(p.id==='land'&&to===3)out.push(x.own.land?{t:'มีที่ดินของตัวเอง',ok:true}:{t:`ทอง ${Math.round(Math.max(0,x.gold))} / 110gp ซื้อที่ดิน`,ok:x.gold>=110});
   if(p.id==='trade'&&to===5)out.push({t:`ทอง ${Math.round(x.gold)} / 2,000gp`,ok:x.gold>=2000});
   if(p.id==='faith'&&to>=4)out.push({t:x.deity?`ศรัทธา ${Math.round(x.faith)} / ${to===5?90:70}`:'ไม่มีเทพประจำตัว',ok:!!x.deity&&x.faith>=(to===5?90:70)});
   if(p.id==='faith'&&to===5)out.push({t:'ไม่เคยทิ้งเทพ',ok:!x.formerDeity});
   if(p.id==='arcane'&&to===5)out.push({t:`การศึกษา ${Math.round(x.l)} / 80`,ok:x.l>=80});
+  if(to===5)out.push({t:x.age>=x.seatAge?'ที่นั่งสูงสุดว่างอยู่':`ที่นั่งมีคนครอง · ท้าชิงได้ DC +3`,ok:true,soft:x.age<x.seatAge});
   return out;
 }
 /* merit fills over working years; trade focus fills it fastest */
 function gainMerit(f){
   if(!S.path||S.path==='adv'||S.rank>=5||S.age<S.race.mature)return;
   const p=pathOf(S.path),m={trade:1.7,balance:1,work:1.2}[f.id]||.55;
-  S.merit=Math.min(100,S.merit+7.5*m*(1+mod(S.ab[pathAb(p)])*.12)*yearScale());
+  S.merit=Math.min(100,S.merit+10*m*(1+mod(S.ab[pathAb(p)])*.12)*yearScale());
 }
 function examSit(){
   const p=pathOf(S.path),to=S.rank+1,dc=RANK_DC[to],ab=pathAb(p),sk=pathSkill(p),R=p.ranks[to-1];
-  const fee=Math.round(8*Math.pow(2.4,to-1));
+  /* years on the path count: each rank held adds +1 to proving yourself, half that to a patron */
+  const fee=Math.round(8*Math.pow(2.4,to-1)),held=to===5&&S.age<S.seatAge,up=held?3:0;
   const opts=[
-    {t:'พิสูจน์ฝีมือ',ab:SKILLS[sk].ab,skill:sk,dc,st:'grit',s:`ทดสอบ${SKILLS[sk].th}ต่อหน้าผู้ตัดสิน`,tg:['aspiration','knowledge']},
-    {t:'หาผู้อุปถัมภ์',ab:'CHA',skill:'persuasion',dc:dc+1,st:'kin',s:'ให้คนที่นับถือคุณช่วยพูด · ต้องมีสายสัมพันธ์ 50 ขึ้นไป',need:x=>x.r>=50,tg:['people','tradition']},
-    {t:'จ่ายเพื่อให้ได้ตำแหน่ง',ab,dc:dc-4,st:'shady',cost:fee,s:`${gp(fee)} · ง่ายกว่า แต่ไปทางร้าย`,al:[0,-.06],tg:['greed']},
+    {t:held?'ท้าชิงที่นั่ง':'พิสูจน์ฝีมือ',ab:SKILLS[sk].ab,skill:sk,bonus:S.rank,dc:dc+up,st:'grit',s:held?`แข่ง${SKILLS[sk].th}กับคนที่นั่งอยู่`:`ทดสอบ${SKILLS[sk].th}ต่อหน้าผู้ตัดสิน`,tg:['aspiration','knowledge']},
+    {t:'หาผู้อุปถัมภ์',ab:'CHA',skill:'persuasion',bonus:Math.floor(S.rank/2),dc:dc+1+up,st:'kin',s:'ให้คนที่นับถือคุณช่วยพูด · ต้องมีสายสัมพันธ์ 50 ขึ้นไป',need:x=>x.r>=50,tg:['people','tradition']},
+    {t:'จ่ายเพื่อให้ได้ตำแหน่ง',ab,dc:dc-4+up,st:'shady',cost:fee,s:`${gp(fee)} · ง่ายกว่า แต่ไปทางร้าย`,al:[0,-.06],tg:['greed']},
     {t:'รอให้ถึงคิว',ab,dc:1,st:'wits',wait:1,s:'ไม่ต้องลุ้น · ผลงานกลับไปครึ่งหนึ่ง แล้วค่อยสอบใหม่',tg:['tradition']}];
   return {id:'exam',kind:'exam',big:true,h:`สอบเลื่อนขั้น: ${R[0]}`,
     b:`${p.th} · จาก ${p.ranks[S.rank-1][0]} สู่ ${R[0]} (${R[1]}) — ${R[2]}`,
@@ -665,7 +679,7 @@ function examSit(){
     resolve:(o,r)=>{
       if(o.wait){S.merit=50;addLog(S.age,`รอคิวสอบเป็น ${R[0]} ต่อไป`,null);return;}
       S.exams++;
-      if(r.ok){S.rank=to;S.merit=0;S.rankAt.push(S.age);
+      if(r.ok){S.rank=to;S.merit=0;S.rankAt.push(S.age);if(p.id==='land'&&to===3&&!S.own.land){S.gold-=110;S.own.land=1;}if(held)addLog(S.age,'ชนะคนที่ครองที่นั่งอยู่',null);toast(`${R[0]} · ${R[1]}`);
         addLog(S.age,`ได้เป็น ${R[0]}`,[rollTh(r),`${R[1]} · ${R[2]}`],true);}
       else if(r.d===1&&S.rank>1){S.rank--;S.merit=0;S.rankAt.pop();
         addLog(S.age,'สอบไม่ผ่าน และเกิดเรื่องอื้อฉาว',[rollTh(r),`ขั้นตกกลับไปเป็น ${p.ranks[S.rank-1][0]}`],true,true);}
@@ -1748,7 +1762,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    focus:FOCUS_DEFAULT_CHILD,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -1871,7 +1885,16 @@ function soulsInto(el,arr,empty){
 }
 const regionRows=()=>[['ความอันตรายของถนน',S.region.danger.toFixed(2)+'×'],['ความมั่งคั่ง',S.region.wealth.toFixed(2)+'×'],
   ['คนที่อ่านออกเขียนได้',Math.round(S.region.lit*100)+'%'],['วิหารที่ประกอบพิธีได้',S.region.temple>=1?'มีทั่วถึง':'หายาก'],['ยุค',era().th]];
+function renderDream(){
+  const el=$('#recDream');el.textContent='';
+  [...PATHS.map(p=>[p.id,p.th,p.ranks[4][0]]),[null,'ปล่อยไปตามชะตา','']].forEach(([id,th,top])=>{
+    const b=ce('button');b.type='button';b.className='dream';b.setAttribute('aria-pressed',String((S.dream||null)===id));
+    const t=ce('b');t.textContent=th;b.appendChild(t);
+    if(top){const e=ce('em');e.textContent='สูงสุด: '+top;b.appendChild(e);}
+    b.onclick=()=>{S.dream=id;renderDream();};el.appendChild(b);});
+}
 function renderRecord(){
+  renderDream();
   $('#recName').textContent=S.name;
   const o=oddsPct();
   $('#recLine').textContent=`ปี ${S.born} DR — เกิดเป็น${S.race.th}ใน${S.region.kind}แห่ง${S.region.th} เป็นลูกของ${S.tier.th} โอกาสที่ดวงวิญญาณหนึ่งจะได้ชีวิตแบบนี้คือ ${o.toFixed(3)}% หรือราว 1 ใน ${fmt(100/o)}`;
@@ -1979,7 +2002,7 @@ function toast(t){
   const d=ce('div');d.className='toast';d.textContent=t;host.appendChild(d);
   setTimeout(()=>{d.remove&&d.remove();},3200);
 }
-function reqChip(q){const c=ce('span');c.className='req '+(q.ok?'ok':'no');c.textContent=(q.ok?'✓ ':'✗ ')+q.t;return c;}
+function reqChip(q){const c=ce('span');c.className='req '+(q.soft?'':q.ok?'ok':'no');c.textContent=(q.soft?'• ':q.ok?'✓ ':'✗ ')+q.t;return c;}
 function ladderInto(el,p,rank,at){
   const ol=ce('ol');ol.className='ladder';
   p.ranks.forEach((R,i)=>{const li=ce('li');li.className=i+1<rank?'past':i+1===rank?'now':'';
@@ -1990,7 +2013,13 @@ function ladderInto(el,p,rank,at){
 function meritBar(v){const bar=ce('div');bar.className='bar';const i=ce('i');i.style.width=clamp(v,0,100)+'%';bar.appendChild(i);return bar;}
 function renderPath(){
   const el=$('#lPath');el.textContent='';
-  if(!S.path){const p=ce('p');p.className='sm muted';p.textContent=S.age<S.race.mature?'ยังเด็กเกินจะเลือกทางเดิน':'ยังไม่ได้เข้าเส้นทางใด';el.appendChild(p);return;}
+  if(!S.path){
+    if(S.dream&&S.age<S.race.mature){
+      const r=crossRow(S.dream),h=ce('p');h.className='eyebrow';h.style.marginBottom='6px';h.textContent='ความฝัน: '+r.p.th+' ★';el.appendChild(h);
+      const q=ce('p');q.className='xs muted';q.textContent=`ถึงทางแยกตอนอายุ ${S.race.mature} · ตอนนี้${r.state==='open'?'ครบทุกข้อแล้ว':r.state==='try'?'ขาดอยู่หนึ่งข้อ':'ยังขาดหลายข้อ'}`;el.appendChild(q);
+      const rq=ce('div');rq.className='reqs';r.reqs.forEach(x=>rq.appendChild(reqChip(x)));el.appendChild(rq);
+      ladderInto(el,r.p,0);return;}
+    const p=ce('p');p.className='sm muted';p.textContent=S.age<S.race.mature?'ยังเด็กเกินจะเลือกทางเดิน · ตั้งความฝันได้ตอนเกิด':'ยังไม่ได้เข้าเส้นทางใด';el.appendChild(p);return;}
   const p=pathOf(S.path),h=ce('p');h.className='eyebrow';h.style.marginBottom='8px';h.textContent='เส้นทาง'+p.th;el.appendChild(h);
   ladderInto(el,p,S.rank,S.rankAt);
   if(S.pastPaths.length){const q=ce('p');q.className='xs muted';q.style.marginTop='10px';
@@ -2632,6 +2661,7 @@ function openCope(sit,cb){
   m.append(eb,h,p);
   if(sit.card){const c=ce('div');c.className='foe';sit.card.forEach(([k,v])=>{const d=ce('div');const a=ce('span');a.textContent=k;d.append(a,document.createTextNode(v));c.appendChild(d);});m.appendChild(c);}
   if(sit.lore){const l=ce('div');l.className='lore';l.textContent=sit.lore;m.appendChild(l);}
+  if(sit.kind==='exam')ladderInto(m,pathOf(S.path),S.rank+1,S.rankAt);
   let insp=false;
   const wrap=ce('div');wrap.className='choices';
   const draw=()=>{
@@ -3037,9 +3067,9 @@ const CROSS={
  trade:{min:12,roll:{ab:'CHA',skill:'persuasion',dc:12},tg:['greed','aspiration'],
   other:x=>x.tier.lvl>=3?{t:'มีญาติเปิดร้าน',ok:true}:{t:`ทุน ${Math.round(Math.max(0,x.gold))} / 50gp`,ok:x.gold>=50,cost:50}},
  faith:{min:12,roll:{ab:'INT',skill:'religion',dc:12},tg:['faith','tradition'],
-  other:x=>({t:x.deity?`ศรัทธา ${Math.round(x.faith)} / 40`:'ยังไม่มีเทพประจำตัว',ok:!!x.deity&&x.faith>=40})},
+  other:x=>({t:x.deity?`ศรัทธา ${Math.round(x.faith)} / 30`:'ยังไม่มีเทพประจำตัว',ok:!!x.deity&&x.faith>=30})},
  arcane:{min:13,roll:{ab:'INT',skill:'arcana',dc:13},tg:['knowledge','aspiration'],
-  other:x=>({t:`การศึกษา ${Math.round(x.l)} / 35 · ค่าเรียน ${gp(25)}`,ok:x.l>=35&&x.gold>=25,cost:25})},
+  other:x=>({t:`การศึกษา ${Math.round(x.l)} / 25 · ค่าเรียน ${gp(25)}`,ok:x.l>=25&&x.gold>=25,cost:25})},
  arms:{min:12,roll:{ab:'STR',skill:'athletics',dc:12},tg:['might','tradition'],
   other:x=>({t:'แคว้นมีกองยาม หรือยุคสงคราม',ok:x.region.danger>=1||era().id==='war'})}
 };
@@ -3055,7 +3085,7 @@ function crossRow(id,x){
   const C=CROSS[id],ab=pathAb(p,x),cert=!!x.certs[id];
   reqs.push({t:`${ab} ${x.ab[ab]} / ${C.min}`,ok:x.ab[ab]>=C.min});
   const sk=p.skills.filter(k=>x.skills.includes(k));
-  reqs.push(cert?{t:'ใบรับรองจากอาจารย์',ok:true}:{t:sk.length?SKILLS[sk[0]].th:'ความชำนาญ: '+p.skills.map(k=>SKILLS[k].th).join(' / '),ok:sk.length>0});
+  reqs.push(cert?{t:'ใบรับรองจากอาจารย์',ok:true}:sk.length?{t:SKILLS[sk[0]].th,ok:true}:{t:'ไม่มีความชำนาญของสาย · ทอยไม่ได้โบนัส',ok:true,soft:true});
   const o=cert?{t:'อาจารย์รับรองแล้ว',ok:true}:C.other(x);reqs.push(o);
   const miss=reqs.filter(q=>!q.ok).length;
   const roll=C.roll||(miss?{ab,dc:10}:null);
@@ -3126,7 +3156,7 @@ function nextDec(){
   }
   /* in childhood, a few chances that come once and go */
   if(S.age<S.race.mature&&S.age>=S.race.mature*.35&&S.oppN<3&&Math.random()<OPP_P*yearScale()){
-    const pool=OPPS.filter(o=>!S.done[o.id]&&(!o.when||o.when(S))).map(o=>({d:o,w:o.w(S)})).filter(o=>o.w>0);
+    const pool=OPPS.filter(o=>!S.done[o.id]&&(!o.when||o.when(S))).map(o=>({d:o,w:o.w(S)*(S.dream&&o.ch[0].mentor===S.dream?2:1)})).filter(o=>o.w>0);
     if(pool.length){const d=wpick(pool).d;S.oppN++;return d;}
   }
   /* then, a few times in a human-length life, something drawn from the bank */

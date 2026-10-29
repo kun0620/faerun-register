@@ -341,6 +341,7 @@ textarea{width:100%;min-height:74px;background:var(--vellum);color:var(--ink);bo
     <div class="set"><span class="lbl">เนื้อหาและจังหวะ</span>
       <div class="row">
         <button class="chip" data-opt="pauses" data-v="1" aria-pressed="true">ช่วงหยุดให้เขียนความคิด</button>
+        <button class="chip" data-opt="market" data-v="1" aria-pressed="true">หยุดเมื่อมีประกาศงาน</button>
         <button class="chip" id="themeBtn">โหมดหน้าจอ: ตามอุปกรณ์</button>
       </div>
     </div>
@@ -648,7 +649,7 @@ function enterPath(id,why){
   S.rank=id==='adv'?advRank(S.lvl||1):1;
   const p=pathOf(id),r=p.ranks[S.rank-1];
   S.rankAt=[S.age];
-  if(id!=='adv'&&PW[id])meet();
+  if(id!=='adv'&&PW[id]){meet();S.job=null;S.follow=jobDec('enter');}
   S.seatAge=Math.random()<.8?S.age+Math.round((8+rnd(40))/yearScale()):0;
   addLog(S.age,`เข้าเส้นทาง${p.th} — ${r[0]}`,`${r[1]} · ${why||r[2]}`,true);
 }
@@ -675,7 +676,7 @@ function rankReqs(x){
 function gainMerit(f){
   if(!S.path||S.path==='adv'||S.rank>=5||S.age<S.race.mature||S.retired)return;
   const p=pathOf(S.path),m={trade:1.7,balance:1,work:1.2}[f.id]||.55;
-  gainMeritRaw(10*m*(1+mod(S.ab[pathAb(p)])*.12)*yearScale());
+  gainMeritRaw(10*m*(1+mod(S.ab[pathAb(p)])*.12)*yearScale()*(S.job?S.job.mer:PW[S.path]?.3:1));
 }
 function examSit(){
   const p=pathOf(S.path),to=S.rank+1,dc=RANK_DC[to],ab=pathAb(p),sk=pathSkill(p),R=p.ranks[to-1];
@@ -694,7 +695,7 @@ function examSit(){
       if(o.wait){S.merit=50;addLog(S.age,`รอคิวสอบเป็น ${R[0]} ต่อไป`,null);return;}
       S.exams++;
       if(r.ok){S.rank=to;S.merit=0;S.rankAt.push(S.age);if(p.id==='land'&&to===3&&!S.own.land){S.gold-=110;S.own.land=1;}if(p.id==='land'&&to===5)S.gold-=600;if(held)addLog(S.age,'ชนะคนที่ครองที่นั่งอยู่',null);toast(`${R[0]} · ${R[1]}`);
-        addLog(S.age,`ได้เป็น ${R[0]}`,[rollTh(r),`${R[1]} · ${R[2]}`],true);if(to===5)leg(`${R[0]} · ${R[1]}`);}
+        addLog(S.age,`ได้เป็น ${R[0]}`,[rollTh(r),`${R[1]} · ${R[2]}`],true);if(to===5)leg(`${R[0]} · ${R[1]}`);if(PW[p.id])S.follow=jobDec('promo');}
       else if(r.d===1&&S.rank>1){S.rank--;S.merit=0;S.rankAt.pop();
         addLog(S.age,'สอบไม่ผ่าน และเกิดเรื่องอื้อฉาว',[rollTh(r),`ขั้นตกกลับไปเป็น ${p.ranks[S.rank-1][0]}`],true,true);}
       else{S.merit=to===5?0:50;addLog(S.age,`สอบเป็น ${R[0]} ไม่ผ่าน`,[rollTh(r),to===5?'ที่นั่งสูงสุดไม่ให้โอกาสซ้ำง่าย ๆ · ผลงานเริ่มนับใหม่':'ผลงานกลับไปครึ่งหนึ่ง'],false,true);}
@@ -1739,7 +1740,7 @@ function sceneCaption(){
 }
 
 /* ---------------- state ---------------- */
-const opt={pace:12,basis:'born',era:'now',pauses:1,auto:0,theme:'system'};
+const opt={pace:12,basis:'born',era:'now',pauses:1,market:1,auto:0,theme:'system'};
 let S=null,timer=null,speed=1;
 const raceList=()=>opt.basis==='living'?RACES.map(r=>({...r,w:r.w*r.span/72})):RACES;
 const era=()=>ERAS.find(e=>e.id===opt.era)||ERAS[1];
@@ -1778,7 +1779,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,arcs:[],arcDone:{},world:null,worldEnd:-99,worldAsk:null,goal:null,goalNext:0,retired:0,leg:[],adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,arcs:[],arcDone:{},world:null,worldEnd:-99,worldAsk:null,goal:null,goalNext:0,retired:0,leg:[],job:null,marketAt:0,follow:null,kitGiven:{},troubleTags:[],crossFailed:[],adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -1833,9 +1834,10 @@ const yearScale=()=>72/S.span;
 function baseIncome(){
   if(S.age<S.race.mature)return 0;
   if(S.age>S.span*.82)return 7;
-  let v=S.adv?70:30;
+  const J=!S.adv&&onPath()?S.job:undefined;
+  let v=S.adv?70:J?J.pay*12/S.region.wealth:J===null?8:30;
   v*=(focusSet().find(x=>x.id===S.focus)||focusSet()[0]).mul||1;
-  v*=S.region.wealth*(1+S.l/160)*S.jobMul*rankMul()*(1-(S.awayNow||0));
+  v*=S.region.wealth*(1+S.l/160)*S.jobMul*(J?1:rankMul())*(1-(S.awayNow||0));
   if(S.own.mule)v*=1.05;
   if(S.own.horse)v*=1.15;
   if(S.own.cart)v*=1.3;
@@ -2041,7 +2043,7 @@ function renderGear(){
   }
   const h=ce('p');h.className='eyebrow';h.style.margin=(S.adv?'14px':'0')+' 0 8px';h.textContent=`กระเป๋า · ${S.bag.length} / ${bagMax()}`;el.appendChild(h);
   if(!S.bag.length){const p=ce('p');p.className='sm muted';p.textContent='ยังไม่มีของติดตัว · ซื้อได้ในแผงใช้เงิน';el.appendChild(p);return;}
-  S.bag.forEach(b=>{const g=GEAR[b.id],r=ce('div');r.className='bagrow';const t=ce('b');t.textContent=g.th+(b.uses?` ×${b.uses}`:'');
+  S.bag.forEach(b=>{const g=GEAR[b.id],r=ce('div');r.className='bagrow';const t=ce('b');t.textContent=g.th+(b.uses?` ×${b.uses}`:'')+(b.wear?` · สึก ${Math.round(b.wear/GEAR_WEAR*100)}%`:'');
     const d=ce('span');d.className='xs muted';d.textContent=g.d;r.append(t,d);el.appendChild(r);});
 }
 function renderPath(){
@@ -2082,7 +2084,7 @@ function renderNext(){
 /* the one line that stays on screen: who, what rank, how hurt, how much */
 function renderStrip(){
   const el=$('#lStrip');el.textContent='';
-  const job=S.rank?`${rankName()} · ${S.adv?S.cls.th+' เลเวล '+S.lvl:pathOf(S.path).th+(S.retired?' · วางมือแล้ว':S.rank<5?' · ผลงาน '+Math.floor(S.merit):'')}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
+  const job=S.rank?`${rankName()} · ${S.adv?S.cls.th+' เลเวล '+S.lvl:(S.job&&!S.retired?S.job.th+' · '+S.job.pay+' gp/เดือน':onPath()&&!S.retired?'ว่างงาน':pathOf(S.path).th)+(S.retired?' · วางมือแล้ว':S.rank<5?' · ผลงาน '+Math.floor(S.merit):'')}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
   [[S.name,''],[job,'rk'],...(worldNow()?[[worldNow().th,'rk']]:[]),[`HP ${S.hp}/${S.hpMax}`,''],[(S.gold<0?'−':'')+gp(Math.abs(S.gold)),'']].forEach(([t,c])=>{
     const b=ce('b');if(c)b.className=c;b.textContent=t;el.appendChild(b);});
 }
@@ -2101,7 +2103,7 @@ function renderLife(){
   $('#lAge').textContent=S.age;
   $('#lMeta').textContent=`ปี ${S.year} DR · 1 ปี ≈ ${(msPerYear()/1000).toFixed(1)} วินาที`;
   renderStrip();renderPath();renderNext();renderGear();
-  const job=S.adv?`${S.cls.th} (นักผจญภัย)`:(S.age<S.race.mature?'ยังไม่ถึงวัยทำงาน':(S.bizYears>0?S.trade+' (มีร้านของตัวเอง)':S.trade));
+  const job=S.adv?`${S.cls.th} (นักผจญภัย)`:(S.age<S.race.mature?'ยังไม่ถึงวัยทำงาน':S.job&&onPath()?`${S.job.th} · ${payTh(S.job)}`:onPath()&&!S.retired?'ว่างงาน':(S.bizYears>0?S.trade+' (มีร้านของตัวเอง)':S.trade));
   const hob=S.hobbies.length?S.hobbies.map(h=>`${h.th} Lv.${h.lv}`).join(' · '):'ยังไม่มี';
   sheetInto($('#lSheet'),false);renderRolls();
   kvInto($('#lKv'),[['เผ่า',S.race.th],['แคว้น',S.region.th],['ทางทำกิน',job],
@@ -2677,6 +2679,9 @@ function resolveCope(sit,o,insp,auto){
   if(o.fx)applyFx(o.fx,1);
   if(insp)S.insp=0;
   const r=check(o.ab,o.dc,{skill:o.skill,save:o.save,attack:o.attack,prof:o.prof,bonus:o.bonus,adv:o.adv||insp,dis:o.dis,label:o.t});
+  if(!r.ok)S.troubleTags=sitTags(sit);
+  if(o.gear&&r.ok){const gb=o.gear.reduce((a,b)=>a+(GEAR[b.id].bonus||0),0),ga=o.gear.some(b=>GEAR[b.id].adv)&&r.mode==='adv';
+    if((ga?Math.min(r.a,r.b):r.d)+r.bonus-gb<o.dc){toast(`${o.gearTh} ช่วยไว้`);S.gearSaves=(S.gearSaves||0)+1;}}
   if(o.al)shiftAlign(o.al[0],o.al[1]);
   const how=`${auto?'ตามท่าที'+stanceTh(S.stance)+' ':''}${o.t}`;
   sit.resolve(o,r,how);
@@ -2964,7 +2969,7 @@ function tick(){
   const career=()=>{if(S.hp>0){const m0=S.merit;workYear(dec&&dec.kind!=='reflect');gainMerit(f);
       if(f.id==='train'&&onPath())trainAdult(pathAb(pathOf(S.path)));
       if(onPath()&&S.rank<5){S.meritLast=S.merit-m0;S.meritRate=S.meritRate?S.meritRate*.6+S.meritLast*.4:S.meritLast;}
-      advShop();examMaybe(end);}else end();};
+      jobYear();advShop();examMaybe(()=>follow(end));}else end();};
   const threat=()=>{
     if(S.adv&&f.xp)gainXp(xpNeed()*f.xp*yearScale());
     if(S.hp>0&&Math.random()<threatQ())runThreat(career);else career();
@@ -2987,7 +2992,7 @@ function tick(){
     if(S.pendingQuest){const j=S.pendingQuest;S.pendingQuest=null;runQuest(j,()=>{if(S.hp<=0)end();else save();});}
     else save();
   };
-  if(dec){renderLife();if(!opt.auto||dec.kind==='reflect')noteAsk();openDec(dec,year);}
+  if(dec){renderLife();if(!opt.auto||dec.kind==='reflect')noteAsk();openDec(dec,()=>follow(year));}
   else year();
 }
 /* ---------------- childhood: training, school, chances, masters ----------------
@@ -3447,7 +3452,7 @@ const WAUTO=[
  {id:'c_fire',p:'craft',ph:'mid',t:'เตาใน{place}ระเบิด',chk:{ab:'DEX',save:1,dc:12},ok:{t:'หลบทัน ช่วยดับไฟได้',m:4},no:{t:'ไฟลวกแขน',hurt:2}},
  {id:'t_haggle',p:'trade',ph:'any',rep:1,t:'ต่อราคากับพ่อค้าต่างแคว้น',chk:{skill:'persuasion',dc:12},ok:{t:'ได้ราคาที่เขาไม่ยอมให้ใคร',m:5,g:8},no:{t:'โดนกดราคา',g:-4}},
  {id:'t_count',p:'trade',ph:'early',t:'บัญชีของ{place}ไม่ลงตัว',chk:{skill:'investigation',dc:11},ok:{t:'เจอเงินที่หายไป',m:5,cast:{mentor:5}},no:{t:'ถูกสงสัยว่าเอาไปเอง',m:-3,cast:{mentor:-5}}},
- {id:'f_sick',p:'faith',ph:'any',rep:1,t:'คนป่วยมานอนเต็มลาน{place}',chk:{skill:'medicine',dc:12},ok:{t:'คนส่วนใหญ่กลับบ้านได้',m:6,r:4},no:{t:'เสียไปหลายคน',s:-3}},
+ {id:'f_sick',p:'faith',ph:'any',rep:1,t:'คนป่วยมานอนเต็มลาน{place}',chk:{skill:'medicine',dc:12},ok:{t:'คนส่วนใหญ่กลับบ้านได้',m:6,r:4,give:'herbs'},no:{t:'เสียไปหลายคน',s:-3}},
  {id:'f_rite',p:'faith',ph:'early',t:'ได้นำบทสวดในพิธีครั้งแรก',chk:{skill:'religion',dc:11},ok:{t:'เสียงไม่สั่นเลย',m:5,faith:4},no:{t:'ท่องข้ามไปทั้งท่อน คนทั้งวิหารได้ยิน',m:-2,s:-2}},
  {id:'a_scroll',p:'arcane',ph:'any',rep:1,t:'ได้ตำราเก่าที่ไม่มีใครอ่านออก',chk:{skill:'arcana',dc:13},ok:{t:'ถอดความได้ทีละหน้า',m:7,l:4},no:{t:'นั่งจ้องอยู่ทั้งฤดู',l:1}},
  {id:'a_blast',p:'arcane',ph:'early',t:'เวทบทแรกย้อนกลับเข้าตัว',chk:{ab:'CON',save:1,dc:11},ok:{t:'แค่คิ้วไหม้',m:2},no:{t:'นอนซมไปสามวัน',hurt:2}},
@@ -3464,7 +3469,7 @@ const WAUTO=[
  {id:'a_lecture',p:'arcane',ph:'early',t:'ต้องอ่านตำราให้ลูกศิษย์รุ่นน้องฟัง',chk:{skill:'history',dc:11},ok:{t:'ตอบได้ทุกคำถาม',m:4},no:{t:'ติดคำถามแรก',s:-2}},
  {id:'m_brawl',p:'arms',ph:'early',t:'ห้ามวิวาทในโรงเตี๊ยม',chk:{skill:'intimidation',dc:11},ok:{t:'แค่ตะคอกคำเดียวก็เงียบ',m:4},no:{t:'โดนเก้าอี้ฟาดหลัง',hurt:1}},
  {id:'m_deserter',p:'arms',ph:'mid',t:'จับได้ว่าทหารใต้บังคับหนีทัพ',chk:{skill:'insight',dc:12},ok:{t:'รู้ว่าเขามีลูกป่วย จึงหาทางช่วยแทน',m:5,r:3},no:{t:'ส่งตัวไปตามระเบียบ',s:-2}},
- {id:'m_night',p:'arms',ph:'any',rep:1,t:'เวรยามคืนที่มีเสียงแปลก ๆ นอกกำแพง',chk:{skill:'perception',dc:12},ok:{t:'เห็นก่อนและส่งสัญญาณทัน',m:6},no:{t:'หลับไปครู่เดียว แล้วถูกลงโทษ',m:-3}}
+ {id:'m_night',p:'arms',ph:'any',rep:1,t:'เวรยามคืนที่มีเสียงแปลก ๆ นอกกำแพง',chk:{skill:'perception',dc:12},ok:{t:'เห็นก่อนและส่งสัญญาณทัน',m:6,give:'lamp'},no:{t:'หลับไปครู่เดียว แล้วถูกลงโทษ',m:-3}}
 ];
 /* happenings that ask: the year's one window, when the year has room for one */
 const WASK=[
@@ -3519,7 +3524,11 @@ function runWauto(e,noSeen){
   if(!noSeen)S.cast.seen[e.id]=S.age;
   let out=e,r=null;
   if(e.chk){const sk=e.chk.skill==='pathsk'?pathSk():e.chk.skill;
-    r=check(e.chk.ab||(sk?SKILLS[sk].ab:'WIS'),e.chk.dc,{skill:sk,save:e.chk.save,label:wt(e.t),adv:S.focus==='trade'&&!e.chk.save});out=r.ok?e.ok:e.no;}
+    const kit=e.chk.save?[]:S.bag.filter(b=>(WORK_GEAR[S.path]||[]).includes(b.id)),gb=kit.reduce((a,b)=>a+(GEAR[b.id].bonus||1),0),kn=kit.map(b=>GEAR[b.id].th).join(', ');
+    r=check(e.chk.ab||(sk?SKILLS[sk].ab:'WIS'),e.chk.dc,{skill:sk,save:e.chk.save,bonus:gb,label:wt(e.t)+(kn?' · ใช้'+kn:''),adv:S.focus==='trade'&&!e.chk.save});out=r.ok?e.ok:e.no;
+    if(kit.length&&r.ok&&r.total-gb<e.chk.dc){toast(`${kn} ช่วยไว้`);S.gearSaves=(S.gearSaves||0)+1;}
+    kit.forEach(b=>{b.wear=(b.wear||0)+1;S.gearWorkUses=(S.gearWorkUses||0)+1;
+      if(b.wear>=GEAR_WEAR){S.bag.splice(S.bag.indexOf(b),1);addLog(S.age,`${GEAR[b.id].th}ใช้จนพัง`,'ซื้อใหม่ได้จากพ่อค้าเร่ที่มากับประกาศรับคน',false,true);toast(`${GEAR[b.id].th}พังแล้ว`);}});}
   S.lastWorkOut=out;
   if(out.m)workMerit(out.m*(out.m>0?yearScale():1));
   ['s','l','r'].forEach(k=>{if(out[k])S[k]=clamp(S[k]+out[k],0,100);});
@@ -3528,6 +3537,7 @@ function runWauto(e,noSeen){
   if(out.hurt)damage(out.hurt,'',false);
   if(out.faith&&S.deity)S.faith=clamp(S.faith+out.faith,0,100);
   if(out.leg)leg(wt(out.leg));
+  if(out.give&&!hasGear(out.give))addGear(out.give,wt(out.t||e.t));
   castFx(out.cast);
   const t=wt(e.t)+(e.chk?' — '+wt(out.t):''),mt=out.m?` · ผลงาน ${out.m>0?'+':'−'}${Math.abs(out.m)}`:'';
   addLog(S.age,t,r?[rollTh(r)+mt]:mt?mt.slice(3):null,false,!!r&&!r.ok&&(out.m||0)<0);
@@ -3776,13 +3786,13 @@ const WORLD={
  war:{th:'สงคราม',w:1.2,yrs:[3,4],threat:1.25,inc:{arms:1.3,trade:1.15,craft:1.1,land:.8,all:.9},merit:{arms:8,craft:3,faith:2},
   start:'ข้าศึกยกทัพข้ามพรมแดน เจ้าแคว้นประกาศเกณฑ์คน',end:'สงครามสงบลง คนที่รอดเริ่มทยอยกลับบ้าน',
   autos:[{t:'ทหารเดินผ่านหมู่บ้าน ขนเสบียงไปครึ่งยุ้ง',g:-5},{t:'ญาติของเพื่อนบ้านไม่ได้กลับจากแนวหน้า',s:-2},{t:'ราคาเหล็กพุ่งขึ้นสามเท่า',g:-2}],
-  ch:[{t:'ส่งของให้กองทัพ',s:'ทอง +10 · ได้กำไรจากสงคราม',tg:['greed'],fx:{g:10},al:[0,-.03]},
+  ch:[{t:'ส่งของให้กองทัพ',s:'ทอง +10 · ได้มีดสั้นติดมือ',tg:['greed'],fx:{g:10},give:'dagger',al:[0,-.03]},
       {t:'ช่วยดูแลผู้ลี้ภัย',s:'ทอง −8 · สายสัมพันธ์ +8',tg:['charity','people'],fx:{g:-8,r:8},al:[0,.04]},
       {t:'ปิดประตูบ้าน รอให้ผ่านไป',s:'จิตใจ −2',tg:['independence'],fx:{s:-2}}]},
  plague:{th:'โรคระบาด',w:1,yrs:[2,3],threat:1.35,inc:{faith:1.2,all:.85},merit:{faith:8},
   start:'โรคที่ไม่มีใครรู้จักมากับขบวนเรือ คนในเมืองเริ่มล้มทีละบ้าน',end:'โรคซาลงไปเอง แต่ทุกบ้านนับคนที่หายไปได้',
   autos:[{t:'เพื่อนบ้านปิดประตูไม่ให้ใครเข้า',r:-2},{t:'เกวียนเก็บศพผ่านหน้าบ้านทุกเช้า',s:-3}],
-  ch:[{t:'ช่วยดูแลคนป่วย',s:'ทดสอบป้องกันทน DC 13 · สายสัมพันธ์ +8',tg:['charity','people'],chk:{ab:'CON',save:1,dc:13,ok:{t:'ไม่ติดโรคเลยตลอดฤดู',fx:{r:8}},no:{t:'ติดโรคเสียเอง',hurt:2,fx:{r:6}}}},
+  ch:[{t:'ช่วยดูแลคนป่วย',s:'ทดสอบป้องกันทน DC 13 · สายสัมพันธ์ +8',tg:['charity','people'],chk:{ab:'CON',save:1,dc:13,ok:{t:'ไม่ติดโรคเลยตลอดฤดู',fx:{r:8},give:'herbs'},no:{t:'ติดโรคเสียเอง',hurt:2,fx:{r:6}}}},
       {t:'ปิดบ้าน ไม่ให้ใครเข้า',s:'ปลอดภัยกว่า · สายสัมพันธ์ −3',tg:['independence'],fx:{r:-3}},
       {t:'หนีไปอยู่ชนบท',s:'ทอง −10',tg:['freedom'],fx:{g:-10,s:-2}}]},
  famine:{th:'ข้าวยากหมากแพง',w:1,yrs:[2,3],threat:1.2,inc:{land:1.25,all:.85},merit:{land:5},
@@ -3790,7 +3800,7 @@ const WORLD={
   autos:[{t:'ขนมปังก้อนละเท่าค่าแรงครึ่งวัน',g:-4},{t:'เด็กข้างบ้านมาขอข้าวกินทุกเย็น',s:-1,r:1}],
   ch:[{t:'แบ่งข้าวให้เพื่อนบ้าน',s:'ทอง −8 · สายสัมพันธ์ +8',tg:['charity','people'],fx:{g:-8,r:8},al:[0,.04]},
       {t:'กักตุนไว้ขายตอนแพง',s:'ทอง +10 · สายสัมพันธ์ −6',tg:['greed'],fx:{g:10,r:-6},al:[0,-.05]},
-      {t:'ไปขอวิหาร',s:'ศรัทธา +3',tg:['faith'],faith:3}]},
+      {t:'ไปขอวิหาร',s:'ศรัทธา +3 · ได้เสบียงแห้งกลับมา',tg:['faith'],faith:3,give:'rations'}]},
  boom:{th:'ยุคทอง',w:1,yrs:[3,4],inc:{trade:1.25,craft:1.15,all:1.06},merit:{trade:6,craft:4},
   start:'เส้นทางการค้าใหม่เปิด เงินไหลเข้าแคว้นอย่างที่ไม่เคยมีมาก่อน',end:'ยุคทองจบลงเงียบ ๆ อย่างที่มันมา',
   autos:[{t:'ตลาดคึกคักทุกวัน',g:4},{t:'พ่อค้าต่างแดนมาขอซื้อของถึงหน้าบ้าน',g:3}],
@@ -3951,6 +3961,111 @@ Object.assign(ARCS,{
    :a.f.good?{t:`ศิษย์รุ่นสุดท้าย ${a.f.n} คนออกไปทำงานของตัวเอง`,s:4,r:4,leg:`ศิษย์รุ่นสุดท้าย ${a.f.n} คน`}
    :{t:'ศิษย์รุ่นสุดท้ายแยกย้ายกันไป ไม่มีใครกลับมาเยี่ยม',s:-2}]}
 });
+/* ---------------- jobs: a real position on the path, with an employer and a monthly wage ----------------
+   Every job belongs to one path and one band of ranks. Within a band the three differ:
+   a steady one, one that pays more but can fold under you, and one that pays less but builds a name. */
+const JOB_KIND={steady:{th:'มั่นคง',pay:1,mer:1,risk:.02},rich:{th:'จ่ายดี แต่เสี่ยง',pay:1.3,mer:.9,risk:.06},fame:{th:'ได้ชื่อเสียง',pay:.85,mer:1.3,risk:.03}};
+const JOB_PAY=[0,2.5,2.75,3.1,3.6,5.5];   // gp a month for a steady job at each rank: the old yearly 30 × the old rank multiplier, over twelve
+const JOBS={
+ land:[[['steady','ลูกมือในนาของคนอื่น'],['rich','ต้อนสัตว์ให้ฟาร์มใหญ่'],['fame','เช่าแปลงทำเอง']],
+       [['steady','ทำนาของตัวเอง'],['rich','คุมคนงานในไร่องุ่น'],['fame','ปลูกพันธุ์ข้าวใหม่ให้วิหาร']],
+       [['steady','ผู้ใหญ่บ้าน'],['rich','ผู้ดูแลที่ดินของขุนนาง'],['fame','ผู้ตัดสินข้อพิพาทที่ดินของแคว้น']]],
+ craft:[[['steady','ลูกมือโรงตีเหล็ก'],['rich','ซ่อมของรับจ้างตามตลาด'],['fame','ลูกมือช่างไม้ของวิหาร']],
+        [['steady','ช่างประจำโรงงานในเมือง'],['rich','เปิดร้านของตัวเองในตลาด'],['fame','ช่างประจำวิหาร']],
+        [['steady','หัวหน้าโรงงานของสมาคม'],['rich','รับงานของพ่อค้าต่างแคว้น'],['fame','ช่างหลวง']]],
+ trade:[[['steady','จดบัญชีโกดัง'],['rich','พ่อค้าเร่'],['fame','เด็กวิ่งส่งของของสภาพ่อค้า']],
+        [['steady','คุมโกดังท่าเรือ'],['rich','เจ้าของแผงในตลาด'],['fame','ตัวแทนพ่อค้าต่างแคว้น']],
+        [['steady','ผู้จัดการโรงเงิน'],['rich','นายกองคาราวาน'],['fame','สมาชิกสภาพ่อค้า']]],
+ faith:[[['steady','ผู้ช่วยวิหาร'],['rich','นักบวชเร่รับทำพิธี'],['fame','ดูแลคนป่วยในเรือนพยาบาล']],
+        [['steady','นักบวชประจำหมู่บ้าน'],['rich','นักบวชประจำบ้านขุนนาง'],['fame','หมอวิหาร']],
+        [['steady','หัวหน้าวิหาร'],['rich','นักบวชประจำราชสำนัก'],['fame','ผู้แทนสภาวิหาร']]],
+ arcane:[[['steady','คัดลอกตำราในหอสมุด'],['rich','ผู้ช่วยนักเล่นแร่แปรธาตุ'],['fame','ศิษย์รับใช้ผู้วิเศษ']],
+         [['steady','ครูสำนักเวท'],['rich','รับจ้างร่ายเวทในเมือง'],['fame','นักค้นคว้าในหอคอย']],
+         [['steady','อาจารย์สำนัก'],['rich','ผู้วิเศษประจำราชสำนัก'],['fame','ผู้ดูแลหอตำราต้องห้าม']]],
+ arms:[[['steady','ยามประตูเมือง'],['rich','คนคุ้มกันคาราวาน'],['fame','ทหารเกณฑ์แนวหน้า']],
+       [['steady','นายสิบประจำป้อม'],['rich','หัวหน้าทหารรับจ้าง'],['fame','ครูฝึกทหาร']],
+       [['steady','ผู้บังคับกองรักษาเมือง'],['rich','แม่ทัพทหารรับจ้าง'],['fame','องครักษ์เจ้าแคว้น']]]
+};
+const WORK_GEAR={land:['rope','furs'],craft:['tools'],trade:['ledger'],faith:['amulet','herbs'],arcane:['lamp'],arms:['dagger']};
+const GEAR_WEAR=15;
+const jobTier=r=>r>=4?2:r>=3?1:0;
+function newJob(path,rank,kind,th){const K=JOB_KIND[kind];
+  return {path,kind,th,pay:Math.round(JOB_PAY[rank]*K.pay*S.region.wealth*10)/10,mer:K.mer,risk:K.risk};}
+function hireJob(path){return {path,kind:'hire',th:'รับจ้างทั่วไป',pay:Math.round(1.5*S.region.wealth*10)/10,mer:.5,risk:.02};}
+const payTh=j=>`${j.pay} gp/เดือน (${Math.round(j.pay*12)} gp/ปี)`;
+function jobOffers(path,rank,n){
+  const pool=JOBS[path][jobTier(rank)].filter(([k,th])=>!S.job||S.job.th!==th).sort(()=>Math.random()-.5);
+  return pool.slice(0,n).map(([k,th])=>newJob(path,rank,k,th));
+}
+function jobCh(j,extra){
+  const K=JOB_KIND[j.kind]||{th:'ชั่วคราว'};
+  return {t:j.th,s:`${payTh(j)} · ${K.th}${extra?' · '+extra:''}`,takeJob:j,
+    tg:j.kind==='rich'?['greed','aspiration']:j.kind==='fame'?['knowledge','pride']:['tradition']};
+}
+/* the things a peddler brings: what is missing from the job's kit, then what the last bad year called for */
+function peddlerOffer(){
+  const kit=WORK_GEAR[S.path]||[],tags=S.troubleTags||[];
+  const sc=id=>(kit.includes(id)?3:0)+(GEAR[id].tags.some(t=>tags.includes(t))?2:0);
+  return Object.keys(GEAR).filter(id=>GEAR[id].cost>0&&GEAR[id].cost<=Math.max(0,S.gold)&&!hasGear(id)&&id!=='spellbook')
+    .map(id=>({id,s:sc(id)+Math.random()})).sort((a,b)=>b.s-a.s).filter(x=>x.s>=1.5).slice(0,2).map(x=>x.id);
+}
+function jobDec(why){
+  const p=pathOf(S.path),r=S.rank,cur=S.job,ch=[];
+  const H={enter:`งานแรกในสาย${p.th}`,promo:`ตำแหน่งใหม่ของ ${rankName()}`,lost:'ตกงาน',offer:'มีคนมาชวน',market:'ประกาศรับคน'}[why];
+  let b={enter:`เข้าสาย${p.th}แล้ว เลือกว่าจะเริ่มทำงานที่ไหน`,promo:'ได้เลื่อนขั้นแล้ว จะอยู่ที่เดิมพร้อมค่าจ้างใหม่ หรือย้ายไปที่ที่ใหญ่กว่า',
+    lost:S.lostWhy||'งานที่ทำอยู่หายไป ต้องหางานใหม่',market:'สองปีผ่านไป มีประกาศรับคนติดอยู่ที่ลานกลางเมือง',offer:''}[why];
+  if(why==='offer'){
+    const who=pick([S.cast&&S.cast.rival.alive&&S.cast.rival.name,S.cast&&S.cast.patron&&S.cast.patron.alive&&S.cast.patron.name,S.cast&&S.cast.friend&&S.cast.friend.name].filter(Boolean).concat(['นายจ้างจากเมืองข้าง ๆ']));
+    const j=jobOffers(S.path,r,3).sort((a,b)=>b.pay*b.mer-a.pay*a.mer)[0];
+    b=`${who} มาชวนไปทำงานด้วย`;ch.push(jobCh(j));
+  }else ch.push(...jobOffers(S.path,r,why==='market'?2:3).map(j=>jobCh(j)));
+  if(cur&&why!=='lost'&&why!=='enter'){
+    const stay=why==='promo'?{...cur,pay:newJob(S.path,r,cur.kind==='hire'?'steady':cur.kind,cur.th).pay}:cur;
+    ch.unshift({t:`ทำงานเดิมต่อ · ${cur.th}`,s:payTh(stay)+(why==='promo'?' · ขึ้นค่าจ้าง':''),takeJob:stay,stay:1,quiet:why==='market',tg:['tradition']});
+    if(why==='market')peddlerOffer().forEach(id=>ch.splice(1,0,{t:`ทำงานเดิมต่อ และซื้อ${GEAR[id].th}`,s:`${gp(GEAR[id].cost)} · ${GEAR[id].d}`,takeJob:cur,stay:1,give:id,fx:{g:-GEAR[id].cost},tg:['tradition']}));
+    const worn=S.bag.find(x=>(x.wear||0)>=GEAR_WEAR*.6&&GEAR[x.id].cost);
+    if(why==='market'&&worn)ch.splice(1,0,{t:`ทำงานเดิมต่อ และซ่อม${GEAR[worn.id].th}`,s:`${gp(Math.ceil(GEAR[worn.id].cost/2))} · ใช้ไปมากแล้ว`,takeJob:cur,stay:1,repair:worn.id,fx:{g:-Math.ceil(GEAR[worn.id].cost/2)},tg:['tradition']});
+  }
+  if(why==='lost')ch.push(jobCh(hireJob(S.path),'ผลงานเดินช้าจนกว่าจะได้งานในสาย'));
+  /* another path whose door is open, said plainly */
+  if((why==='market'||why==='lost')&&S.rank<=2){
+    const o=PATHS.find(q=>q.id!=='adv'&&q.id!==S.path&&PW[q.id]&&crossRow(q.id).state==='open'&&Math.random()<.5);
+    if(o){const j=newJob(o.id,1,'steady',JOBS[o.id][0][0][1]);ch.push({...jobCh(j,`เปลี่ยนไปสาย${o.th} · ผลงานเริ่มนับใหม่ที่ขั้น 1`),switchPath:o.id});}
+  }
+  return {id:`job_${why}_${S.age}`,kind:'job',why,h:H,b,lore:cur&&why!=='lost'?`ตอนนี้: ${cur.th} · ${payTh(cur)}`:null,ch};
+}
+function takeJob(c){
+  if(c.switchPath){enterPath(c.switchPath,'ย้ายสายตามงานที่ได้');S.follow=null;}
+  const j=c.takeJob;S.job={...j,path:S.path,since:c.stay&&S.job?S.job.since:S.age};
+  if(c.repair){const b=S.bag.find(x=>x.id===c.repair);if(b)b.wear=0;}
+  /* the first job on a path hands you its tools */
+  S.kitGiven=S.kitGiven||{};
+  if(!S.kitGiven[S.path]){S.kitGiven[S.path]=1;(WORK_GEAR[S.path]||[]).forEach(id=>{if(!hasGear(id))addGear(id,`ของประจำงาน${j.th}`);});}
+  if(!c.stay){S.marketAt=S.age+Math.max(1,Math.round(2/yearScale()));addLog(S.age,`เริ่มงาน: ${j.th}`,payTh(j),true);}
+}
+/* the year at work: a job can fold, someone can come calling, and every two years there is a board */
+function jobYear(){
+  if(!onPath()||S.retired||S.follow)return;
+  if(!S.job){S.lostWhy='ยังไม่มีงานประจำ ต้องหางาน';S.follow=jobDec('lost');return;}
+  const W=worldNow(),hard=W&&['war','famine','plague'].includes(S.world.id)&&['land','craft','trade'].includes(S.path)?2:1;
+  if(Math.random()<S.job.risk*hard*yearScale()){
+    const why=pick(S.job.kind==='rich'?['เจ้าของกิจการขาดทุนจนต้องปิดกิจการ','ลูกค้ารายใหญ่หายไปทั้งหมดในฤดูเดียว']:['นายจ้างตายกะทันหัน ลูกหลานขายกิจการทิ้ง','ถูกเลิกจ้างเพราะงานน้อยลง']);
+    const W2=W&&hard>1?`${W.th}ทำให้`:'';
+    addLog(S.age,`ตกงาน — ${W2}${why}`,`${S.job.th} · เคยได้ ${payTh(S.job)}`,true,true);toast('ตกงาน');
+    S.lostWhy=`${W2}${why} ต้องหางานใหม่`;S.job=null;S.follow=jobDec('lost');return;}
+  if(S.rank<5&&Math.random()<.07*yearScale()){S.follow=jobDec('offer');return;}
+  if(S.age>=(S.marketAt||0)){
+    S.marketAt=S.age+Math.max(1,Math.round(2/yearScale()));
+    if(opt.market)S.follow=jobDec('market');
+    else{const d=jobDec('market'),best=d.ch.filter(c=>!c.stay&&!c.switchPath).sort((a,b)=>b.takeJob.pay-a.takeJob.pay)[0];
+      if(best&&best.takeJob.pay>=S.job.pay*1.3){S.lapse=1;applyChoice(d,best);S.lapse=0;}}
+  }
+}
+/* a window that has to follow the one just closed: the job after a promotion, a second try at the crossroads */
+function follow(next){
+  if(S.follow&&!S.dead){const d=S.follow;S.follow=null;S.done[d.id]=1;renderLife();openDec(d,()=>follow(next));}
+  else next();
+}
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
    One screen at maturity in place of the old call and trade questions. A path whose
    conditions are all met can be chosen; one that misses a single condition can be tried
@@ -3985,12 +4100,12 @@ function crossRow(id,x){
   reqs.push(cert?{t:'ใบรับรองจากอาจารย์',ok:true}:sk.length?{t:SKILLS[sk[0]].th,ok:true}:{t:'ไม่มีความชำนาญของสาย · ทอยไม่ได้โบนัส',ok:true,soft:true});
   const o=cert?{t:'อาจารย์รับรองแล้ว',ok:true}:C.other(x);reqs.push(o);
   const miss=reqs.filter(q=>!q.ok).length;
-  const roll=C.roll||(miss?{ab,dc:10}:null);
+  const roll=miss?(C.roll||{ab,dc:10}):null;
   return {id,p,reqs,cost:o.ok?(o.cost||0):0,state:miss===0?'open':miss===1?'try':'shut',
     roll:roll&&{...roll,dc:roll.dc+(miss?3:0),dis:!!miss}};
 }
 function crossDec(again){
-  const ids=PATHS.map(p=>p.id).filter(id=>!again||(id!=='adv'&&id!==S.path));
+  const ids=PATHS.map(p=>p.id).filter(id=>again?(id!=='adv'&&id!==S.path):!(S.crossFailed||[]).includes(id));
   const rows=ids.map(id=>crossRow(id));
   const order={open:0,try:1,shut:2};rows.sort((a,b)=>order[a.state]-order[b.state]);
   const ch=rows.filter(r=>r.state!=='shut').map(r=>{
@@ -4009,16 +4124,17 @@ function crossResolve(c,notes){
   if(c.adv)return;               // the old adventure branch in applyChoice takes it from here
   const again=!!S.path;
   if(again){S.s=clamp(S.s-10,0,100);}
-  if(c.plain){enterPath(c.cross,'ทำงานที่หาได้');return;}
+  if(c.plain){enterPath(c.cross,'ทำงานที่หาได้');S.follow=null;takeJob({takeJob:hireJob(c.cross)});return;}
   const r=c.row;if(r.cost)S.gold-=r.cost;
   if(!r.roll){enterPath(c.cross);return;}
   const k=check(r.roll.ab,r.roll.dc,{skill:r.roll.skill,dis:r.roll.dis,label:`คัดเลือกเข้า${r.p.th}`});
   notes.push(rollTh(k));
   if(k.ok){enterPath(c.cross,r.roll.dis?'ผ่านทั้งที่ยังไม่ครบ':null);return;}
   if(again){addLog(S.age,`คัดเลือกเข้า${r.p.th}ไม่ผ่าน`,'อยู่ทางเดิมต่อไป',false,true);return;}
-  const fall=tradeKind(S)==='farm'?'land':'trade';
-  addLog(S.age,`คัดเลือกเข้า${r.p.th}ไม่ผ่าน`,null,false,true);
-  enterPath(fall,'ทำงานที่หาได้ไปก่อน');
+  S.crossFailed=(S.crossFailed||[]).concat(r.id);
+  addLog(S.age,`คัดเลือกเข้า${r.p.th}ไม่ผ่าน`,'เลือกทางใหม่ได้ทันที',false,true);
+  const d=crossDec(false);d.id='cross_re_'+S.age+'_'+S.crossFailed.length;d.h='เลือกทางใหม่';
+  d.b=`ไม่ผ่านการคัดเลือกเข้า${r.p.th} · เลือกทางอื่นได้เลยตอนนี้`;S.follow=d;
 }
 DECS.splice(DECS.findIndex(d=>d.id==='pause_mid'),0,ASK_MENTOR);
 /* the crossroads takes the place of the call and the three trade questions */
@@ -4149,6 +4265,8 @@ function crossInto(m,d,scrim,done){
 }
 /* auto mode answers a question the way the ideal would, and at random when the ideal has nothing to say */
 function autoChoice(d){
+  if(d.kind==='job'){const cur=S.job?S.job.pay*S.job.mer:0,sc=c=>c.takeJob.pay*c.takeJob.mer*(c.stay?1.2:1)*(c.switchPath?.8:1)*(c.give||c.repair?1.05:1)+Math.random()*.4;
+    return d.ch.reduce((a,b)=>sc(b)>sc(a)?b:a);}
   if(d.kind==='cross'){
     const sc=c=>c.stay?0:c.plain?1:(c.row.state==='open'?100:40)+S.ab[c.row.id==='adv'?S.best:pathAb(c.row.p)]+(c.row.id===S.dream?30:0)+(c.row.id==='adv'?8:0);
     return d.ch.reduce((a,b)=>sc(b)>sc(a)?b:a);
@@ -4172,6 +4290,7 @@ function applyChoice(d,c){
   if(c.quest)S.pendingQuest=c.quest;
   if(c.merit)workMerit(c.merit);
   if(c.goal)setGoal(c.goal);
+  if(c.takeJob)takeJob(c);
   if(c.leg)leg(wt(c.leg));
   if(c.retire){S.retired=1;addLog(S.age,'วางมือจากงาน',`ส่งต่อให้คนรุ่นหลัง · รายได้เหลือครึ่งเดียว`,true);}
   if(c.cast)castFx(c.cast);
@@ -4240,7 +4359,7 @@ function applyChoice(d,c){
   if(d.arc){const out=cr&&c.chk?(cr.ok?c.chk.ok:c.chk.no):null,A=c.arc||{},O=(out&&out.arc)||{};
     arcNext(d.arc,{set:{...A.set,...O.set},end:A.end||O.end});}
   if(c.after)c.after(S,cr);
-  addLog(S.age,`${d.h} — เลือก “${c.t}”${extra}`,notes.length?notes:null,true);
+  if(!c.quiet)addLog(S.age,`${d.h} — เลือก “${c.t}”${extra}`,notes.length?notes:null,true);
   markTags(c);
   S.decCtx=0;
   renderLife();
@@ -4525,7 +4644,7 @@ function renderDist(){
   document.addEventListener('click',ev=>{
     const b=ev.target.closest&&ev.target.closest('[data-opt]');if(!b)return;
     const k=b.dataset.opt,v=b.dataset.v;
-    if(k==='pauses'){opt[k]=opt[k]?0:1;b.setAttribute('aria-pressed',String(!!opt[k]));return;}
+    if(k==='pauses'||k==='market'){opt[k]=opt[k]?0:1;b.setAttribute('aria-pressed',String(!!opt[k]));return;}
     opt[k]=(k==='pace')?+v:v;
     document.querySelectorAll(`[data-opt="${k}"]`).forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===v)));
     if(k==='basis')renderDist();

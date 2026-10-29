@@ -634,7 +634,7 @@ const PATHS=[
 ];
 const pathOf=id=>PATHS.find(p=>p.id===id);
 const RANK_MUL=[1,1,1.1,1.25,1.45,2.2];
-const RANK_DC=[0,10,13,16,19,25];          // DC to reach rank n
+const RANK_DC=[0,10,13,16,19,26];          // DC to reach rank n
 const advRank=lv=>lv>=20?5:lv>=17?4:lv>=11?3:lv>=5?2:1;
 function rankMul(){return S.path&&S.path!=='adv'?RANK_MUL[S.rank]||1:1;}
 function pathAb(p,x){x=x||S;return p.ab?p.ab.reduce((a,b)=>x.ab[b]>x.ab[a]?b:a):x.cls?x.cls.key:'STR';}
@@ -1777,7 +1777,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,arcs:[],arcDone:{},adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -2513,7 +2513,7 @@ function runChk(c,gm,adv){
     if(out.hurt)damage(out.hurt,'',false);
     if(out.exh)gainExh(out.exh);
     if(out.faith&&S.deity)S.faith=clamp(S.faith+out.faith,0,100);
-    if(out.merit)gainMeritRaw(out.merit);
+    if(out.merit)workMerit(out.merit);
     if(out.cast)castFx(out.cast);
     if(out.give&&!S.bag.some(b=>b.id===out.give))addGear(out.give,out.t);
   }
@@ -2636,7 +2636,7 @@ function hazSit(h,dc,f){
 /* real time at 1× since the last window opened; small matters never interrupt inside it */
 /* a short life gets fewer windows, not denser ones: the gap widens when the whole life is five minutes */
 /* working years carry their own happenings between windows, so an adult's windows sit a little further apart */
-const canAsk=()=>(S.age-S.lastAskAge)*msPerYear()>=ASK_GAP*(opt.pace<12?1.7:1)*(S.age>=S.race.mature?1.22:1);
+const canAsk=()=>(S.age-S.lastAskAge)*msPerYear()>=ASK_GAP*(opt.pace<12?1.7:1)*(S.age>=S.race.mature?1.5:1);
 function noteAsk(){S.lastAskAge=S.age;S.nAsk++;}
 function noteDecision(stance){S.nDec++;if(stance)S.nStance++;S.lastDecAge=S.age;S.decAges.push(S.age);}
 function prepOpts(sit){
@@ -3397,7 +3397,7 @@ function meet(){
   const used=[S.name.split(' ')[0]],nm=()=>{let n,i=0;do n=nameFor(S.race.id).split(' ')[0];while(used.includes(n)&&i++<20);used.push(n);return n;};
   S.cast={mentor:{name:nm(),alive:true,bond:55,dieAt:S.age+Math.round((10+rnd(30))/yearScale())},
           rival:{name:nm(),alive:true,bond:40,rank:1},seen:{}};
-  S.workStart=S.age;
+  S.workStart=S.age;S.arcs=[];S.arcDone={};
 }
 function gainMeritRaw(n){
   if(!onPath()||S.rank>=5)return;
@@ -3405,6 +3405,8 @@ function gainMeritRaw(n){
   if(was<50&&S.merit>=50)toast('ผลงานถึงครึ่งทางแล้ว');
   if(was<100&&S.merit>=100)toast(rankReqs().every(q=>q.ok)?'ผลงานครบ · ได้สอบเลื่อนขั้นปีนี้':'ผลงานครบแล้ว · เหลือเงื่อนไขที่ยังขาด');
 }
+/* merit from what happens at work counts for less the higher you stand: the summit has to be earned slowly */
+function workMerit(n){gainMeritRaw(n>0?n*(S.rank>=4?.4:S.rank>=3?.7:1):n);}
 /* {who} {place} {boss} {job} {teach} {rival} fill from the path and the cast */
 function wt(s){const w=PW[S.path]||PW.craft,c=S.cast||{mentor:{},rival:{}};
   return s.replace(/\{(\w+)\}/g,(m,k)=>k==='mentor'?c.mentor.name:k==='rival'?c.rival.name:w[k]||m);}
@@ -3427,7 +3429,7 @@ const WAUTO=[
  {id:'a_season',ph:'any',rep:1,t:'ฤดูนี้{job}ดีเป็นพิเศษ',m:4,g:4},
  {id:'a_slump',ph:'any',rep:1,t:'ฤดูนี้{job}เงียบเหงา',chk:{ab:'WIS',dc:11},ok:{t:'ใช้เวลาว่างฝึกฝีมือ',m:3},no:{t:'นั่งรอเงินที่ไม่มา',g:-3,s:-2}},
  {id:'a_praise',ph:'late',t:'คนรุ่นใหม่พูดถึงชื่อคุณใน{place}',m:3,r:3},
- {id:'a_tired',ph:'late',t:'มือไม่นิ่งเหมือนเคย',chk:{ab:'CON',save:1,dc:12},ok:{t:'ยังไหว',m:2},no:{t:'ต้องให้คนอื่นช่วยงานละเอียด',m:-2,s:-2}},
+ {id:'a_hands',ph:'late',when:x=>x.age>=x.span*.55,t:'มือไม่นิ่งเหมือนเคย',chk:{ab:'CON',save:1,dc:12},ok:{t:'ยังไหว',m:2},no:{t:'ต้องให้คนอื่นช่วยงานละเอียด',m:-2,s:-2}},
  /* each path's own */
  {id:'l_rain',p:'land',ph:'any',t:'ฝนมาช้ากว่าทุกปี',chk:{skill:'nature',dc:12},ok:{t:'อ่านฟ้าออก หว่านทันพอดี',m:6,g:5},no:{t:'ข้าวเสียไปครึ่งแปลง',g:-6,s:-2}},
  {id:'l_ox',p:'land',ph:'early',t:'วัวไถนาหนีเข้าป่า',chk:{skill:'animal',dc:11},ok:{t:'ตามกลับมาได้ก่อนค่ำ',m:3},no:{t:'ต้องยืมวัวเพื่อนบ้าน',r:-2,g:-2}},
@@ -3440,12 +3442,24 @@ const WAUTO=[
  {id:'a_scroll',p:'arcane',ph:'any',rep:1,t:'ได้ตำราเก่าที่ไม่มีใครอ่านออก',chk:{skill:'arcana',dc:13},ok:{t:'ถอดความได้ทีละหน้า',m:7,l:4},no:{t:'นั่งจ้องอยู่ทั้งฤดู',l:1}},
  {id:'a_blast',p:'arcane',ph:'early',t:'เวทบทแรกย้อนกลับเข้าตัว',chk:{ab:'CON',save:1,dc:11},ok:{t:'แค่คิ้วไหม้',m:2},no:{t:'นอนซมไปสามวัน',hurt:2}},
  {id:'m_drill',p:'arms',ph:'early',t:'ซ้อมรบประจำปี',chk:{skill:'athletics',dc:11},ok:{t:'ยืนอยู่จนคนสุดท้าย',m:6},no:{t:'ล้มตั้งแต่ยกแรก',m:-1,hurt:1}},
+ {id:'l_market',p:'land',ph:'mid',t:'ขนผลผลิตไปขายในเมือง',chk:{skill:'persuasion',dc:12},ok:{t:'ขายหมดก่อนเที่ยง',g:6,m:3},no:{t:'ถูกกดราคาจนแทบไม่คุ้มค่าเดินทาง',g:-2}},
+ {id:'l_wolf',p:'land',ph:'any',t:'หมาป่าลงมากินแกะ',chk:{skill:'survival',dc:12},ok:{t:'วางกับดักได้ตัวจ่าฝูง',m:5,r:3},no:{t:'เสียแกะไปสามตัว',g:-4}},
+ {id:'c_guildfee',p:'craft',ph:'mid',t:'สมาคมช่างขึ้นค่าธรรมเนียม',chk:{skill:'persuasion',dc:13},ok:{t:'ต่อรองให้ทั้งรุ่นจ่ายเท่าเดิม',m:6,r:3},no:{t:'จ่ายไปเงียบ ๆ',g:-4}},
+ {id:'c_copy',p:'craft',ph:'early',t:'ลอกแบบงานของครูทั้งคืน',chk:{skill:'investigation',dc:11},ok:{t:'เข้าใจว่าครูทำไมถึงทำแบบนั้น',m:5,l:2},no:{t:'ลอกได้แต่รูป ไม่ได้วิธี',m:1}},
+ {id:'t_caravan',p:'trade',ph:'mid',t:'ขบวนคาราวานมาถึงช้ากว่ากำหนด',chk:{skill:'insight',dc:12},ok:{t:'กักของไว้ขายตอนราคาขึ้น',g:8,m:4},no:{t:'ของเน่าในโกดัง',g:-5}},
+ {id:'t_cheat',p:'trade',ph:'early',t:'ลูกค้าจ่ายด้วยเหรียญปลอม',chk:{skill:'insight',dc:11},ok:{t:'จับได้ตั้งแต่เหรียญแรก',m:4},no:{t:'รับมาเต็มถุง',g:-4,m:-2}},
+ {id:'f_confess',p:'faith',ph:'mid',t:'มีคนมาสารภาพบาปที่หนักเกินจะฟัง',chk:{skill:'insight',dc:12},ok:{t:'พูดจนเขายอมไปชดใช้',m:6,faith:3},no:{t:'นอนไม่หลับไปหลายคืน',s:-3}},
+ {id:'f_alms',p:'faith',ph:'early',t:'ออกบิณฑบาตรอบเมือง',chk:{ab:'CHA',dc:10},ok:{t:'ได้ของกลับวิหารเต็มบาตร',m:3,r:2},no:{t:'กลับมามือเปล่า'}},
+ {id:'a_familiar',p:'arcane',ph:'mid',t:'เรียกสัตว์รับใช้ครั้งแรก',chk:{skill:'arcana',dc:13},ok:{t:'นกฮูกตัวหนึ่งเกาะไหล่ไม่ยอมไป',m:7},no:{t:'วงเวทไหม้ทั้งพื้นห้อง',g:-3}},
+ {id:'a_lecture',p:'arcane',ph:'early',t:'ต้องอ่านตำราให้ลูกศิษย์รุ่นน้องฟัง',chk:{skill:'history',dc:11},ok:{t:'ตอบได้ทุกคำถาม',m:4},no:{t:'ติดคำถามแรก',s:-2}},
+ {id:'m_brawl',p:'arms',ph:'early',t:'ห้ามวิวาทในโรงเตี๊ยม',chk:{skill:'intimidation',dc:11},ok:{t:'แค่ตะคอกคำเดียวก็เงียบ',m:4},no:{t:'โดนเก้าอี้ฟาดหลัง',hurt:1}},
+ {id:'m_deserter',p:'arms',ph:'mid',t:'จับได้ว่าทหารใต้บังคับหนีทัพ',chk:{skill:'insight',dc:12},ok:{t:'รู้ว่าเขามีลูกป่วย จึงหาทางช่วยแทน',m:5,r:3},no:{t:'ส่งตัวไปตามระเบียบ',s:-2}},
  {id:'m_night',p:'arms',ph:'any',rep:1,t:'เวรยามคืนที่มีเสียงแปลก ๆ นอกกำแพง',chk:{skill:'perception',dc:12},ok:{t:'เห็นก่อนและส่งสัญญาณทัน',m:6},no:{t:'หลับไปครู่เดียว แล้วถูกลงโทษ',m:-3}}
 ];
 /* happenings that ask: the year's one window, when the year has room for one */
 const WASK=[
  {id:'w_big',ph:'any',h:'งานชิ้นใหญ่',b:()=>wt('มีคนเสนอ{job}ชิ้นใหญ่ที่สุดที่เคยได้รับ ค่าจ้างดี แต่ถ้าพลาดจะเสียชื่อไปนาน'),
-  ch:()=>[{t:'รับ แล้วทุ่มเต็มที่',s:'ทดสอบฝีมือ DC 14 · ผ่านได้ผลงานก้อนใหญ่',tg:['aspiration','pride'],chk:{skill:pathSk(),dc:14,ok:{t:'งานออกมาดีจนคนพูดถึงทั้งเมือง',merit:18,fx:{g:14}},no:{t:'ส่งงานช้าและไม่ครบ',merit:-6,fx:{s:-3}}}},
+  ch:()=>[{t:'รับ แล้วทุ่มเต็มที่',s:'ทดสอบฝีมือ DC 14 · ผ่านได้ผลงานก้อนใหญ่',tg:['aspiration','pride'],chk:{skill:pathSk(),dc:14,ok:{t:'งานออกมาดีจนคนพูดถึงทั้งเมือง',merit:18,fx:{g:8}},no:{t:'ส่งงานช้าและไม่ครบ',merit:-6,fx:{s:-3}}}},
           {t:'รับ แต่ชวน{rival}มาช่วย'.replace('{rival}',S.cast.rival.name),s:'ง่ายกว่า · แบ่งเงินกับชื่อเสียง',tg:['people'],chk:{skill:pathSk(),dc:11,ok:{t:'งานผ่าน ทั้งสองคนสนิทกันขึ้น',merit:9,fx:{g:6},cast:{rival:12}},no:{t:'ทะเลาะกันกลางงาน',merit:-2,cast:{rival:-8}}}},
           {t:'ปฏิเสธ',s:'ไม่เสี่ยง',fx:{s:-1},tg:['tradition']}]},
  {id:'w_rival_cheat',ph:'early',h:'คู่แข่งโกง',b:()=>wt('เห็น {rival} แอบเอางานของคนอื่นไปอ้างเป็นของตัวเองต่อหน้า{boss}'),
@@ -3484,17 +3498,19 @@ function pathSk(){return PW[S.path]?PW[S.path].sk:'insight';}
 function castFx(c){if(!c||!S.cast)return;for(const k in c){const p=S.cast[k];if(p)p.bond=clamp(p.bond+c[k],0,100);}}
 function wautoOk(e){
   if(e.p&&e.p!==S.path)return false;
+  if(e.when&&!e.when(S))return false;
   if(e.ph!=='any'&&e.ph!==workPhase())return false;
   const seen=S.cast.seen[e.id];
   if(seen!=null&&(!e.rep||(S.age-seen)*yearScale()<10))return false;
   return true;
 }
-function runWauto(e){
-  S.cast.seen[e.id]=S.age;
+function runWauto(e,noSeen){
+  if(!noSeen)S.cast.seen[e.id]=S.age;
   let out=e,r=null;
   if(e.chk){const sk=e.chk.skill==='pathsk'?pathSk():e.chk.skill;
-    r=check(e.chk.ab||(sk?SKILLS[sk].ab:'WIS'),e.chk.dc,{skill:sk,save:e.chk.save,label:wt(e.t)});out=r.ok?e.ok:e.no;}
-  if(out.m)gainMeritRaw(out.m*(out.m>0?yearScale()*(S.rank>=4?.5:1):1));
+    r=check(e.chk.ab||(sk?SKILLS[sk].ab:'WIS'),e.chk.dc,{skill:sk,save:e.chk.save,label:wt(e.t),adv:S.focus==='trade'&&!e.chk.save});out=r.ok?e.ok:e.no;}
+  S.lastWorkOut=out;
+  if(out.m)workMerit(out.m*(out.m>0?yearScale():1));
   ['s','l','r'].forEach(k=>{if(out[k])S[k]=clamp(S[k]+out[k],0,100);});
   if(out.fx)applyFx(out.fx,1);
   if(out.g)S.gold+=out.g*S.region.wealth;
@@ -3525,15 +3541,19 @@ function workYear(asked){
   castYear();
   const ph=workPhase(),n=ph==='early'?3:ph==='mid'?2:(Math.random()<.55*yearScale()?1:0);
   const k=Math.max(0,n-(asked?1:0));let first=null;
+  arcStart();
   for(let i=0;i<k;i++){
-    const pool=WAUTO.filter(wautoOk);if(!pool.length)break;
-    const t=runWauto(pick(pool));if(!first)first=t;
+    let t=i===0?arcAuto():null;
+    if(!t){const pool=WAUTO.filter(wautoOk);if(!pool.length)break;t=runWauto(pick(pool));}
+    if(!first)first=t;
   }
+  if(!k)first=arcAuto();
   if(first)toast(first);
 }
 function wask(){
   if(!onPath()||!S.cast)return null;
-  const ph=workPhase(),p=ph==='early'?.3:ph==='mid'?.22:.12;
+  {const d=arcAsk();if(d)return d;}
+  const ph=workPhase(),p=ph==='early'?.18:ph==='mid'?.13:.08;
   if(Math.random()>p)return null;
   const pool=WASK.filter(e=>!S.done[e.id]&&(e.ph==='any'||e.ph===ph)&&(!e.when||e.when(S)));
   if(!pool.length)return null;
@@ -3597,6 +3617,137 @@ function fixDec(){
         {t:'เดินทางไปเรียนกับปรมาจารย์',s:'ทอง −20 · การศึกษา +14',fx:{g:-20,l:14},tg:['knowledge','aspiration']}];}
   if(!ch.length)return null;
   return {...base,b,ch:ch.filter(c=>!c.need||c.need(S))};
+}
+/* ---- stories that run over years ----
+   A story starts at work, then comes back one to three years later, three or four times,
+   each part shaped by what was chosen before. A part either asks (in the year's one window)
+   or rolls by itself. At most two run at once. */
+const ARC_P=.13;
+const ARC_CRISIS={
+ land:{h:'ปีแล้ง',b:'ฝนไม่ตกมาสองฤดู ดินแตกระแหงไปทั้งหมู่บ้าน',
+  ch:[{t:'ขุดบ่อร่วมกับเพื่อนบ้าน',s:'ทดสอบกรีฑา DC 12',tg:['people'],chk:{skill:'athletics',dc:12,ok:{t:'น้ำพุ่งขึ้นมาตอนขุดถึงวันที่เก้า',fx:{r:8},arc:{set:{good:1}}},no:{t:'ขุดจนมือพองแต่ไม่เจอน้ำ',fx:{s:-2}}}},
+      {t:'ขายวัวก่อนราคาตก',s:'ทอง +10 · ปีหน้าไถนาลำบาก',tg:['greed','independence'],fx:{g:10},merit:-3},
+      {t:'นำสวดขอฝน',s:'ทดสอบศาสนา DC 13',tg:['faith'],chk:{skill:'religion',dc:13,ok:{t:'ฟ้าครึ้มในคืนที่สาม',faith:6,arc:{set:{good:1}}},no:{t:'ฟ้ายังเงียบ',fx:{s:-2}}}}],
+  mid:a=>a.f.good?{t:'หมู่บ้านผ่านปีแล้งไปได้ทั้งหมด',m:10,r:5}:{t:'ปีแล้งลากยาวไปอีกปี',chk:{ab:'CON',save:1,dc:13},ok:{t:'ประหยัดจนรอด',g:-3},no:{t:'อดจนร่างทรุด',hurt:1,g:-6}},
+  end:{t:'ฝนกลับมา ทุ่งเขียวอีกครั้ง',m:4,s:3}},
+ craft:{h:'ของปลอมตราของคุณ',b:'ของที่ประทับตรา{place}ของคุณวางขายเกลื่อนตลาด แต่คุณไม่ได้ทำสักชิ้น',
+  ch:[{t:'ตามหาคนทำของปลอม',s:'ทดสอบสืบสวน DC 13',tg:['fairness'],chk:{skill:'investigation',dc:13,ok:{t:'เจอโรงงานลับหลังท่าเรือ',arc:{set:{good:1}}},no:{t:'ตามรอยไปจนหาย'}}},
+      {t:'ฟ้อง{guild}',s:'ทดสอบโน้มน้าว DC 12',tg:['tradition'],chk:{skill:'persuasion',dc:12,ok:{t:'สมาคมออกประกาศเตือน',arc:{set:{good:1}}},no:{t:'สมาคมเฉย'}}},
+      {t:'ทำตราใหม่ที่ปลอมยาก',s:'ทดสอบมือไว DC 13',tg:['knowledge'],chk:{skill:'sleight',dc:13,ok:{t:'ตราใหม่ลอกเลียนไม่ได้',arc:{set:{good:1}},merit:4},no:{t:'ตราใหม่ก็ถูกลอกในเดือนเดียว'}}}],
+  mid:a=>a.f.good?{t:'ของปลอมหายไปจากตลาด',m:10}:{t:'ของปลอมยังขายดีกว่าของจริง',g:-6,m:-4},
+  end:{t:'ลูกค้าเริ่มถามหาตราของจริง',m:5,g:4}},
+ trade:{h:'ด่านภาษีใหม่',b:'เจ้าแคว้นตั้งด่านกลางเส้นทางค้าขาย เก็บหนึ่งในห้าของทุกเกวียน',
+  ch:[{t:'จ่ายตามระเบียบ',s:'ทอง −15',tg:['tradition'],fx:{g:-15}},
+      {t:'อ้อมทางป่า',s:'ทดสอบเอาตัวรอด DC 13',tg:['freedom','rash'],chk:{skill:'survival',dc:13,ok:{t:'พบทางลัดที่ไม่มีใครรู้',arc:{set:{risky:1}}},no:{t:'หลงอยู่สามวัน',arc:{set:{risky:1}},fx:{s:-2}}}},
+      {t:'ติดสินบนนายด่าน',s:'ทอง −6 · ไปทางร้าย',tg:['greed'],fx:{g:-6},al:[0,-.05],arc:{set:{bribe:1}}}],
+  mid:a=>a.f.risky?{t:'ขบวนเกวียนกลางป่า',chk:{ab:'DEX',save:1,dc:12},ok:{t:'ของถึงตลาดก่อนใคร',g:12,m:6},no:{t:'โจรดักกลางทาง',hurt:2,g:-10}}
+   :a.f.bribe?{t:'นายด่านคนใหม่ไม่รับสินบน',chk:{skill:'deception',dc:13},ok:{t:'พูดจนผ่านไปได้',m:2},no:{t:'ถูกปรับและขึ้นบัญชีดำ',g:-12,m:-6}}:{t:'ของถึงตลาดตรงเวลาทุกเที่ยว',m:5},
+  end:{t:'ด่านถูกยกเลิก ตลาดกลับมาคึกคัก',g:8,m:4}},
+ faith:{h:'โรคระบาดในเมือง',b:'คนป่วยล้มตามถนน หัวหน้าวิหารถามว่าคุณจะทำอะไร',
+  ch:[{t:'เปิดวิหารรับคนป่วย',s:'ทดสอบการแพทย์ DC 13',tg:['charity','people'],chk:{skill:'medicine',dc:13,ok:{t:'คนส่วนใหญ่รอด',merit:10,fx:{r:6},arc:{set:{good:1}}},no:{t:'เตียงไม่พอ คนตายในลาน',fx:{s:-4},arc:{set:{good:1}}}}},
+      {t:'ปิดประตู สวดอยู่ข้างใน',s:'ปลอดภัย · คนในเมืองจะจำ',tg:['faith'],faith:5,fx:{r:-6}},
+      {t:'ออกไปรักษาตามบ้าน',s:'ทดสอบป้องกันทน DC 13',tg:['charity','rash'],chk:{ab:'CON',save:1,dc:13,ok:{t:'เดินผ่านทุกบ้านโดยไม่ติดโรค',merit:12,arc:{set:{good:1}}},no:{t:'ติดโรคเสียเอง',hurt:2,arc:{set:{good:1}}}}}],
+  mid:a=>a.f.good?{t:'คนที่รอดเดินมาขอบคุณถึงวิหาร',m:8,r:6}:{t:'คนในเมืองไม่ลืมว่าประตูวิหารปิด',r:-4,m:-3},
+  end:{t:'โรคซาลง เมืองนับคนที่เหลือ',s:3,m:3}},
+ arcane:{h:'ตำราต้องห้าม',b:'ในกองตำราเก่ามีเล่มหนึ่งที่สภาสำนักเวทสั่งเผาไปเมื่อร้อยปีก่อน',
+  ch:[{t:'ลองตามตำรา',s:'ทดสอบเวทวิทยา DC 15 · ได้มาก เสียมาก',tg:['knowledge','rash'],chk:{skill:'arcana',dc:15,ok:{t:'เวทได้ผลตามที่เขียนไว้',merit:12,fx:{l:8},arc:{set:{did:1}}},no:{t:'เวทระเบิดใส่หน้า',hurt:2,arc:{set:{did:1}}}}},
+      {t:'ส่งให้สภาสำนักเวท',s:'ผลงาน +6',tg:['tradition'],merit:6,fx:{r:3}},
+      {t:'เผาทิ้ง',s:'ไม่มีใครรู้',tg:['faith'],fx:{s:1}}],
+  mid:a=>a.f.did?{t:'สภาสำนักเวทได้ข่าว',chk:{skill:'deception',dc:13},ok:{t:'พูดจนสภาเชื่อว่าเป็นแค่ข่าวลือ',m:4},no:{t:'ถูกพักงานหนึ่งฤดู',m:-12,s:-3}}:{t:'สภาเชิญไปนั่งฟังการถอดตำรา',m:4,l:3},
+  end:{t:'เรื่องตำราต้องห้ามกลายเป็นนิทานในหอสมุด',m:3}},
+ arms:{h:'ศึกชายแดน',b:'ข้าศึกข้ามแม่น้ำมาแล้ว ผู้บังคับกองเรียกอาสา',
+  ch:[{t:'อาสาไปแนวหน้า',s:'ผลงานมาก · อาจไม่ได้กลับ',tg:['might','aspiration','rash'],arc:{set:{front:1}},merit:4},
+      {t:'อยู่รักษาเมือง',s:'ผลงาน +4',tg:['tradition','people'],merit:4},
+      {t:'หาทางเลี่ยง',s:'ผลงาน −5',tg:['independence'],merit:-5,fx:{s:-2}}],
+  mid:a=>a.f.front?{t:'ปะทะที่ท่าข้าม',chk:{skill:'athletics',dc:13},ok:{t:'ตีทัพข้าศึกแตก',m:15},no:{t:'ถูกหอกแทงที่สีข้าง',hurt:3,m:5}}:{t:'ข่าวจากแนวหน้ามาถึงทุกเช้า',s:-1},
+  end:{t:'ศึกสงบ ทหารที่รอดกลับบ้าน',m:3,r:3}}
+};
+const ARCS={
+ commission:{h:'งานชิ้นใหญ่ที่สุดในชีวิต',when:x=>x.rank>=2,w:1.2,steps:[
+  a=>({ask:1,h:'งานชิ้นใหญ่ที่สุดในชีวิต',b:wt('ผู้มีอำนาจจากเมืองหลวงอยากได้{job}ที่ไม่เคยมีใครทำสำเร็จ ให้เวลาสองปี'),
+   ch:[{t:'รับ',s:'เรื่องนี้จะกินเวลาหลายปี',tg:['aspiration','pride']},{t:'ปฏิเสธ',s:'ไม่เสี่ยง',fx:{s:-1},arc:{end:1},tg:['tradition']}]}),
+  a=>({t:'วัตถุดิบสำหรับงานใหญ่ขาดตลาด',chk:{skill:'insight',dc:12},ok:{t:'หาแหล่งใหม่เจอทันเวลา',arc:{set:{mat:1}}},no:{t:'ของที่ได้มาคุณภาพต่ำกว่าที่ต้องการ'}}),
+  a=>({ask:1,h:'งานใหญ่ใกล้กำหนดส่ง',b:a.f.mat?'ทุกอย่างพร้อม เหลือแค่แรงกับเวลา':'ของไม่ดี เวลาก็เหลือน้อย',
+   ch:[{t:'ทำจนเสร็จ ทั้งที่ต้องอดนอน',s:'ทดสอบป้องกันทน DC 12',tg:['might','aspiration'],chk:{ab:'CON',save:1,dc:12,ok:{t:'เสร็จทันคืนสุดท้าย',arc:{set:{push:1}}},no:{t:'ทำเสร็จ แต่ร่างกายทรุด',hurt:1,arc:{set:{push:1}}}}},
+       {t:'ขอเลื่อนส่ง',s:'ปลอดภัยกว่า แต่ผู้ว่าจ้างไม่ชอบ',tg:['tradition'],arc:{set:{late:1}}},
+       {t:`จ้าง${S.cast.rival.name}มาช่วย`,s:'ทอง −10 · คู่แข่งได้หน้าไปด้วย',tg:['people'],fx:{g:-10},cast:{rival:10},arc:{set:{help:1}}}]}),
+  a=>({t:'ส่งงานชิ้นใหญ่',chk:{skill:'pathsk',dc:15-2*(a.f.mat||0)-2*(a.f.push||0)-2*(a.f.help||0)+2*(a.f.late||0)},
+   ok:{t:'ชื่อของคุณไปถึงเมืองหลวง',m:25,g:10,r:5},no:{t:'ผู้ว่าจ้างไม่รับงาน',m:-10,s:-4}})]},
+ rumor:{h:'ข่าวลือ',when:x=>workYears(x)>=3,w:1,steps:[
+  a=>({t:'มีข่าวลือเรื่องคุณแพร่ไปทั่ว{place}',m:-3}),
+  a=>({ask:1,h:'ใครปล่อยข่าว',b:wt('คนใน{place}เริ่มมองคุณแปลก ๆ ข่าวลือไม่ได้มาจากลมแน่'),
+   ch:[{t:'สืบหาตัวคนปล่อย',s:'ทดสอบสืบสวน DC 13',tg:['fairness'],chk:{skill:'investigation',dc:13,ok:{t:'เจอต้นทางของข่าว',arc:{set:{found:1}}},no:{t:'ทุกคนชี้ไปที่คนอื่น'}}},
+       {t:'ปล่อยข่าวกลับ',s:'ทดสอบหลอกลวง DC 12 · ไปทางร้าย',tg:['greed','pride'],al:[0,-.04],chk:{skill:'deception',dc:12,ok:{t:'ข่าวใหม่ดังกว่าข่าวเก่า',arc:{set:{counter:1}}},no:{t:'คนจับได้ว่าคุณแต่งเรื่อง',fx:{r:-4}}}},
+       {t:'ทำงานให้ดีจนข่าวเงียบไปเอง',s:'ช้า แต่ไม่มีใครว่าได้',tg:['tradition','honor'],merit:3,arc:{set:{quiet:1}}}]}),
+  a=>a.f.found?(S.cast.rival.alive&&S.cast.rival.bond<45?{t:'คนปล่อยข่าวคือ {rival}',m:8,cast:{rival:-25}}:{t:'คนปล่อยข่าวคือลูกค้าที่เคยติดหนี้คุณ',m:6})
+   :a.f.counter?{t:'ข่าวลือย้อนกลับไปเล่นงานคนปล่อย',m:4,r:-3}
+   :a.f.quiet?{t:'ข่าวลือค่อย ๆ เงียบ',chk:{ab:'WIS',dc:12},ok:{t:'ลูกค้าเก่ากลับมา',m:6},no:{t:'ลูกค้าหายไปหลายราย',g:-6,m:-4}}
+   :{t:'ลูกค้าหายไปหลายราย',g:-6,m:-5}]},
+ feud:{h:'ศึกกับคู่แข่ง',when:x=>x.cast.rival.alive&&x.cast.rival.bond<35,w:1.4,steps:[
+  a=>({ask:1,h:'คู่แข่งท้า',b:wt('{rival} ประกาศกลาง{place}ว่าฝีมือคุณสู้เขาไม่ได้ แล้วท้าแข่งต่อหน้า{boss}'),
+   ch:[{t:'รับคำท้า',s:'ทดสอบฝีมือ DC 13',tg:['pride','might'],chk:{skill:pathSk(),dc:13,ok:{t:'ชนะขาดต่อหน้าทุกคน',merit:10,cast:{rival:-10},arc:{set:{won:1}}},no:{t:'แพ้ต่อหน้าทุกคน',merit:-6,fx:{s:-3}}}},
+       {t:'ไม่รับ',s:'ไม่เสียอะไร นอกจากหน้า',tg:['independence'],fx:{s:-2}}]}),
+  a=>a.f.won?{t:'{rival} แอบทำลายงานของคุณ',chk:{skill:'perception',dc:13},ok:{t:'จับได้คาหนังคาเขา',m:6,cast:{rival:-10}},no:{t:'งานเสียหายทั้งชิ้น',m:-6,g:-5}}
+   :{t:'{rival} ได้ใจ คุยโวไปทั่ว',s:-2},
+  a=>({ask:1,h:'คู่แข่งล้ม',b:wt('{rival} ป่วยหนักและหนี้ท่วม ไม่มีใครยื่นมือไปช่วย'),
+   ch:[{t:'ยื่นมือไปช่วย',s:'ทอง −15 · ศัตรูอาจกลายเป็นมิตร',tg:['charity','people'],fx:{g:-15,r:4},merit:4,cast:{rival:50},
+        after:x=>{addLog(x.age,`${x.cast.rival.name} ไม่เคยลืมเรื่องนี้`,'ศัตรูเก่ากลายเป็นมิตร',true);}},
+       {t:'ปล่อยให้ล้มไป',s:'คู่แข่งจะหายไปจากชีวิตคุณ',tg:['pride','greed'],
+        after:x=>{x.cast.rival.alive=false;addLog(x.age,`${x.cast.rival.name} ขายของทั้งหมดแล้วย้ายออกจากเมือง`,null,true);}}]})]},
+ pupil:{h:'ศิษย์',when:x=>!!x.pupil,w:2,steps:[
+  a=>({t:`${S.pupil.name} ทำงานชิ้นแรกพัง`,chk:{ab:'WIS',dc:11},ok:{t:'สอนใหม่ใจเย็นจนเด็กเข้าใจ',m:3},no:{t:'ดุแรงจนเด็กร้องไห้',s:-2}}),
+  a=>({ask:1,h:'ศิษย์อยากไป',b:`${S.pupil.name} ได้ข้อเสนอค่าจ้างดีกว่าจาก${S.cast.rival.alive?S.cast.rival.name:'อีกเมือง'}`,
+   ch:[{t:'ให้ไปด้วยพร',s:'สายสัมพันธ์ +3',tg:['charity','freedom'],fx:{r:3}},
+       {t:'ขอให้อยู่ต่อ',s:'ทดสอบโน้มน้าว DC 12',tg:['people'],chk:{skill:'persuasion',dc:12,ok:{t:'เด็กอยู่ต่อ',arc:{set:{stay:1}}},no:{t:'เด็กไปตอนเช้ามืด'}}},
+       {t:'ขึ้นค่าจ้างให้',s:'ทอง −8',tg:['greed'],fx:{g:-8},arc:{set:{stay:1}}}]}),
+  a=>a.f.stay?{t:`${S.pupil.name} ฝีมือขึ้นจนรับงานแทนคุณได้`,m:12,g:6}:{t:`${S.pupil.name} เปิด{place}ของตัวเอง และยังแวะมาเยี่ยม`,r:4,s:3}]},
+ partner:{h:'หุ้นส่วน',when:x=>['trade','craft','land'].includes(x.path)&&x.gold>=25,w:1,steps:[
+  a=>({ask:1,h:'ชวนลงทุน',b:wt(`${a.n} เพื่อนเก่าชวนลงขันทำ{job}ด้วยกัน`),
+   ch:[{t:'ลงขัน 20 gp',s:'ทอง −20 · เรื่องนี้กินเวลาหลายปี',tg:['aspiration','people'],fx:{g:-20}},
+       {t:'ไม่ลง',s:'เก็บเงินไว้',tg:['tradition'],arc:{end:1}}]}),
+  a=>({t:`ปีแรกของกิจการกับ ${a.n}`,chk:{skill:'insight',dc:12},ok:{t:'ได้กำไร',g:8,arc:{set:{good:1}}},no:{t:'ขาดทุน',s:-2}}),
+  a=>({ask:1,h:'หุ้นส่วนอยากขยาย',b:`${a.n} อยากเปิดอีกสาขา ขอให้ลงเพิ่ม`,
+   ch:[{t:'ลงเพิ่มอีก 30 gp',s:'ได้มากหรือเสียหมด',tg:['aspiration','rash'],fx:{g:-30},arc:{set:{more:1}}},
+       {t:'ถอนทุนคืน',s:a.f.good?'ได้คืนพร้อมกำไร':'ได้คืนบางส่วน',tg:['tradition'],fx:{g:a.f.good?28:12},arc:{end:1}}]}),
+  a=>({t:`กิจการกับ ${a.n}`,chk:{skill:'insight',dc:13},ok:{t:'ไปได้สวยเกินคาด',g:30,m:8},no:{t:`${a.n} หอบเงินหนีไปกลางดึก`,s:-6,r:-4}})]},
+ legacy:{h:'งานสุดท้ายของอาจารย์',when:x=>x.cast.mentor.alive&&x.cast.mentor.bond>=50,w:1,steps:[
+  a=>({ask:1,h:'งานสุดท้ายของอาจารย์',b:`${S.cast.mentor.name} มือสั่นจนทำงานไม่ไหวแล้ว และขอให้คุณช่วยทำงานชิ้นสุดท้ายให้เสร็จ`,
+   ch:[{t:'รับปาก',s:'งานนี้จะกินเวลาหลายปี',tg:['people','tradition'],cast:{mentor:10}},
+       {t:'ไม่มีเวลา',s:'อาจารย์จะผิดหวัง',tg:['independence'],cast:{mentor:-15},arc:{end:1}}]}),
+  a=>({t:`ทำงานของ ${S.cast.mentor.name} ต่อจากที่ค้างไว้`,chk:{skill:'pathsk',dc:13},ok:{t:'ทำได้เหมือนมือเดียวกัน',arc:{set:{good:1}},m:5},no:{t:'ต้องรื้อทำใหม่ครึ่งหนึ่ง'}}),
+  a=>a.f.good?{t:`งานของ ${S.cast.mentor.name} เสร็จสมบูรณ์ ชื่อของทั้งสองคนสลักไว้ด้วยกัน`,m:15,r:5,cast:{mentor:20}}
+   :{t:'งานเสร็จ แต่ไม่ใช่อย่างที่อาจารย์ฝันไว้',m:5,cast:{mentor:5}}]},
+ crisis:{h:'วิกฤต',when:x=>!!ARC_CRISIS[x.path],w:1.2,steps:[
+  a=>{const C=ARC_CRISIS[S.path];return {ask:1,h:C.h,b:wt(C.b),ch:C.ch};},
+  a=>ARC_CRISIS[S.path].mid(a),
+  a=>ARC_CRISIS[S.path].end]}
+};
+function arcStart(){
+  if(!onPath()||(S.arcs||[]).length>=2||Math.random()>ARC_P*yearScale())return;
+  const pool=Object.entries(ARCS).filter(([id,A])=>!S.arcDone[id]&&!S.arcs.some(a=>a.id===id)&&A.when(S)).map(([id,A])=>({id,w:A.w}));
+  if(!pool.length)return;
+  const id=wpick(pool).id;S.arcDone[id]=1;
+  S.arcs.push({id,step:0,at:S.age,f:{},n:nameFor(S.race.id).split(' ')[0]});
+}
+function arcNext(a,o){
+  if(o&&o.set)Object.assign(a.f,o.set);
+  a.step++;
+  if((o&&o.end)||a.step>=ARCS[a.id].steps.length){S.arcs=S.arcs.filter(x=>x!==a);return;}
+  a.at=S.age+Math.max(1,Math.round((1+rnd(3))/yearScale()));
+}
+const arcDue=()=>(S.arcs||[]).filter(a=>a.at<=S.age);
+/* a part that rolls by itself; returns its line for the year's toast */
+function arcAuto(){
+  const a=arcDue().find(a=>!ARCS[a.id].steps[a.step](a).ask);if(!a)return null;
+  const e={id:'arc',...ARCS[a.id].steps[a.step](a)};
+  const t=runWauto(e,true);arcNext(a,S.lastWorkOut&&S.lastWorkOut.arc);return t;
+}
+/* a part that asks; the choice carries the story on */
+function arcAsk(){
+  const a=arcDue().find(a=>ARCS[a.id].steps[a.step](a).ask);if(!a)return null;
+  const e=ARCS[a.id].steps[a.step](a),fix=c=>({...c,t:wt(c.t),s:c.s&&wt(c.s),
+    chk:c.chk&&{...c.chk,ok:c.chk.ok&&{...c.chk.ok,t:wt(c.chk.ok.t)},no:c.chk.no&&{...c.chk.no,t:wt(c.chk.no.t)}}});
+  return {id:'arc_'+a.id+'_'+a.step,kind:'arc',arc:a,h:wt(e.h),b:e.b,lore:`เรื่องต่อเนื่อง: ${ARCS[a.id].h} · ตอนที่ ${a.step+1} จาก ${ARCS[a.id].steps.length}`,ch:e.ch.map(fix)};
 }
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
    One screen at maturity in place of the old call and trade questions. A path whose
@@ -3817,7 +3968,7 @@ function applyChoice(d,c){
   }
   if(c.heal)S.gold-=(S.life.ward==='full'?12:30);
   if(c.quest)S.pendingQuest=c.quest;
-  if(c.merit)gainMeritRaw(c.merit);
+  if(c.merit)workMerit(c.merit);
   if(c.cast)castFx(c.cast);
   if(c.fam){if(S.spouse)S.spouse.bond=clamp(S.spouse.bond+c.fam,0,100);S.kids.forEach(k=>{k.bond=clamp(k.bond+c.fam,0,100);});}
   if(c.pupil)S.pupil={name:nameFor(S.race.id).split(' ')[0],age:S.age};
@@ -3881,6 +4032,8 @@ function applyChoice(d,c){
     if(r.ok){extra=' — ประคองไข้ไว้ได้ทีละคืนจนผ่านไป';S.r=clamp(S.r+4,0,100);}
     else{S.r=clamp(S.r-10,0,100);S.s=clamp(S.s-6,0,100);addLog(S.age,'คนในบ้านไม่ผ่านฤดูนั้นไป',rollTh(r),true,true);}
   }
+  if(d.arc){const out=cr&&c.chk?(cr.ok?c.chk.ok:c.chk.no):null,A=c.arc||{},O=(out&&out.arc)||{};
+    arcNext(d.arc,{set:{...A.set,...O.set},end:A.end||O.end});}
   if(c.after)c.after(S,cr);
   addLog(S.age,`${d.h} — เลือก “${c.t}”${extra}`,notes.length?notes:null,true);
   markTags(c);

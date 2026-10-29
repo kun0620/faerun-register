@@ -673,7 +673,7 @@ function rankReqs(x){
 }
 /* merit fills over working years; trade focus fills it fastest */
 function gainMerit(f){
-  if(!S.path||S.path==='adv'||S.rank>=5||S.age<S.race.mature)return;
+  if(!S.path||S.path==='adv'||S.rank>=5||S.age<S.race.mature||S.retired)return;
   const p=pathOf(S.path),m={trade:1.7,balance:1,work:1.2}[f.id]||.55;
   gainMeritRaw(10*m*(1+mod(S.ab[pathAb(p)])*.12)*yearScale());
 }
@@ -694,14 +694,14 @@ function examSit(){
       if(o.wait){S.merit=50;addLog(S.age,`รอคิวสอบเป็น ${R[0]} ต่อไป`,null);return;}
       S.exams++;
       if(r.ok){S.rank=to;S.merit=0;S.rankAt.push(S.age);if(p.id==='land'&&to===3&&!S.own.land){S.gold-=110;S.own.land=1;}if(p.id==='land'&&to===5)S.gold-=600;if(held)addLog(S.age,'ชนะคนที่ครองที่นั่งอยู่',null);toast(`${R[0]} · ${R[1]}`);
-        addLog(S.age,`ได้เป็น ${R[0]}`,[rollTh(r),`${R[1]} · ${R[2]}`],true);}
+        addLog(S.age,`ได้เป็น ${R[0]}`,[rollTh(r),`${R[1]} · ${R[2]}`],true);if(to===5)leg(`${R[0]} · ${R[1]}`);}
       else if(r.d===1&&S.rank>1){S.rank--;S.merit=0;S.rankAt.pop();
         addLog(S.age,'สอบไม่ผ่าน และเกิดเรื่องอื้อฉาว',[rollTh(r),`ขั้นตกกลับไปเป็น ${p.ranks[S.rank-1][0]}`],true,true);}
       else{S.merit=to===5?0:50;addLog(S.age,`สอบเป็น ${R[0]} ไม่ผ่าน`,[rollTh(r),to===5?'ที่นั่งสูงสุดไม่ให้โอกาสซ้ำง่าย ๆ · ผลงานเริ่มนับใหม่':'ผลงานกลับไปครึ่งหนึ่ง'],false,true);}
     }};
 }
 function examMaybe(done){
-  if(S.path&&S.path!=='adv'&&S.rank<5&&S.merit>=100&&S.hp>0&&rankReqs().every(q=>q.ok)){askCope(examSit(),done);return;}
+  if(S.path&&S.path!=='adv'&&!S.retired&&S.rank<5&&S.merit>=100&&S.hp>0&&rankReqs().every(q=>q.ok)){askCope(examSit(),done);return;}
   done();
 }
 const ABIL=['STR','DEX','CON','INT','WIS','CHA'];
@@ -1778,7 +1778,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,arcs:[],arcDone:{},world:null,worldEnd:-99,worldAsk:null,goal:null,goalNext:0,adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,arcs:[],arcDone:{},world:null,worldEnd:-99,worldAsk:null,goal:null,goalNext:0,retired:0,leg:[],adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -1842,6 +1842,7 @@ function baseIncome(){
   if(S.boost>0)v*=1.12;
   if(S.adv&&S.cls)v*=S.cls.pay;
   if(S.bizYears>0)v*=1.35;
+  if(S.retired)v*=.5;
   v*=worldInc();
   return v;
 }
@@ -2060,7 +2061,7 @@ function renderPath(){
 /* the card above the dice: how close the next rank is, and what still stands in the way */
 function renderNext(){
   const el=$('#lNext');el.textContent='';
-  if(!S.path||S.rank>=5){el.hidden=true;return;}
+  if(!S.path||S.rank>=5||S.retired){el.hidden=true;return;}
   el.hidden=false;const p=pathOf(S.path),R=p.ranks[S.rank];
   const h=ce('p');h.className='eyebrow';h.style.marginBottom='6px';h.textContent='ขั้นต่อไป';
   const t=ce('div');t.className='nexttitle';const b=ce('b');b.textContent=R[0];const sp=ce('span');sp.className='sm muted';sp.textContent=' '+R[1];t.append(b,sp);
@@ -2081,7 +2082,7 @@ function renderNext(){
 /* the one line that stays on screen: who, what rank, how hurt, how much */
 function renderStrip(){
   const el=$('#lStrip');el.textContent='';
-  const job=S.rank?`${rankName()} · ${S.adv?S.cls.th+' เลเวล '+S.lvl:pathOf(S.path).th+(S.rank<5?' · ผลงาน '+Math.floor(S.merit):'')}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
+  const job=S.rank?`${rankName()} · ${S.adv?S.cls.th+' เลเวล '+S.lvl:pathOf(S.path).th+(S.retired?' · วางมือแล้ว':S.rank<5?' · ผลงาน '+Math.floor(S.merit):'')}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
   [[S.name,''],[job,'rk'],...(worldNow()?[[worldNow().th,'rk']]:[]),[`HP ${S.hp}/${S.hpMax}`,''],[(S.gold<0?'−':'')+gp(Math.abs(S.gold)),'']].forEach(([t,c])=>{
     const b=ce('b');if(c)b.className=c;b.textContent=t;el.appendChild(b);});
 }
@@ -2519,6 +2520,7 @@ function runChk(c,gm,adv){
     if(out.faith&&S.deity)S.faith=clamp(S.faith+out.faith,0,100);
     if(out.merit)workMerit(out.merit);
     if(out.endWorld&&S.world)S.world.until=S.age+1;
+    if(out.leg)leg(wt(out.leg));
     if(out.cast)castFx(out.cast);
     if(out.give&&!S.bag.some(b=>b.id===out.give))addGear(out.give,out.t);
   }
@@ -3417,7 +3419,7 @@ function gainMeritRaw(n){
 function workMerit(n){gainMeritRaw(n>0?n*(S.rank>=4?.4:S.rank>=3?.7:1):n);}
 /* {who} {place} {boss} {job} {teach} {rival} fill from the path and the cast */
 function wt(s){const w=PW[S.path]||PW.craft,c=S.cast||{mentor:{},rival:{}};
-  return s.replace(/\{(\w+)\}/g,(m,k)=>k==='mentor'?c.mentor.name:k==='rival'?c.rival.name:k==='friend'?(c.friend||{}).name:k==='patron'?(c.patron||{}).name:w[k]||m);}
+  return s.replace(/\{(\w+)\}/g,(m,k)=>k==='mentor'?c.mentor.name:k==='rival'?c.rival.name:k==='friend'?(c.friend||{}).name:k==='patron'?(c.patron||{}).name:k==='pupil'?(S.pupil||{}).name:w[k]||m);}
 /* happenings that roll by themselves: one line in the record and the dice to show for it */
 const WAUTO=[
  {id:'a_scold',ph:'early',t:'{teach} {mentor} ด่าต่อหน้าทุกคนที่ทำงานพลาด',chk:{ab:'WIS',save:1,dc:11},ok:{t:'ก้มหน้ารับแล้วแก้จนเสร็จ',m:4},no:{t:'เถียงกลับ จนต้องไปขอโทษทีหลัง',m:-2,cast:{mentor:-6}}},
@@ -3507,7 +3509,8 @@ function castFx(c){if(!c||!S.cast)return;for(const k in c){const p=S.cast[k];if(
 function wautoOk(e){
   if(e.p&&e.p!==S.path)return false;
   if(e.when&&!e.when(S))return false;
-  if(e.ph!=='any'&&e.ph!==workPhase())return false;
+  if(e.ph==='old'){if(!isOld())return false;}
+  else if(e.ph!=='any'&&e.ph!==workPhase())return false;
   const seen=S.cast.seen[e.id];
   if(seen!=null&&(!e.rep||(S.age-seen)*yearScale()<10))return false;
   return true;
@@ -3524,6 +3527,7 @@ function runWauto(e,noSeen){
   if(out.g)S.gold+=out.g*S.region.wealth*(out.g>0?.7:1);
   if(out.hurt)damage(out.hurt,'',false);
   if(out.faith&&S.deity)S.faith=clamp(S.faith+out.faith,0,100);
+  if(out.leg)leg(wt(out.leg));
   castFx(out.cast);
   const t=wt(e.t)+(e.chk?' — '+wt(out.t):''),mt=out.m?` · ผลงาน ${out.m>0?'+':'−'}${Math.abs(out.m)}`:'';
   addLog(S.age,t,r?[rollTh(r)+mt]:mt?mt.slice(3):null,false,!!r&&!r.ok&&(out.m||0)<0);
@@ -3547,7 +3551,7 @@ function workYear(asked){
   if(!onPath())return;
   if(!S.cast)meet();
   castYear();
-  const ph=workPhase(),n=ph==='early'?3:ph==='mid'?2:(Math.random()<.55*yearScale()?1:0);
+  const ph=workPhase(),n=ph==='early'?3:ph==='mid'?2:(Math.random()<(isOld()?.75:.55)*yearScale()?1:0);
   const k=Math.max(0,n-(asked?1:0));let first=null;
   arcLapse();
   /* a wall nobody had a window to ask about gets handled the way the stance would */
@@ -3683,7 +3687,7 @@ const ARCS={
        {t:'ขอเลื่อนส่ง',s:'ปลอดภัยกว่า แต่ผู้ว่าจ้างไม่ชอบ',tg:['tradition'],arc:{set:{late:1}}},
        {t:`จ้าง${S.cast.rival.name}มาช่วย`,s:'ทอง −10 · คู่แข่งได้หน้าไปด้วย',tg:['people'],fx:{g:-10},cast:{rival:10},arc:{set:{help:1}}}]}),
   a=>({t:'ส่งงานชิ้นใหญ่',chk:{skill:'pathsk',dc:15-2*(a.f.mat||0)-2*(a.f.push||0)-2*(a.f.help||0)+2*(a.f.late||0)},
-   ok:{t:'ชื่อของคุณไปถึงเมืองหลวง',m:25,g:10,r:5},no:{t:'ผู้ว่าจ้างไม่รับงาน',m:-10,s:-4}})]},
+   ok:{t:'ชื่อของคุณไปถึงเมืองหลวง',m:25,g:10,r:5,leg:'{job}ชิ้นใหญ่ที่ชื่อไปถึงเมืองหลวง'},no:{t:'ผู้ว่าจ้างไม่รับงาน',m:-10,s:-4}})]},
  rumor:{h:'ข่าวลือ',when:x=>workYears(x)>=3,w:1,steps:[
   a=>({t:'มีข่าวลือเรื่องคุณแพร่ไปทั่ว{place}',m:-3}),
   a=>({ask:1,h:'ใครปล่อยข่าว',b:wt('คนใน{place}เริ่มมองคุณแปลก ๆ ข่าวลือไม่ได้มาจากลมแน่'),
@@ -3726,7 +3730,7 @@ const ARCS={
    ch:[{t:'รับปาก',s:'งานนี้จะกินเวลาหลายปี',tg:['people','tradition'],cast:{mentor:10}},
        {t:'ไม่มีเวลา',s:'อาจารย์จะผิดหวัง',tg:['independence'],cast:{mentor:-15},arc:{end:1}}]}),
   a=>({t:`ทำงานของ ${S.cast.mentor.name} ต่อจากที่ค้างไว้`,chk:{skill:'pathsk',dc:13},ok:{t:'ทำได้เหมือนมือเดียวกัน',arc:{set:{good:1}},m:5},no:{t:'ต้องรื้อทำใหม่ครึ่งหนึ่ง'}}),
-  a=>a.f.good?{t:`งานของ ${S.cast.mentor.name} เสร็จสมบูรณ์ ชื่อของทั้งสองคนสลักไว้ด้วยกัน`,m:15,r:5,cast:{mentor:20}}
+  a=>a.f.good?{t:`งานของ ${S.cast.mentor.name} เสร็จสมบูรณ์ ชื่อของทั้งสองคนสลักไว้ด้วยกัน`,m:15,r:5,cast:{mentor:20},leg:`งานสุดท้ายของ ${S.cast.mentor.name} ที่ทำต่อจนเสร็จ`}
    :{t:'งานเสร็จ แต่ไม่ใช่อย่างที่อาจารย์ฝันไว้',m:5,cast:{mentor:5}}]},
  crisis:{h:'วิกฤต',when:x=>!!ARC_CRISIS[x.path],w:1.2,steps:[
   a=>{const C=ARC_CRISIS[S.path];return {ask:1,h:C.h,b:wt(C.b),ch:C.ch};},
@@ -3904,6 +3908,49 @@ WASK.push(
   ch:()=>[{t:'อยู่กับลูก',s:'ผลงาน −6 · ใจลูก +10',tg:['people'],merit:-6,fam:10},
           {t:'ไปส่งงาน',s:'ผลงาน +8 · ใจลูก −12',tg:['aspiration'],merit:8,fam:-12,fx:{s:-3}}]}
 );
+/* ---- the last chapter: who takes it on, who you taught, what is left behind ----
+   From about three-fifths of a life, work turns from climbing to handing on. */
+const OLD_AT=.6;
+const isOld=x=>(x||S).age>=(x||S).span*OLD_AT;
+function leg(t){(S.leg=S.leg||[]).push(t);}
+WAUTO.push(
+ {id:'o_advice',ph:'old',t:'คนรุ่นใหม่ใน{place}มาขอคำแนะนำ',chk:{ab:'WIS',dc:11},ok:{t:'คำของคุณถูกเล่าต่อไปอีกหลายรุ่น',r:4,s:3},no:{t:'พูดไปแล้วเขาไม่ฟัง',s:-2}},
+ {id:'o_peers',ph:'old',t:'คนรุ่นเดียวกันใน{place}จากไปทีละคน',s:-3},
+ {id:'o_book',ph:'old',t:'เขียนบันทึกวิชาไว้ให้คนรุ่นหลัง',chk:{ab:'INT',dc:12},ok:{t:'บันทึกเสร็จทั้งเล่ม',l:4,s:4,leg:'บันทึกวิชาที่เขียนไว้ให้คนรุ่นหลัง'},no:{t:'เขียนได้ครึ่งเล่มแล้วมือก็ไม่ไหว',s:-1}},
+ {id:'o_guest',ph:'old',when:x=>x.rank>=3,t:'ได้รับเชิญเป็นแขกในพิธีของ{guild}',r:4,s:3},
+ {id:'o_honor',ph:'old',when:x=>x.rank>=4,t:'{guild}มอบเหรียญเชิดชูให้ต่อหน้าทุกคน',s:6,r:5,leg:'เหรียญเชิดชูจาก{guild}'},
+ {id:'o_slow',ph:'old',t:'ทำงานได้ช้าลงจนต้องให้คนอื่นช่วย',chk:{ab:'CON',save:1,dc:12},ok:{t:'ยังพอไหว',m:1},no:{t:'ต้องพักไปหนึ่งฤดู',s:-2}},
+ {id:'o_visit',ph:'old',when:x=>!!x.pupil,t:'{pupil} แวะมาเยี่ยมพร้อมของฝาก',s:4,r:2},
+ {id:'o_rival_old',ph:'old',when:x=>x.cast.rival.alive,t:'นั่งดื่มกับ{rival}ที่โรงเตี๊ยม เล่าเรื่องเก่าจนดึก',chk:{ab:'CHA',dc:10},ok:{t:'หัวเราะเรื่องที่เคยโกรธกัน',cast:{rival:15},s:4},no:{t:'ทะเลาะกันเรื่องเดิมอีกรอบ',s:-1}}
+);
+Object.assign(ARCS,{
+ heir:{h:'คนรับช่วง',when:x=>isOld(x)&&x.rank>=2&&!x.retired,w:4,steps:[
+  a=>{const k=S.kids.find(k=>k.age>=14),opts=[];
+   if(k)opts.push({t:`ให้ ${k.name.split(' ')[0]} ลูกของคุณรับช่วง`,s:'ใจลูก +10 · ต้องสอนให้ทัน',tg:['tradition','people'],arc:{set:{heir:'kid',name:k.name.split(' ')[0]}},after:()=>{k.bond=clamp(k.bond+10,0,100);}});
+   if(S.pupil)opts.push({t:`ให้ ${S.pupil.name} ศิษย์ของคุณรับช่วง`,s:'ศิษย์รู้งานดีอยู่แล้ว',tg:['fairness'],arc:{set:{heir:'pupil',name:S.pupil.name,ready:1}}});
+   if(!k&&!S.pupil)opts.push({t:`ให้ ${a.n} ลูกจ้างหนุ่มที่ขยันที่สุดรับช่วง`,s:'ไม่ใช่สายเลือด แต่ใจรักงาน',tg:['fairness','people'],arc:{set:{heir:'hire',name:a.n}}});
+   opts.push({t:'ขายกิจการให้คนนอก',s:`ได้ทองราว ${gp(Math.round(S.rank*25*S.region.wealth))} · ชื่อของคุณจบที่รุ่นนี้`,tg:['greed','independence'],arc:{end:1},
+     after:x=>{const v=Math.round(x.rank*25*x.region.wealth);x.gold+=v;x.retired=1;addLog(x.age,'ขายกิจการแล้ววางมือ',`ได้ ${gp(v)}`,true);}});
+   opts.push({t:'ยังไม่วางมือ',s:'จะถามอีกครั้งในไม่กี่ปี',tg:['pride','aspiration'],arc:{end:1},after:x=>{x.arcDone.heir=0;}});
+   return {ask:1,h:'คนรับช่วง',b:wt('มือเริ่มช้า ตาเริ่มฝ้า {place}ต้องมีคนดูแลต่อจากคุณ'),ch:opts};},
+  a=>a.f.ready?{t:`${a.f.name} ทำงานแทนคุณได้เกือบทุกอย่างแล้ว`,m:2}
+   :{t:`สอน{job}ให้ ${a.f.name} ทุกวัน`,chk:{ab:'CHA',dc:12},ok:{t:'ลูกเข้าใจเร็วกว่าที่คิด',arc:{set:{ready:1}}},no:{t:'สอนเท่าไรก็ไม่เข้าหัว'}},
+  a=>({ask:1,h:'วันส่งมอบ',b:`${a.f.name} พร้อม${a.f.ready?'แล้ว':'แค่ครึ่งเดียว'} จะส่งมอบ{place}ตอนนี้ หรือทำต่ออีกสักพัก`.replace('{place}',PW[S.path].place),
+   ch:[{t:'ส่งมอบแล้ววางมือ',s:'รายได้ลดลงครึ่ง · ได้พักจริง ๆ',tg:['tradition','people'],retire:1},
+       {t:'ทำต่ออีกสักพัก',s:'ผลงาน +6 · คนรับช่วงรอต่อไป',tg:['pride'],merit:6,arc:{set:{late:1}}}]}),
+  a=>a.f.ready&&!a.f.late?{t:`ถึงรุ่นของ ${a.f.name} {place}ยิ่งรุ่งเรือง`,s:6,r:4,leg:`${a.f.name} รับช่วง{place}ต่อและทำให้รุ่งเรืองกว่าเดิม`}
+   :a.f.ready?{t:`${a.f.name} รับช่วงต่อ แต่ยังรู้สึกว่าคุณไม่ไว้ใจ`,s:2,leg:`${a.f.name} รับช่วง{place}ต่อ`}
+   :{t:`${a.f.name} ประคอง{place}ไว้ได้แค่พอรอด`,s:-2,leg:`${a.f.name} รับช่วง{place}ต่อ`}]},
+ lastpupils:{h:'ศิษย์รุ่นสุดท้าย',when:x=>isOld(x)&&x.rank>=2,w:2,steps:[
+  a=>({ask:1,h:'ศิษย์รุ่นสุดท้าย',b:wt('เด็กหลายคนมายืนรอหน้า{place} อยากเรียนจากคนที่ทำงานนี้มาทั้งชีวิต'),
+   ch:[{t:'รับไว้ทั้งกลุ่ม',s:'ทอง −10 · เหนื่อยแต่ได้ส่งต่อมาก',tg:['charity','tradition'],fx:{g:-10,s:-1},arc:{set:{n:4}}},
+       {t:'รับคนเดียวที่ดีที่สุด',s:'ทดสอบหยั่งใจ DC 12 เพื่อเลือกให้ถูกคน',tg:['knowledge'],chk:{skill:'insight',dc:12,ok:{t:'เลือกเด็กที่ตาเป็นประกาย',arc:{set:{n:1,best:1}}},no:{t:'เลือกเด็กที่พูดเก่งแต่ไม่ขยัน',arc:{set:{n:1}}}}},
+       {t:'ไม่รับใครแล้ว',s:'ได้พักจริง ๆ',tg:['independence'],fx:{s:2},arc:{end:1}}]}),
+  a=>({t:'สอนศิษย์รุ่นสุดท้าย',chk:{ab:'WIS',dc:11},ok:{t:'ทุกคนได้สิ่งที่มาหา',s:4,arc:{set:{good:1}}},no:{t:'สอนแล้วหงุดหงิดทุกวัน',s:-2}}),
+  a=>a.f.best&&a.f.good?{t:'ศิษย์คนสุดท้ายเก่งกว่าคุณในวันที่ยังหนุ่ม',s:6,leg:'ศิษย์คนสุดท้ายที่เก่งกว่าครู'}
+   :a.f.good?{t:`ศิษย์รุ่นสุดท้าย ${a.f.n} คนออกไปทำงานของตัวเอง`,s:4,r:4,leg:`ศิษย์รุ่นสุดท้าย ${a.f.n} คน`}
+   :{t:'ศิษย์รุ่นสุดท้ายแยกย้ายกันไป ไม่มีใครกลับมาเยี่ยม',s:-2}]}
+});
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
    One screen at maturity in place of the old call and trade questions. A path whose
    conditions are all met can be chosen; one that misses a single condition can be tried
@@ -4125,6 +4172,8 @@ function applyChoice(d,c){
   if(c.quest)S.pendingQuest=c.quest;
   if(c.merit)workMerit(c.merit);
   if(c.goal)setGoal(c.goal);
+  if(c.leg)leg(wt(c.leg));
+  if(c.retire){S.retired=1;addLog(S.age,'วางมือจากงาน',`ส่งต่อให้คนรุ่นหลัง · รายได้เหลือครึ่งเดียว`,true);}
   if(c.cast)castFx(c.cast);
   if(c.fam){if(S.spouse)S.spouse.bond=clamp(S.spouse.bond+c.fam,0,100);S.kids.forEach(k=>{k.bond=clamp(k.bond+c.fam,0,100);});}
   if(c.pupil)S.pupil={name:nameFor(S.race.id).split(' ')[0],age:S.age};
@@ -4363,6 +4412,8 @@ function renderDeath(){
   const bits=[];
   if(S.pastPaths.length)bits.push('เคยเดิน '+S.pastPaths.map(x=>`${pathOf(x.path).th} ถึง ${pathOf(x.path).ranks[x.rank-1][0]}`).join(' · '));
   if(S.exams)bits.push(`สอบเลื่อนขั้น ${S.exams} ครั้ง`);
+  if((S.leg||[]).length)bits.push('ทิ้งไว้ให้โลก: '+S.leg.join(' · '));
+  if(S.goalsWon)bits.push(`เป้าหมายที่ทำสำเร็จ ${S.goalsWon} จาก ${S.goalsWon+(S.goalsLost||0)}`);
   if(S.quests)bits.push(`ภารกิจ ${S.quests} งาน สำเร็จ ${S.questWins||0} · ใช้ชีวิตบนถนน ${Math.round(S.awaySeasons/4*10)/10} ปี`);
   if((S.magicFound||[]).length)bits.push('ของเวทที่ได้มา: '+S.magicFound.join(', '));
   if(S.potions)bits.push(`ยารักษาช่วยชีวิตไว้ ${S.potions} ครั้ง`);

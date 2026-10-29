@@ -683,7 +683,8 @@ function examSit(){
   const fee=Math.round(8*Math.pow(2.4,to-1)),held=to===5&&S.age<S.seatAge,up=held?4:0;
   const opts=[
     {t:held?'ท้าชิงที่นั่ง':'พิสูจน์ฝีมือ',ab:SKILLS[sk].ab,skill:sk,bonus:S.rank,dc:dc+up,st:'grit',s:held?`แข่ง${SKILLS[sk].th}กับคนที่นั่งอยู่`:`ทดสอบ${SKILLS[sk].th}ต่อหน้าผู้ตัดสิน`,tg:['aspiration','knowledge']},
-    {t:'หาผู้อุปถัมภ์',ab:'CHA',skill:'persuasion',bonus:Math.floor(S.rank/2),dc:dc+1+up,st:'kin',s:'ให้คนที่นับถือคุณช่วยพูด · ต้องมีสายสัมพันธ์ 50 ขึ้นไป',need:x=>x.r>=50,tg:['people','tradition']},
+    S.cast&&S.cast.patron&&S.cast.patron.alive?{t:`ให้ ${S.cast.patron.name} ช่วยพูด`,ab:'CHA',skill:'persuasion',bonus:Math.floor(S.rank/2)+2,dc:dc+1+up,st:'kin',s:'ผู้อุปถัมภ์ของคุณยืนอยู่ข้างผู้ตัดสิน',tg:['people','tradition']}
+    :{t:'หาผู้อุปถัมภ์',ab:'CHA',skill:'persuasion',bonus:Math.floor(S.rank/2),dc:dc+1+up,st:'kin',s:'ให้คนที่นับถือคุณช่วยพูด · ต้องมีสายสัมพันธ์ 50 ขึ้นไป',need:x=>x.r>=50,tg:['people','tradition']},
     {t:'จ่ายเพื่อให้ได้ตำแหน่ง',ab,dc:dc-4+up,st:'shady',cost:fee,s:`${gp(fee)} · ง่ายกว่า แต่ไปทางร้าย`,al:[0,-.06],tg:['greed']},
     {t:'รอให้ถึงคิว',ab,dc:1,st:'wits',wait:1,last:1,s:'ไม่ต้องลุ้น · ผลงานกลับไปครึ่งหนึ่ง แล้วค่อยสอบใหม่',tg:['tradition']}];
   return {id:'exam',kind:'exam',big:true,h:`สอบเลื่อนขั้น: ${R[0]}`,
@@ -1777,7 +1778,7 @@ function birth(){
     exh:0,exhFloor:0,strain:0,hit:0,relent:0,raisePen:0,downBy:'',
     ...startAlign(s),deity:null,faith:0,formerDeity:null,
     rolls:[],lastRoll:null,nRolls:0,yearRolls:0,n20:0,n1:0,used:{},
-    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,arcs:[],arcDone:{},adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
+    bag:[],eq:null,party:[],awayLeft:0,awayNow:0,awaySeasons:0,quests:0,questWins:0,fame:0,nextBoard:0,pendingQuest:null,focus:FOCUS_DEFAULT_CHILD,dream:null,dreamLost:0,seatAge:0,train:{},grown:0,grownAb:{},schoolYears:{},certs:{},mentor:null,mentorYears:0,school:null,oppN:0,path:null,rank:0,merit:0,cast:null,workStart:null,arcs:[],arcDone:{},world:null,worldEnd:-99,worldAsk:null,goal:null,goalNext:0,adultGrown:0,fixAt:{},meritRate:0,meritLast:0,rankAt:[],pastPaths:[],exams:0,downs:0,dsEp:0,stabilized:0,kills:0,encounters:0,verdict:null,
     stance:'grit',fam:{},nOwn:0,nDecRolls:0,nDec:0,nAsk:0,nStance:0,decAges:[],lastDecAge:0,lastAskAge:-999,decCtx:0,busy:0};
   if(s.race.id==='halfelf'){const pool=Object.keys(SKILLS).filter(k=>!S.skills.includes(k));for(let i=0;i<2;i++)S.skills.push(pool.splice(rnd(pool.length),1)[0]);}
   S.hpMax=hpMaxFor();S.hp=S.hpMax;
@@ -1841,6 +1842,7 @@ function baseIncome(){
   if(S.boost>0)v*=1.12;
   if(S.adv&&S.cls)v*=S.cls.pay;
   if(S.bizYears>0)v*=1.35;
+  v*=worldInc();
   return v;
 }
 const spouseIncome=()=>S.spouse?baseIncome()*.72:0;
@@ -2072,6 +2074,7 @@ function renderNext(){
   if(S.merit<100&&S.meritRate>0){const n=ce('p');n.className='xs muted';n.style.marginTop='6px';
     const yrs=Math.max(1,Math.ceil((100-S.merit)/S.meritRate));
     n.textContent=`ปีที่แล้ว ${S.meritLast>=0?'+':'−'}${Math.abs(Math.round(S.meritLast))} · อีกราว ${yrs} ปีจะได้สอบ`;el.appendChild(n);}
+  if(S.goal){const n=ce('p');n.className='xs';n.style.marginTop='6px';n.textContent=`เป้าหมาย: ${S.goal.th} · เหลือ ${Math.max(0,S.goal.until-S.age)} ปี`;el.appendChild(n);}
   if(S.cast){const n=ce('p');n.className='xs muted';n.style.marginTop='4px';const c=S.cast;
     n.textContent=`อาจารย์ ${c.mentor.name}${c.mentor.alive?' · ใจ '+Math.round(c.mentor.bond):' (จากไปแล้ว)'} · คู่แข่ง ${c.rival.name} ขั้น ${c.rival.rank}`;el.appendChild(n);}
 }
@@ -2079,7 +2082,7 @@ function renderNext(){
 function renderStrip(){
   const el=$('#lStrip');el.textContent='';
   const job=S.rank?`${rankName()} · ${S.adv?S.cls.th+' เลเวล '+S.lvl:pathOf(S.path).th+(S.rank<5?' · ผลงาน '+Math.floor(S.merit):'')}`:(S.age<S.race.mature?'วัยเด็ก':(S.trade||'ยังไม่มีงาน'));
-  [[S.name,''],[job,'rk'],[`HP ${S.hp}/${S.hpMax}`,''],[(S.gold<0?'−':'')+gp(Math.abs(S.gold)),'']].forEach(([t,c])=>{
+  [[S.name,''],[job,'rk'],...(worldNow()?[[worldNow().th,'rk']]:[]),[`HP ${S.hp}/${S.hpMax}`,''],[(S.gold<0?'−':'')+gp(Math.abs(S.gold)),'']].forEach(([t,c])=>{
     const b=ce('b');if(c)b.className=c;b.textContent=t;el.appendChild(b);});
 }
 /* left-hand tabs; on a phone they sit at the bottom and open as a sheet */
@@ -2372,6 +2375,7 @@ function threatQ(){
   q*=S.region.danger;
   if(S.own.horse)q*=1.06;
   if(S.chronic)q*=1.25;
+  q*=worldThreat();
   if(S.life.ward==='full')q*=.93;
   if(S.adv){const fo=focusSet().find(x=>x.id===S.focus);q*=(S.cls?S.cls.risk:1.3)*(fo&&fo.enc?.6:(fo?.risk||1));}
   return clamp(q*TQ,0,.95);
@@ -2514,6 +2518,7 @@ function runChk(c,gm,adv){
     if(out.exh)gainExh(out.exh);
     if(out.faith&&S.deity)S.faith=clamp(S.faith+out.faith,0,100);
     if(out.merit)workMerit(out.merit);
+    if(out.endWorld&&S.world)S.world.until=S.age+1;
     if(out.cast)castFx(out.cast);
     if(out.give&&!S.bag.some(b=>b.id===out.give))addGear(out.give,out.t);
   }
@@ -2636,7 +2641,7 @@ function hazSit(h,dc,f){
 /* real time at 1× since the last window opened; small matters never interrupt inside it */
 /* a short life gets fewer windows, not denser ones: the gap widens when the whole life is five minutes */
 /* working years carry their own happenings between windows, so an adult's windows sit a little further apart */
-const canAsk=()=>(S.age-S.lastAskAge)*msPerYear()>=ASK_GAP*(opt.pace<12?1.7:1)*(S.age>=S.race.mature?1.5:1);
+const canAsk=()=>(S.age-S.lastAskAge)*msPerYear()>=ASK_GAP*(opt.pace<12?1.7:1)*(S.age>=S.race.mature?1.55:1);
 function noteAsk(){S.lastAskAge=S.age;S.nAsk++;}
 function noteDecision(stance){S.nDec++;if(stance)S.nStance++;S.lastDecAge=S.age;S.decAges.push(S.age);}
 function prepOpts(sit){
@@ -2937,6 +2942,8 @@ function tick(){
     if(Math.random()<pq||p.age>p.span+p.span*.22)p.alive=false;});
   runAuto();
   faithYear();
+  worldYear();
+  goalYear();
   if(S.age===S.race.mature){
     addLog(S.age,`บรรลุนิติภาวะตามธรรมเนียมของ${S.race.th}`,`${S.race.th}ถือว่าเป็นผู้ใหญ่เมื่ออายุราว ${S.race.mature} ปี`,true);
     bgPick();
@@ -3396,7 +3403,8 @@ function onPath(x){x=x||S;return !!x.path&&x.path!=='adv'&&x.age>=x.race.mature&
 function meet(){
   const used=[S.name.split(' ')[0]],nm=()=>{let n,i=0;do n=nameFor(S.race.id).split(' ')[0];while(used.includes(n)&&i++<20);used.push(n);return n;};
   S.cast={mentor:{name:nm(),alive:true,bond:55,dieAt:S.age+Math.round((10+rnd(30))/yearScale())},
-          rival:{name:nm(),alive:true,bond:40,rank:1},seen:{}};
+          rival:{name:nm(),alive:true,bond:40,rank:1},seen:{},
+          friend:S.friends.length?{name:S.friends[0].name.split(' ')[0],alive:true,bond:S.friends[0].bond}:{name:nm(),alive:true,bond:55},patron:null};
   S.workStart=S.age;S.arcs=[];S.arcDone={};
 }
 function gainMeritRaw(n){
@@ -3409,7 +3417,7 @@ function gainMeritRaw(n){
 function workMerit(n){gainMeritRaw(n>0?n*(S.rank>=4?.4:S.rank>=3?.7:1):n);}
 /* {who} {place} {boss} {job} {teach} {rival} fill from the path and the cast */
 function wt(s){const w=PW[S.path]||PW.craft,c=S.cast||{mentor:{},rival:{}};
-  return s.replace(/\{(\w+)\}/g,(m,k)=>k==='mentor'?c.mentor.name:k==='rival'?c.rival.name:w[k]||m);}
+  return s.replace(/\{(\w+)\}/g,(m,k)=>k==='mentor'?c.mentor.name:k==='rival'?c.rival.name:k==='friend'?(c.friend||{}).name:k==='patron'?(c.patron||{}).name:w[k]||m);}
 /* happenings that roll by themselves: one line in the record and the dice to show for it */
 const WAUTO=[
  {id:'a_scold',ph:'early',t:'{teach} {mentor} ด่าต่อหน้าทุกคนที่ทำงานพลาด',chk:{ab:'WIS',save:1,dc:11},ok:{t:'ก้มหน้ารับแล้วแก้จนเสร็จ',m:4},no:{t:'เถียงกลับ จนต้องไปขอโทษทีหลัง',m:-2,cast:{mentor:-6}}},
@@ -3513,7 +3521,7 @@ function runWauto(e,noSeen){
   if(out.m)workMerit(out.m*(out.m>0?yearScale():1));
   ['s','l','r'].forEach(k=>{if(out[k])S[k]=clamp(S[k]+out[k],0,100);});
   if(out.fx)applyFx(out.fx,1);
-  if(out.g)S.gold+=out.g*S.region.wealth;
+  if(out.g)S.gold+=out.g*S.region.wealth*(out.g>0?.7:1);
   if(out.hurt)damage(out.hurt,'',false);
   if(out.faith&&S.deity)S.faith=clamp(S.faith+out.faith,0,100);
   castFx(out.cast);
@@ -3541,6 +3549,9 @@ function workYear(asked){
   castYear();
   const ph=workPhase(),n=ph==='early'?3:ph==='mid'?2:(Math.random()<.55*yearScale()?1:0);
   const k=Math.max(0,n-(asked?1:0));let first=null;
+  arcLapse();
+  /* a wall nobody had a window to ask about gets handled the way the stance would */
+  if(S.merit>=100&&Math.random()<.3*yearScale()){const d=fixDec();if(d&&d.ch.length){S.done[d.id]=1;S.lapse=1;applyChoice(d,autoChoice(d));S.lapse=0;}}
   arcStart();
   for(let i=0;i<k;i++){
     let t=i===0?arcAuto():null;
@@ -3743,12 +3754,156 @@ function arcAuto(){
   const t=runWauto(e,true);arcNext(a,S.lastWorkOut&&S.lastWorkOut.arc);return t;
 }
 /* a part that asks; the choice carries the story on */
-function arcAsk(){
-  const a=arcDue().find(a=>ARCS[a.id].steps[a.step](a).ask);if(!a)return null;
+function arcAsk(a){
+  a=a||arcDue().find(a=>ARCS[a.id].steps[a.step](a).ask);if(!a)return null;
   const e=ARCS[a.id].steps[a.step](a),fix=c=>({...c,t:wt(c.t),s:c.s&&wt(c.s),
     chk:c.chk&&{...c.chk,ok:c.chk.ok&&{...c.chk.ok,t:wt(c.chk.ok.t)},no:c.chk.no&&{...c.chk.no,t:wt(c.chk.no.t)}}});
   return {id:'arc_'+a.id+'_'+a.step,kind:'arc',arc:a,h:wt(e.h),b:e.b,lore:`เรื่องต่อเนื่อง: ${ARCS[a.id].h} · ตอนที่ ${a.step+1} จาก ${ARCS[a.id].steps.length}`,ch:e.ch.map(fix)};
 }
+/* a story part that has waited two years for a window goes the way the standing stance would take it */
+function arcLapse(){
+  const a=arcDue().find(a=>ARCS[a.id].steps[a.step](a).ask&&(S.age-a.at)*yearScale()>=2);if(!a)return;
+  const d=arcAsk(a);d.ch=d.ch.filter(c=>!c.need||c.need(S));
+  S.done[d.id]=1;S.lapse=1;applyChoice(d,autoChoice(d));S.lapse=0;
+}
+/* ---- the region's years: something big comes to everyone every 8 to 15 years and stays 2 to 4 ----
+   It touches every path differently: what is a bad year for the farm is a good one for the soldier. */
+const WORLD={
+ war:{th:'สงคราม',w:1.2,yrs:[3,4],threat:1.25,inc:{arms:1.3,trade:1.15,craft:1.1,land:.8,all:.9},merit:{arms:8,craft:3,faith:2},
+  start:'ข้าศึกยกทัพข้ามพรมแดน เจ้าแคว้นประกาศเกณฑ์คน',end:'สงครามสงบลง คนที่รอดเริ่มทยอยกลับบ้าน',
+  autos:[{t:'ทหารเดินผ่านหมู่บ้าน ขนเสบียงไปครึ่งยุ้ง',g:-5},{t:'ญาติของเพื่อนบ้านไม่ได้กลับจากแนวหน้า',s:-2},{t:'ราคาเหล็กพุ่งขึ้นสามเท่า',g:-2}],
+  ch:[{t:'ส่งของให้กองทัพ',s:'ทอง +10 · ได้กำไรจากสงคราม',tg:['greed'],fx:{g:10},al:[0,-.03]},
+      {t:'ช่วยดูแลผู้ลี้ภัย',s:'ทอง −8 · สายสัมพันธ์ +8',tg:['charity','people'],fx:{g:-8,r:8},al:[0,.04]},
+      {t:'ปิดประตูบ้าน รอให้ผ่านไป',s:'จิตใจ −2',tg:['independence'],fx:{s:-2}}]},
+ plague:{th:'โรคระบาด',w:1,yrs:[2,3],threat:1.35,inc:{faith:1.2,all:.85},merit:{faith:8},
+  start:'โรคที่ไม่มีใครรู้จักมากับขบวนเรือ คนในเมืองเริ่มล้มทีละบ้าน',end:'โรคซาลงไปเอง แต่ทุกบ้านนับคนที่หายไปได้',
+  autos:[{t:'เพื่อนบ้านปิดประตูไม่ให้ใครเข้า',r:-2},{t:'เกวียนเก็บศพผ่านหน้าบ้านทุกเช้า',s:-3}],
+  ch:[{t:'ช่วยดูแลคนป่วย',s:'ทดสอบป้องกันทน DC 13 · สายสัมพันธ์ +8',tg:['charity','people'],chk:{ab:'CON',save:1,dc:13,ok:{t:'ไม่ติดโรคเลยตลอดฤดู',fx:{r:8}},no:{t:'ติดโรคเสียเอง',hurt:2,fx:{r:6}}}},
+      {t:'ปิดบ้าน ไม่ให้ใครเข้า',s:'ปลอดภัยกว่า · สายสัมพันธ์ −3',tg:['independence'],fx:{r:-3}},
+      {t:'หนีไปอยู่ชนบท',s:'ทอง −10',tg:['freedom'],fx:{g:-10,s:-2}}]},
+ famine:{th:'ข้าวยากหมากแพง',w:1,yrs:[2,3],threat:1.2,inc:{land:1.25,all:.85},merit:{land:5},
+  start:'ฝนแล้งสองปีซ้อน ยุ้งฉางทั่วแคว้นว่างเปล่า',end:'ข้าวรุ่นใหม่ออกรวง ราคากลับมาเท่าเดิม',
+  autos:[{t:'ขนมปังก้อนละเท่าค่าแรงครึ่งวัน',g:-4},{t:'เด็กข้างบ้านมาขอข้าวกินทุกเย็น',s:-1,r:1}],
+  ch:[{t:'แบ่งข้าวให้เพื่อนบ้าน',s:'ทอง −8 · สายสัมพันธ์ +8',tg:['charity','people'],fx:{g:-8,r:8},al:[0,.04]},
+      {t:'กักตุนไว้ขายตอนแพง',s:'ทอง +10 · สายสัมพันธ์ −6',tg:['greed'],fx:{g:10,r:-6},al:[0,-.05]},
+      {t:'ไปขอวิหาร',s:'ศรัทธา +3',tg:['faith'],faith:3}]},
+ boom:{th:'ยุคทอง',w:1,yrs:[3,4],inc:{trade:1.25,craft:1.15,all:1.06},merit:{trade:6,craft:4},
+  start:'เส้นทางการค้าใหม่เปิด เงินไหลเข้าแคว้นอย่างที่ไม่เคยมีมาก่อน',end:'ยุคทองจบลงเงียบ ๆ อย่างที่มันมา',
+  autos:[{t:'ตลาดคึกคักทุกวัน',g:4},{t:'พ่อค้าต่างแดนมาขอซื้อของถึงหน้าบ้าน',g:3}],
+  ch:[{t:'ลงทุนเพิ่มตอนตลาดดี',s:'ทดสอบหยั่งใจ DC 12',tg:['aspiration','greed'],chk:{skill:'insight',dc:12,ok:{t:'ได้กำไรเป็นกอบเป็นกำ',fx:{g:15}},no:{t:'ซื้อตอนแพงสุด',fx:{g:-8}}}},
+      {t:'เก็บเงินไว้',s:'ไม่เสี่ยง',tg:['tradition'],fx:{g:4}}]},
+ festival:{th:'เทศกาลใหญ่',w:.8,yrs:[1,2],inc:{all:1.05},merit:{},
+  start:'เจ้าแคว้นประกาศจัดเทศกาลฉลองร้อยปีของราชวงศ์',end:'โคมดวงสุดท้ายของเทศกาลดับลง',
+  autos:[{t:'เต้นรำกลางลานจนเช้า',s:3},{t:'คนแปลกหน้าจากทั่วแคว้นมาพักในเมือง',r:2}],
+  ch:[{t:'ลงแข่งในเทศกาล',s:'ทดสอบกรีฑา DC 13',tg:['pride','might'],chk:{skill:'athletics',dc:13,ok:{t:'ได้ที่หนึ่ง ชื่อถูกประกาศกลางลาน',fx:{r:6,s:5},merit:5},no:{t:'ตกรอบแรก แต่สนุก',fx:{s:2}}}},
+      {t:'ตั้งร้านขายของในงาน',s:'ทอง +8',tg:['greed','aspiration'],fx:{g:8}},
+      {t:'ดูอยู่ห่าง ๆ',s:'จิตใจ +1',fx:{s:1}}]},
+ dragon:{th:'เงามังกร',w:.3,yrs:[1,1],threat:1.15,inc:{all:.95},merit:{arms:4,arcane:4},
+  start:'มีคนเห็นมังกรบินผ่านเหนือภูเขาทางเหนือ',end:'ไม่มีใครเห็นมังกรอีก ราวกับมันไม่เคยมา',
+  autos:[{t:'ฝูงแกะทางเหนือหายไปทั้งฝูงในคืนเดียว',s:-2}],
+  ch:[{t:'ไปดูให้เห็นกับตา',s:'ทดสอบการรับรู้ DC 12',tg:['knowledge','rash'],chk:{skill:'perception',dc:12,ok:{t:'เห็นเงาปีกพาดผ่านทุ่งทั้งทุ่ง และจำไปจนตาย',fx:{s:6,l:5}},no:{t:'ลมจากปีกพัดจนตกเขา',hurt:2}}},
+      {t:'หลบอยู่ในห้องใต้ดิน',s:'ปลอดภัย',tg:['tradition'],fx:{s:-1}}]},
+ newlord:{th:'เจ้าแคว้นคนใหม่',w:1,yrs:[3,4],inc:{all:.88},merit:{},
+  start:'เจ้าแคว้นคนเก่าตาย ลูกชายขึ้นครองแล้วขึ้นภาษีทันที',end:'สภาเมืองบีบให้เจ้าแคว้นลดภาษีลง',
+  autos:[{t:'คนเก็บภาษีมาเคาะประตู',g:-4},{t:'ทหารของเจ้าแคว้นยึดเกวียนของเพื่อนบ้าน',s:-2}],
+  ch:[{t:'ร่วมยื่นฎีกา',s:'ทดสอบโน้มน้าว DC 14 · ผ่านแล้วภาษีจบเร็ว',tg:['fairness','people'],chk:{skill:'persuasion',dc:14,ok:{t:'เจ้าแคว้นยอมถอย',fx:{r:6},endWorld:1},no:{t:'ถูกจดชื่อไว้',fx:{r:-2}}}},
+      {t:'จ่ายตามสั่ง',s:'ไม่มีปัญหา',tg:['tradition']},
+      {t:'ซ่อนผลผลิต',s:'ทดสอบหลอกลวง DC 12',tg:['freedom','greed'],chk:{skill:'deception',dc:12,ok:{t:'คนเก็บภาษีหาไม่เจอ',fx:{g:10}},no:{t:'ถูกจับได้ ปรับสองเท่า',fx:{g:-15}}}}]}
+};
+const WORLD_P=.11;
+const worldNow=()=>S.world&&WORLD[S.world.id];
+const worldThreat=()=>{const W=worldNow();return W&&W.threat||1;};
+const worldInc=()=>{const W=worldNow();return W?(W.inc[S.path]||W.inc.all||1):1;};
+function worldYear(){
+  if(S.world&&S.age>=S.world.until){addLog(S.age,`${worldNow().end}`,`${worldNow().th} จบลง`,true);S.world=null;S.worldEnd=S.age;}
+  if(!S.world&&(S.age-S.worldEnd)*yearScale()>=8&&S.age>=S.race.mature*.3&&Math.random()<WORLD_P*yearScale()){
+    const id=wpick(Object.entries(WORLD).map(([id,W])=>({id,w:W.w}))).id,W=WORLD[id];
+    S.world={id,since:S.age,until:S.age+Math.max(1,Math.round((W.yrs[0]+rnd(W.yrs[1]-W.yrs[0]+1))/yearScale()))};
+    S.worldSeen=(S.worldSeen||0)+1;
+    addLog(S.age,W.start,`${W.th} · ทั้งแคว้นได้รับผล ทุกเส้นทางไม่เหมือนกัน`,true);toast(W.th);
+    if(S.age>=S.race.mature)S.worldAsk=id;
+    return;
+  }
+  const W=worldNow();if(!W)return;
+  if(onPath()&&W.merit[S.path])workMerit(W.merit[S.path]*yearScale());
+  if(Math.random()<.5*yearScale()){const e=pick(W.autos);applyFx({s:e.s,r:e.r},1);if(e.g)S.gold+=e.g*S.region.wealth;addLog(S.age,e.t,W.th);}
+}
+function worldDec(){
+  if(!S.worldAsk||!S.world)return null;
+  const W=WORLD[S.worldAsk];S.worldAsk=null;
+  return {id:'world_'+S.world.id+'_'+S.age,kind:'world',h:W.th,b:W.start,lore:`เหตุการณ์ทั้งแคว้น · จะอยู่ไปราว ${Math.round((S.world.until-S.age)*yearScale())} ปี`,ch:W.ch};
+}
+/* ---- what this stretch of life is for: every few years, pick one of three ---- */
+const GOALS=[
+ {id:'rank',when:x=>onPath(x)&&x.rank<5,th:x=>`ขึ้นเป็น ${pathOf(x.path).ranks[x.rank][0]}`,base:x=>x.rank,ok:(x,b)=>x.rank>b},
+ {id:'rival',when:x=>onPath(x)&&x.cast&&x.cast.rival.alive&&x.cast.rival.rank>=x.rank&&x.rank<5,th:x=>`แซง ${x.cast.rival.name} ให้ได้`,ok:x=>x.rank>x.cast.rival.rank},
+ {id:'gold',when:x=>x.gold>=0,th:x=>`เก็บเงินให้ถึง ${gp(goalGold(x))}`,base:x=>goalGold(x),ok:(x,b)=>x.gold>=b},
+ {id:'debt',when:x=>x.gold<0,th:()=>'ปลดหนี้ให้หมด',ok:x=>x.gold>=0},
+ {id:'bond',when:x=>x.r<82,th:x=>`ให้คนทั้ง${x.region.th}นับถือ (สายสัมพันธ์ ${Math.round(x.r+8)})`,base:x=>x.r+8,ok:(x,b)=>x.r>=b},
+ {id:'learn',when:x=>x.l<85,th:x=>`อ่านตำราให้มากกว่าที่เคย (การศึกษา ${Math.round(x.l+8)})`,base:x=>x.l+8,ok:(x,b)=>x.l>=b},
+ {id:'faith',when:x=>!!x.deity&&x.faith<82,th:x=>`ศรัทธาต่อ${deityOf(x.deity).th}ให้ลึกกว่านี้ (${Math.round(x.faith+10)})`,base:x=>x.faith+10,ok:(x,b)=>!!x.deity&&x.faith>=b},
+ {id:'school',when:x=>x.kids.some(k=>k.age<14)&&!x.kids.some(k=>k.school),th:()=>'ส่งลูกเข้าเรียน',ok:x=>x.kids.some(k=>k.school)},
+ {id:'rest',when:x=>x.exh>=1,th:()=>'หายจากความอ่อนล้า',ok:x=>x.exh===0},
+ {id:'level',when:x=>x.adv,th:x=>`ขึ้นถึงเลเวล ${x.lvl+2}`,base:x=>x.lvl+2,ok:(x,b)=>x.lvl>=b},
+ {id:'kids',when:x=>x.kids.length&&x.kids.some(k=>k.bond<60),th:()=>'กลับไปใกล้ชิดกับลูก (ใจลูกทุกคน 60)',ok:x=>x.kids.every(k=>k.bond>=60)}
+];
+const GOAL_YRS=10,GOAL_GAP=7;
+function goalGold(x){return Math.max(40,Math.round((Math.max(0,x.gold)+70*x.region.wealth)/10)*10);}
+function goalDec(){
+  if(S.age<S.race.mature+2||S.goal||(S.age-S.goalNext)<0)return null;
+  const pool=GOALS.filter(g=>g.when(S)).sort(()=>Math.random()-.5).slice(0,3);
+  if(pool.length<2)return null;
+  S.goalNext=S.age+Math.round(GOAL_GAP/yearScale());
+  return {id:'goal_'+S.age,kind:'goal',h:'ช่วงนี้อยากได้อะไร',b:`อีกราว ${GOAL_YRS} ปีข้างหน้า จะตั้งใจทำอะไรให้สำเร็จ`,
+    lore:'ทำสำเร็จได้จิตใจ แรงบันดาลใจ และผลงาน · ไม่สำเร็จก็ไม่มีโทษ นอกจากความผิดหวัง',
+    ch:[...pool.map(g=>({t:g.th(S),s:`ภายใน ${GOAL_YRS} ปี`,goal:g.id,tg:['aspiration']})),{t:'ปล่อยชีวิตไปตามทาง',s:'ไม่ตั้งเป้า',tg:['freedom']}]};
+}
+function setGoal(id){const g=GOALS.find(x=>x.id===id);S.goal={id,th:g.th(S),base:g.base?g.base(S):null,until:S.age+Math.round(GOAL_YRS/yearScale())};}
+function goalYear(){
+  const G=S.goal;if(!G)return;const g=GOALS.find(x=>x.id===G.id);
+  if(g.ok(S,G.base)){
+    S.goal=null;S.goalsWon=(S.goalsWon||0)+1;S.s=clamp(S.s+6,0,100);
+    if(!S.insp){S.insp=1;S.inspGot=(S.inspGot||0)+1;}
+    if(onPath())workMerit(8);
+    addLog(S.age,`★ ทำสำเร็จ: ${G.th}`,'จิตใจ +6 · ได้แรงบันดาลใจ',true);toast('ทำสำเร็จ: '+G.th);
+  }else if(S.age>=G.until){S.goal=null;S.goalsLost=(S.goalsLost||0)+1;S.s=clamp(S.s-2,0,100);addLog(S.age,`ไม่ทันตามที่ตั้งใจ: ${G.th}`,null,false,true);}
+}
+/* the friend from before the path, and the patron who comes once you are worth noticing */
+Object.assign(ARCS,{
+ friend:{h:'เพื่อนเก่า',when:x=>!!x.cast.friend,w:1.2,steps:[
+  a=>({ask:1,h:'เพื่อนมายืมเงิน',b:wt('{friend} มาหาตอนดึก ขอยืม 15 gp บอกว่าจะคืนให้ภายในปีหน้า'),
+   ch:[{t:'ให้ยืม',s:'ทอง −15',tg:['people','charity'],fx:{g:-15},cast:{friend:10},arc:{set:{lent:1}}},
+       {t:'ปฏิเสธ',s:'เพื่อนจะจำ',tg:['independence'],cast:{friend:-10}}]}),
+  a=>({ask:1,h:'เพื่อนเดือดร้อน',b:wt('{friend} ถูกกล่าวหาว่าขโมยของ คนทั้งตลาดมองมาที่คุณ เพราะรู้ว่าคุณสนิทกับเขา'),
+   ch:[{t:'ไปเป็นพยานให้',s:'ทดสอบโน้มน้าว DC 13',tg:['honor','people'],chk:{skill:'persuasion',dc:13,ok:{t:'ศาลปล่อยตัว',cast:{friend:20},arc:{set:{saved:1}}},no:{t:'ศาลไม่ฟัง คนมองคุณไม่ดีไปด้วย',fx:{r:-3},cast:{friend:10}}}},
+       {t:'ทำเป็นไม่รู้จัก',s:'ปลอดภัย',tg:['independence'],cast:{friend:-30}}]}),
+  a=>a.f.saved||a.f.lent?{t:'{friend} กลับมาพร้อมเงินคืนและงานให้ทำ',g:a.f.lent?30:12,m:6,s:4}:{t:'{friend} เดินสวนกันในตลาดโดยไม่ทักทาย',s:-3}]},
+ patron:{h:'ผู้อุปถัมภ์',when:x=>x.rank>=2&&!x.cast.patron,w:1.1,steps:[
+  a=>({ask:1,h:'ผู้อุปถัมภ์',b:`ขุนนาง ${a.n} สนใจงานของคุณ และเสนอตัวเป็นผู้อุปถัมภ์ แลกกับการทำงานให้ก่อนใคร`,
+   ch:[{t:'รับ',s:'สอบเลื่อนขั้นง่ายขึ้น · แต่ต้องตอบแทน',tg:['aspiration'],after:x=>{x.cast.patron={name:a.n,alive:true,bond:60};}},
+       {t:'ปฏิเสธ',s:'ไม่ติดหนี้ใคร',tg:['independence','freedom'],arc:{end:1}}]}),
+  a=>({t:`${a.n} พาไปออกงานของชนชั้นสูง`,chk:{ab:'CHA',dc:12},ok:{t:'คุยถูกคอกับแขกทุกโต๊ะ',m:8,r:4},no:{t:'ทำตัวไม่ถูกต่อหน้าแขก',s:-3}}),
+  a=>({ask:1,h:'ผู้อุปถัมภ์ขอตอบแทน',b:`${a.n} ขอให้คุณช่วยใส่ร้ายคู่แข่งทางการเมืองของเขา`,
+   ch:[{t:'ทำตาม',s:'ผลงาน +10 · ไปทางร้าย',tg:['greed','pride'],al:[-.02,-.08],merit:10},
+       {t:'ปฏิเสธ',s:'เสียผู้อุปถัมภ์',tg:['honor','fairness'],merit:-4,after:x=>{if(x.cast.patron)x.cast.patron.alive=false;addLog(x.age,`${a.n} ไม่เคยพูดกับคุณอีก`,null,true);}}]})]}
+});
+/* when the job and the people at home want the same night */
+WASK.push(
+ {id:'w_kid_trade',ph:'any',when:x=>x.kids.some(k=>k.age>=10&&k.age<18),h:'ลูกอยากเดินทางเดียวกับคุณ',
+  b:()=>wt(`${S.kids.find(k=>k.age>=10&&k.age<18).name.split(' ')[0]} ขอให้คุณสอน{job}ให้`),
+  ch:()=>{const k=S.kids.find(k=>k.age>=10&&k.age<18);return [
+   {t:'สอนเอง',s:'ใจลูก +15 · ผลงาน +3',tg:['tradition','people'],fx:{s:3},merit:3,after:x=>{k.bond=clamp(k.bond+15,0,100);if(!x.pupil)x.pupil={name:k.name.split(' ')[0],age:x.age,kid:1};}},
+   {t:'ส่งไปเรียนกับคนอื่น',s:'ทอง −8 · ใจลูก +5',tg:['knowledge'],fx:{g:-8},after:()=>{k.bond=clamp(k.bond+5,0,100);}},
+   {t:'ให้เลือกทางของตัวเอง',s:'ใจลูก +3',tg:['freedom'],after:()=>{k.bond=clamp(k.bond+3,0,100);}}];}},
+ {id:'w_move',ph:'any',when:x=>!!x.spouse&&x.spouse.bond>=40,h:'คู่ชีวิตอยากย้าย',
+  b:()=>`${S.spouse.name} ได้งานดีในอีกแคว้น และอยากให้ไปด้วยกัน`,
+  ch:()=>[{t:'ย้ายตามไป',s:'ผลงาน −15 · เริ่มใหม่ในที่ใหม่',tg:['people'],merit:-15,migrate:1,after:x=>{x.spouse.bond=clamp(x.spouse.bond+15,0,100);}},
+          {t:'ขอให้อยู่ที่นี่',s:'ใจคู่ชีวิต −15',tg:['aspiration','independence'],after:x=>{x.spouse.bond=clamp(x.spouse.bond-15,0,100);}}]},
+ {id:'w_sick_child',ph:'any',when:x=>x.kids.some(k=>k.age<10),h:'คืนเดียวกัน',
+  b:()=>wt('ลูกไข้ขึ้นสูงในคืนก่อนวันส่ง{job}ชิ้นสำคัญ'),
+  ch:()=>[{t:'อยู่กับลูก',s:'ผลงาน −6 · ใจลูก +10',tg:['people'],merit:-6,fam:10},
+          {t:'ไปส่งงาน',s:'ผลงาน +8 · ใจลูก −12',tg:['aspiration'],merit:8,fam:-12,fx:{s:-3}}]}
+);
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
    One screen at maturity in place of the old call and trade questions. A path whose
    conditions are all met can be chosen; one that misses a single condition can be tried
@@ -3851,7 +4006,7 @@ function nextDec(){
     return d.make?d.make():typeof d.ch==='function'?{...d,ch:d.ch(S)}:d;
   }
   /* at work: a way around what blocks the exam, else something from the job itself */
-  {const d=fixDec()||wask();if(d)return d;}
+  {const d=worldDec()||goalDec()||fixDec()||(onPath()&&S.cast?arcAsk():null)||wask();if(d)return d;}
   /* in childhood, a few chances that come once and go */
   if(S.age<S.race.mature&&S.age>=S.race.mature*.35&&S.oppN<3&&Math.random()<OPP_P*yearScale()){
     const pool=OPPS.filter(o=>!S.done[o.id]&&(!o.when||o.when(S))).map(o=>({d:o,w:o.w(S)*(S.dream&&o.ch[0].mentor===S.dream?2:1)})).filter(o=>o.w>0);
@@ -3955,7 +4110,7 @@ function autoChoice(d){
   return up.length?pick(up):pick(d.ch.filter(c=>!tagDown(c)).length?d.ch.filter(c=>!tagDown(c)):d.ch);
 }
 function applyChoice(d,c){
-  S.decCtx=1;noteDecision(false);
+  S.decCtx=1;if(!S.lapse)noteDecision(false);
   applyFx(c.fx||{},1);
   if(c.al)shiftAlign(c.al[0],c.al[1]);
   const notes=[];let extra='';
@@ -3969,6 +4124,7 @@ function applyChoice(d,c){
   if(c.heal)S.gold-=(S.life.ward==='full'?12:30);
   if(c.quest)S.pendingQuest=c.quest;
   if(c.merit)workMerit(c.merit);
+  if(c.goal)setGoal(c.goal);
   if(c.cast)castFx(c.cast);
   if(c.fam){if(S.spouse)S.spouse.bond=clamp(S.spouse.bond+c.fam,0,100);S.kids.forEach(k=>{k.bond=clamp(k.bond+c.fam,0,100);});}
   if(c.pupil)S.pupil={name:nameFor(S.race.id).split(' ')[0],age:S.age};

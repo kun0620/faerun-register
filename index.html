@@ -2645,7 +2645,7 @@ function hazSit(h,dc,f){
 /* real time at 1× since the last window opened; small matters never interrupt inside it */
 /* a short life gets fewer windows, not denser ones: the gap widens when the whole life is five minutes */
 /* working years carry their own happenings between windows, so an adult's windows sit a little further apart */
-const canAsk=()=>(S.age-S.lastAskAge)*msPerYear()>=ASK_GAP*(opt.pace<12?1.7:1)*(S.age>=S.race.mature?1.55:1);
+const canAsk=()=>(S.age-S.lastAskAge)*msPerYear()>=ASK_GAP*(opt.pace<12?1.7:1)*(S.age>=S.race.mature?2.1:1);
 function noteAsk(){S.lastAskAge=S.age;S.nAsk++;}
 function noteDecision(stance){S.nDec++;if(stance)S.nStance++;S.lastDecAge=S.age;S.decAges.push(S.age);}
 function prepOpts(sit){
@@ -3964,7 +3964,7 @@ Object.assign(ARCS,{
 /* ---------------- jobs: a real position on the path, with an employer and a monthly wage ----------------
    Every job belongs to one path and one band of ranks. Within a band the three differ:
    a steady one, one that pays more but can fold under you, and one that pays less but builds a name. */
-const JOB_KIND={steady:{th:'มั่นคง',pay:1,mer:1,risk:.02},rich:{th:'จ่ายดี แต่เสี่ยง',pay:1.3,mer:.9,risk:.06},fame:{th:'ได้ชื่อเสียง',pay:.85,mer:1.3,risk:.03}};
+const JOB_KIND={steady:{th:'มั่นคง',pay:1,mer:1,risk:.02},rich:{th:'จ่ายดี แต่เสี่ยง',pay:1.2,mer:.9,risk:.06},fame:{th:'ได้ชื่อเสียง',pay:.85,mer:1.3,risk:.03}};
 const JOB_PAY=[0,2.5,2.75,3.1,3.6,5.5];   // gp a month for a steady job at each rank: the old yearly 30 × the old rank multiplier, over twelve
 const JOBS={
  land:[[['steady','ลูกมือในนาของคนอื่น'],['rich','ต้อนสัตว์ให้ฟาร์มใหญ่'],['fame','เช่าแปลงทำเอง']],
@@ -4016,7 +4016,8 @@ function jobDec(why){
     lost:S.lostWhy||'งานที่ทำอยู่หายไป ต้องหางานใหม่',market:'สองปีผ่านไป มีประกาศรับคนติดอยู่ที่ลานกลางเมือง',offer:''}[why];
   if(why==='offer'){
     const who=pick([S.cast&&S.cast.rival.alive&&S.cast.rival.name,S.cast&&S.cast.patron&&S.cast.patron.alive&&S.cast.patron.name,S.cast&&S.cast.friend&&S.cast.friend.name].filter(Boolean).concat(['นายจ้างจากเมืองข้าง ๆ']));
-    const j=jobOffers(S.path,r,3).sort((a,b)=>b.pay*b.mer-a.pay*a.mer)[0];
+    /* someone who comes calling pays halfway to the rank above, or there would be no reason to call */
+    const j=jobOffers(S.path,r,3).sort((a,b)=>b.pay*b.mer-a.pay*a.mer)[0];j.pay=Math.round(j.pay*(1+(JOB_PAY[Math.min(5,r+1)]/JOB_PAY[r]-1)/2)*10)/10;
     b=`${who} มาชวนไปทำงานด้วย`;ch.push(jobCh(j));
   }else ch.push(...jobOffers(S.path,r,why==='market'?2:3).map(j=>jobCh(j)));
   if(cur&&why!=='lost'&&why!=='enter'){
@@ -4046,6 +4047,9 @@ function takeJob(c){
 /* the year at work: a job can fold, someone can come calling, and every two years there is a board */
 function jobYear(){
   if(!onPath()||S.retired||S.follow)return;
+  /* a board or an offer that waited two years for the year's window goes the way the stance would take it */
+  if(S.jobPending&&(S.age-S.jobPendingAt)*yearScale()>=2){const d=S.jobPending;S.jobPending=null;S.lapse=1;applyChoice(d,autoChoice(d));S.lapse=0;}
+  if(S.jobPending)return;
   if(!S.job){S.lostWhy='ยังไม่มีงานประจำ ต้องหางาน';S.follow=jobDec('lost');return;}
   const W=worldNow(),hard=W&&['war','famine','plague'].includes(S.world.id)&&['land','craft','trade'].includes(S.path)?2:1;
   if(Math.random()<S.job.risk*hard*yearScale()){
@@ -4053,17 +4057,42 @@ function jobYear(){
     const W2=W&&hard>1?`${W.th}ทำให้`:'';
     addLog(S.age,`ตกงาน — ${W2}${why}`,`${S.job.th} · เคยได้ ${payTh(S.job)}`,true,true);toast('ตกงาน');
     S.lostWhy=`${W2}${why} ต้องหางานใหม่`;S.job=null;S.follow=jobDec('lost');return;}
-  if(S.rank<5&&Math.random()<.07*yearScale()){S.follow=jobDec('offer');return;}
+  /* someone comes calling: a clearly better offer asks, a middling one goes the way the stance would take it */
+  if(S.rank<5&&Math.random()<.07*yearScale()){
+    const d=jobDec('offer'),o=d.ch.find(c=>!c.stay);
+    if(o&&jobVal(o.takeJob)>=jobVal(S.job)*1.2){S.jobPending=d;S.jobPendingAt=S.age;}
+    else if(o){const take=jobVal(o.takeJob)>=jobVal(S.job)*1.15;
+      if(take){S.lapse=1;applyChoice(d,o);S.lapse=0;}
+      else addLog(S.age,`ปฏิเสธข้อเสนอ: ${o.takeJob.th}`,'ไม่ได้ดีกว่างานเดิมพอจะย้าย');}
+    return;}
+  /* the board every two years opens only when something on it is worth a look */
   if(S.age>=(S.marketAt||0)){
     S.marketAt=S.age+Math.max(1,Math.round(2/yearScale()));
-    if(opt.market)S.follow=jobDec('market');
-    else{const d=jobDec('market'),best=d.ch.filter(c=>!c.stay&&!c.switchPath).sort((a,b)=>b.takeJob.pay-a.takeJob.pay)[0];
-      if(best&&best.takeJob.pay>=S.job.pay*1.3){S.lapse=1;applyChoice(d,best);S.lapse=0;}}
+    const d=jobDec('market'),why=marketWorth(d);
+    if(why&&opt.market){S.jobPending=d;S.jobPendingAt=S.age;d.b=`สองปีผ่านไป มีประกาศรับคนติดอยู่ที่ลานกลางเมือง · ${why}`;}
+    else{const best=d.ch.filter(c=>!c.stay&&!c.switchPath).sort((a,b)=>jobVal(b.takeJob)-jobVal(a.takeJob))[0];
+      if(best&&best.takeJob.pay>=S.job.pay*1.3){S.lapse=1;applyChoice(d,best);S.lapse=0;}
+      else{const fix=d.ch.find(c=>c.repair||(c.give&&(WORK_GEAR[S.path]||[]).includes(c.give)));
+        if(fix){S.lapse=1;applyChoice(d,fix);S.lapse=0;}
+        else addLog(S.age,`ทำงานเดิมต่อ · ${S.job.th}`,null);}}
   }
+}
+const jobVal=j=>j?j.pay*j.mer:0;
+/* the board or offer waiting for the year's window; a job lost since then makes it moot */
+function jobPend(){const d=S.jobPending;S.jobPending=null;return d&&S.job&&onPath()&&!S.retired?d:null;}
+/* a reason to stop the clock for the board, or none */
+function marketWorth(d){
+  const cur=S.job;
+  if(d.ch.some(c=>!c.stay&&!c.switchPath&&c.takeJob.pay>=cur.pay*1.15))return 'มีงานที่จ่ายดีกว่าเดิมชัด ๆ';
+  if(d.ch.some(c=>!c.stay&&!c.switchPath&&c.takeJob.kind==='fame'&&cur.kind!=='fame'&&jobVal(c.takeJob)>=jobVal(cur)*1.1))return 'มีงานที่ได้ชื่อเสียงมากกว่า';
+  if(d.ch.some(c=>c.repair||(c.give&&(WORK_GEAR[S.path]||[]).includes(c.give))))return 'ของประจำงานต้องซ่อมหรือซื้อใหม่';
+  const sw=d.ch.find(c=>c.switchPath&&!(S.doorsSeen||{})[c.switchPath]);
+  if(sw){(S.doorsSeen=S.doorsSeen||{})[sw.switchPath]=1;return `ประตูสาย${pathOf(sw.switchPath).th}เพิ่งเปิด`;}
+  return null;
 }
 /* a window that has to follow the one just closed: the job after a promotion, a second try at the crossroads */
 function follow(next){
-  if(S.follow&&!S.dead){const d=S.follow;S.follow=null;S.done[d.id]=1;renderLife();openDec(d,()=>follow(next));}
+  if(S.follow&&!S.dead){const d=S.follow;S.follow=null;S.done[d.id]=1;renderLife();if(!opt.auto)noteAsk();openDec(d,()=>follow(next));}
   else next();
 }
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
@@ -4169,7 +4198,7 @@ function nextDec(){
     return d.make?d.make():typeof d.ch==='function'?{...d,ch:d.ch(S)}:d;
   }
   /* at work: a way around what blocks the exam, else something from the job itself */
-  {const d=worldDec()||goalDec()||fixDec()||(onPath()&&S.cast?arcAsk():null)||wask();if(d)return d;}
+  {const d=worldDec()||jobPend()||goalDec()||fixDec()||(onPath()&&S.cast?arcAsk():null)||wask();if(d)return d;}
   /* in childhood, a few chances that come once and go */
   if(S.age<S.race.mature&&S.age>=S.race.mature*.35&&S.oppN<3&&Math.random()<OPP_P*yearScale()){
     const pool=OPPS.filter(o=>!S.done[o.id]&&(!o.when||o.when(S))).map(o=>({d:o,w:o.w(S)*(S.dream&&o.ch[0].mentor===S.dream?2:1)})).filter(o=>o.w>0);

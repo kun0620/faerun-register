@@ -82,6 +82,8 @@ select{font:inherit;font-size:13.5px;background:var(--vellum);color:var(--ink);b
 
 .stat{display:grid;grid-template-columns:72px 1fr 32px;gap:9px;align-items:center;font-size:13.5px}
 .stat .bar{height:9px}
+.fight .stat{grid-template-columns:minmax(70px,32%) 1fr auto;margin:3px 0}
+.fight .stat .mono{white-space:nowrap;font-size:12px}
 .stat.low .bar i{background:var(--blood)}
 .money{border-top:1px solid var(--rule);margin-top:12px;padding-top:11px;display:grid;gap:5px;font-size:13.5px}
 .money .r{display:flex;justify-content:space-between;gap:10px}
@@ -2422,21 +2424,11 @@ const TCOPE={
   {t:'ใช้แรงยันไว้',ab:'STR',skill:'athletics',st:'grit',s:'ผ่านแล้วเสียเลือดครึ่งเดียว',half:1,tg:['pride']},
   {t:'ร้องเรียกคนที่อยู่ใกล้ที่สุด',ab:'CHA',skill:'persuasion',st:'kin',s:'ผ่านแล้วเขาคว้าไว้ทัน ไม่เสียเลือดเลย',d:3,need:hasHelper,tg:['people']},
   {t:'ดึงคนข้าง ๆ มาบังไว้',ab:'DEX',skill:'sleight',st:'shady',s:'ไปทางร้าย · ผ่านแล้วไม่เสียเลือดเลย · สายสัมพันธ์ลด',fx:{r:-3},al:[0,-.08],d:2,tg:['coward','might']}],
- robbers:[
-  {t:'สู้กลับ',arm:1,attack:1,st:'grit',s:'ชนะแล้วไม่เสียอะไร · แพ้แล้วศัตรูได้ฟันใส่',tg:['might','pride']},
-  {t:'วิ่งหนีเข้าซอก',ab:'DEX',skill:'acrobatics',st:'wits',s:'ผ่านแล้วไม่เสียอะไร',tg:['coward']},
-  {t:'ยื่นเงินให้แลกกับชีวิต',ab:'CHA',skill:'persuasion',st:'kin',s:'เสียเงินไม่ว่าผ่านหรือไม่',pay:1,d:-2,tg:['people']},
-  {t:'ข่มขู่ให้ถอยไป',ab:'CHA',skill:'intimidation',st:'shady',s:'ไปทางร้าย',al:[-.02,-.04],tg:['might']}],
  war:[
   {t:'จับหอกยืนแนวหน้า',arm:1,attack:1,st:'grit',s:'ผ่านแล้วไม่เสียอะไร',tg:['might','honor']},
   {t:'หลบซ่อนตัวจนทัพผ่านไป',ab:'DEX',skill:'stealth',st:'wits',s:'ผ่านแล้วไม่เสียอะไร',tg:['coward']},
   {t:'อพยพไปกับคนทั้งหมู่บ้าน',ab:'WIS',skill:'survival',st:'kin',s:'ผ่านแล้วสายสัมพันธ์ดีขึ้น',okfx:{r:2},tg:['people']},
   {t:'หนีทัพกลางดึก',ab:'DEX',skill:'stealth',st:'shady',s:'ไปทางเสรีและร้าย · ผ่านแล้วไม่เสียอะไร',d:-1,al:[-.08,-.03],tg:['coward','freedom']}],
- beast:[
-  {t:'ยืนสู้กับมัน',arm:1,attack:1,st:'grit',s:'ผ่านแล้วไม่เสียอะไร',tg:['might']},
-  {t:'ค่อย ๆ ถอยโดยไม่หันหลังให้มัน',ab:'WIS',skill:'animal',st:'wits',s:'ผ่านแล้วไม่เสียอะไร',tg:['knowledge']},
-  {t:'ตะโกนเรียกคนในหมู่บ้าน',ab:'CHA',skill:'intimidation',st:'kin',s:'ผ่านแล้วไม่เสียอะไร',d:1,tg:['people']},
-  {t:'ทิ้งคนที่วิ่งช้ากว่าไว้ข้างหลัง',ab:'DEX',skill:'acrobatics',st:'shady',s:'ไปทางร้าย · สายสัมพันธ์ลด',fx:{r:-4},al:[0,-.1],d:-3,tg:['coward']}]
 };
 const THREAT_DC=0;
 function threatSit(t,dc,D){
@@ -2463,6 +2455,19 @@ function threatSit(t,dc,D){
 }
 function runThreat(done){
   const t=wpick(THREATS.map(z=>({z,w:z.w(S)})).filter(o=>o.w>0)).z;
+  if(t.cope==='robbers'||t.cope==='beast'){
+    const ti=S.adv?(S.lvl>=9?3:S.lvl>=5?2:S.lvl>=3?1:0):0,commoner=!S.adv;
+    const foes=commoner?COMMON_FOES[t.cope]():t.cope==='beast'?foeFrom(pick(FOES.filter(x=>x.lv===ENC_TIERS[ti]&&x.kind==='beast'))||FOES[1],ENC_TIERS[ti])
+      :foeFrom({th:'โจรดักปล้น',ac:12+ti,hp:18*(ti+1),hz:'ลูกดอกอาบยาพิษ',sv:'CON',poison:1},ENC_TIERS[ti],2);
+    const F=newFight({title:`ภัยถึงชีวิต: ${t.th}`,sub:commoner?`เลือด ${S.hp}/${S.hpMax} · AC ${acFor()} · คนธรรมดาไม่ได้เกิดมาเพื่อสู้`:'',foes,ti,commoner,terrain:commoner?null:undefined});
+    runFight(F,true,F=>{
+      const note=[fightSummary(F)];
+      if(F.end==='win'&&commoner&&t.cope==='robbers'&&Math.random()<.5){const g=dice(2,6);S.gold+=g;note.push(`ค้นตัวโจรได้ถุงเงิน ${gp(g)}`);}
+      if(F.end==='win'&&commoner){S.s=clamp(S.s+4,0,100);note.push('เรื่องนี้ถูกเล่าต่อไปทั่วหมู่บ้าน');}
+      S.threats=(S.threats||0)+1;S.ongoing=false;if(commoner)S.commonFights=(S.commonFights||0)+1;
+      addLog(S.age,`ภัยถึงชีวิต: ${t.th} — ${FIGHT_END[F.end]}`,note.concat(F.notes.slice(-3)),true,S.hp<=0);
+      done();});
+    return;}
   const dc=10+Math.round(S.region.danger*1.5)+Math.round(S.age/S.span*4)+THREAT_DC;
   const D=dice(S.adv?1+S.lvl:1,6)+2;
   askCope(threatSit(t,dc,D),done);
@@ -2857,57 +2862,14 @@ function encounter(f,done){
   const ti=S.lvl>=9?3:S.lvl>=5?2:S.lvl>=3?1:0,up=ti<3&&Math.random()<ENC_UP,tier=ENC_TIERS[ti+(up?1:0)];
   const foe=pick(FOES.filter(x=>x.lv===tier));
   S.encounters++;
-  askCope(encSit(foe,tier,up),done);
-}
-/* Fight, run, talk, or cast. The card shows what is across the room before anything is rolled. */
-function encSit(foe,tier,up){
-  const key=S.cls.key,cast=CASTER[S.cls.id],talkDc=12+Math.ceil(tier/2);
-  const sneak=S.skills.includes('stealth')&&!S.skills.includes('acrobatics')?'stealth':'acrobatics';
-  const wpn=weapon(),wab=weaponAb(),clk=S.eq&&S.eq.cloak&&S.eq.cloak.stealth,arm=S.eq&&S.eq.armor&&EQUIP[S.eq.armor.id].stealth,bt=S.eq&&S.eq.feet&&S.eq.feet.flee;
-  const opts=[{t:'สู้',act:'fight',ab:wab,attack:1,prof:1,bonus:wpn.plus,dc:foe.ac,st:'grit',s:`${wpn.th||'มือเปล่า'} ${wpn.dmg[0]}d${wpn.dmg[1]}${wpn.plus?' +'+wpn.plus:''} vs AC · ได้ XP และของเต็ม`,tg:['might']},
-    {t:'หนี',act:'flee',ab:'DEX',skill:sneak,dc:10+tier,st:'wits',adv:clk||bt?1:0,dis:sneak==='stealth'&&arm&&!clk?1:0,s:'แข่งกับการสังเกตของศัตรู · ได้ XP น้อย · ไม่ผ่านแล้วโดนตี',tg:['coward']}];
-  if(foe.kind==='beast')opts.push({t:'ทำให้มันสงบลง',act:'talk',ab:'WIS',skill:'animal',dc:talkDc,st:'kin',s:'ได้ XP ครึ่งหนึ่ง · ปลอดภัยกว่า · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',tg:['knowledge']});
-  else if(foe.kind!=='undead'){
-    opts.push({t:'เจรจา',act:'talk',ab:'CHA',skill:'persuasion',dc:talkDc,st:'kin',s:'ได้ XP ครึ่งหนึ่ง · ไปทางดี · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',al:[0,.03],tg:['charity','people']});
-    opts.push({t:'ข่มขู่',act:'talk',ab:'CHA',skill:'intimidation',dc:talkDc+1,st:'shady',s:'ได้ XP ครึ่งหนึ่ง · ไปทางร้าย · ไม่ผ่านแล้วต้องสู้แบบเสียเปรียบ',al:[0,-.03],tg:['might']});
-  }
-  if(cast)opts.push({t:cast.t,act:'spell',ab:key,attack:1,prof:1,bonus:eqSpell(),dc:foe.ac-1,st:'wits',s:cast.s,tg:['knowledge']});
-  const diff=up?'สูงกว่าเลเวลคุณ':'พอ ๆ กับเลเวลคุณ';
-  return {id:'enc',kind:'enc',big:up||Math.random()<BIG_SHARE,h:`การเผชิญหน้า: ${foe.th}`,
-    b:up?'สิ่งที่รออยู่ข้างหน้าแข็งแกร่งกว่าทุกอย่างที่เคยเจอ ชนะแล้วได้ XP สองเท่า':'คณะเดินทางหยุดอยู่ตรงหน้ามัน ทุกคนรอให้คุณตัดสินใจ',
-    card:[['ศัตรู',foe.th],['AC',String(foe.ac)],['เลือด',String(foe.hp)],['ความยาก',diff]],opts,
-    resolve:(o,r,how)=>encOutcome(foe,tier,up,o,r,how)};
-}
-function encOutcome(foe,tier,up,o,r,how){
-  const key=S.cls.key,note=[],mul=up?2:1;
-  let won=false,xp=0,took=0,sv=null,loot=0;
-  const strike=atk=>{
-    const sp=atk.spell||o.act==='spell',[n,dd]=sp?CLS_DMG[S.cls.id]:weapon().dmg,dab=sp?key:weaponAb(),plus=sp?eqSpell():weapon().plus;
-    let nd=n*(S.lvl>=5&&['fighter','barbarian','ranger'].includes(S.cls.id)?2:1)+(S.cls.id==='rogue'?Math.ceil(S.lvl/2):0);
-    if(o.act==='spell')nd=1+Math.ceil(S.lvl/2);
-    const dealt=atk.ok?Math.max(1,dice(nd,dd)+mod(S.ab[dab])+plus):0;
-    note.push(rollTh(atk)+(atk.ok?` · ดาเมจ ${nd}d${dd}${sgn(mod(S.ab[dab])+plus)} = ${dealt}`:''));
-    return atk.ok;
-  };
-  const hit=extra=>{
-    sv=check(foe.sv,10+Math.ceil(tier/2)+extra,{save:1,adv:S.race.id==='dwarf'&&foe.poison,label:`ทอยป้องกัน${ABIL_TH[foe.sv]} · ${foe.hz}`});
-    const D=dice(1+S.lvl,ENC_DMG);
-    return sv.ok?(extra?Math.floor(D/2):0):D;
-  };
-  if(o.act==='fight'||o.act==='spell'){won=strike(r);took=hit(won?0:2);xp=xpNeed()/(won?3:6);}
-  else if(o.act==='flee'){note.push(rollTh(r));if(r.ok)xp=xpNeed()/12;else{took=hit(2);xp=xpNeed()/12;}}
-  else{note.push(rollTh(r));
-    if(r.ok){xp=xpNeed()/6;won=true;}
-    else{won=strike(check(weaponAb(),foe.ac,{attack:1,prof:1,bonus:weapon().plus,dis:1,label:`โจมตี${foe.th} · หลังเจรจาล้มเหลว`}));took=hit(won?0:2);xp=xpNeed()/(won?3:6);}}
-  xp*=mul*ENC_XP;
-  if(won&&o.act!=='talk'){S.kills++;loot=dice(1+ENC_TIERS.indexOf(tier),6)*mul;S.gold+=loot;
-    const L=lootMagic(tier,up);if(L){if(L.got){note.push(`ได้ ${L.got}`);toast(`ของเวท: ${L.got}`);}else{S.gold+=L.sold;note.push(`พบ${L.m.th}ที่ไม่ได้ใช้ ขายได้ ${gp(L.sold)}`);}}}
-  if(took)damage(took,`${foe.hz}ของ${foe.th}`,true);
-  if(sv)note.push(rollTh(sv)+(took?` · เสียเลือด ${took}`:' · ไม่เป็นอะไร'));
-  note.push(`+${fmt(xp)} XP`+(loot?` · ได้ของมีค่า ${gp(loot)}`:''));
-  const res=o.act==='flee'?(r.ok?'หนีรอดมาได้':'หนีไม่ทัน'):o.act==='talk'&&r.ok?'ตกลงกันได้โดยไม่ต้องสู้':won?'ชนะ':'รอดมาได้แต่ไม่ชนะ';
-  addLog(S.age,`การเผชิญหน้า: ${foe.th} — ${how} · ${res}${S.hp<=0?' แล้วล้มลง':''}`,note,true,S.hp<=0||(sv&&!sv.ok));
-  gainXp(xp);
+  const F=newFight({title:`การเผชิญหน้า: ${foe.th}`,sub:up?'แข็งแกร่งกว่าทุกอย่างที่เคยเจอ ชนะแล้วได้ XP สองเท่า':'พอ ๆ กับเลเวลคุณ',foes:foeFrom(foe,tier),ti:ENC_TIERS.indexOf(tier)});
+  runFight(F,up||Math.random()<BIG_SHARE,F=>{
+    const mul=up?2:1,won=F.end==='win';let xp=xpNeed()*(won?1/3:F.end==='talk'?1/6:F.end==='flee'?1/12:1/6)*mul*ENC_XP,loot=0;const note=[fightSummary(F)];
+    if(won){S.kills++;loot=dice(1+ENC_TIERS.indexOf(tier),6)*mul;S.gold+=loot;
+      const L=lootMagic(tier,up);if(L){if(L.got){note.push(`ได้ ${L.got}`);toast(`ของเวท: ${L.got}`);}else{S.gold+=L.sold;note.push(`พบ${L.m.th}ที่ไม่ได้ใช้ ขายได้ ${gp(L.sold)}`);}}}
+    note.push(`+${fmt(xp)} XP`+(loot?` · ได้ของมีค่า ${gp(loot)}`:''));
+    addLog(S.age,`การเผชิญหน้า: ${foe.th} — ${FIGHT_END[F.end]}`,note.concat(F.notes.slice(-3)),true,S.hp<=0);
+    gainXp(xp);done();});
 }
 function tick(){
   if(S.dead||S.busy)return;
@@ -2919,7 +2881,7 @@ function tick(){
   S.hp=S.hit?Math.min(S.hpMax,S.hp+Math.ceil((S.hpMax-S.hp)/2)):S.hpMax;
   if(S.gold>-40&&(!S.hit||Math.random()<.5))healExh(1);
   if(f.rest)healExh(1);
-  S.hit=0;S.relent=0;
+  S.hit=0;S.relent=0;S.featUsed=0;S.slotsUsed=0;
   if(S.raisePen>0)S.raisePen--;
   S.awayNow=Math.min(4,S.awayLeft||0)/4;
   if(S.awayLeft){S.awayLeft=Math.max(0,S.awayLeft-4);
@@ -3366,23 +3328,6 @@ function sceneSit(job,key,i){
       job.log.push(`${Sc.th}: ${o.t} — ${r.ok?'ผ่าน':'ไม่ผ่าน'} (${note.join(' · ')})`);
     }};
 }
-function bossSit(job){
-  const tier=ENC_TIERS[Math.min(3,job.ti+1)],foe=pick(FOES.filter(x=>x.lv===tier)),dc=foe.ac+(job.loud?2:0);
-  const prep=job.won>=Math.ceil(job.scenes.length/2),key=S.cls.key,cast=CASTER[S.cls.id];
-  const opts=[{t:'บุกเข้าไปจัดการ',ab:weaponAb(),attack:1,prof:1,bonus:weapon().plus,dc,adv:prep?1:0,st:'grit',s:`ทอยโจมตี vs AC ${dc}${prep?' · ได้เปรียบจากฉากก่อน ๆ':''}${job.loud?' · ศัตรูรู้ตัวแล้ว':''}`,tg:['might','aspiration']},
-    {t:'บีบให้ยอมจำนน',ab:'CHA',skill:'intimidation',dc:dc+1,adv:prep?1:0,st:'shady',s:'ได้ค่าจ้างครึ่งเดียวถ้าเขาหนีไปได้',al:[0,-.03],tg:['power']},
-    {t:'ถอยกลับ',ab:'CON',save:1,dc:1,st:'wits',retreat:1,last:1,s:'ไม่ได้ค่าจ้าง · ชื่อเสียงลด · แต่รอด',tg:['coward']}];
-  if(cast)opts.splice(1,0,{t:cast.t,ab:key,attack:1,prof:1,bonus:eqSpell(),dc:dc-1,adv:prep?1:0,st:'wits',s:cast.s,tg:['knowledge']});
-  return {id:'quest_boss',kind:'quest',big:true,h:`${job.th} · ตอนจบ: ${foe.th}`,
-    b:`ผ่านมา ${job.won} จาก ${job.scenes.length} ฉาก${job.lost.length?` · เสีย${job.lost.join(', ')}ไประหว่างทาง`:''} · เลือด ${Math.max(0,S.hp)}/${S.hpMax}`,
-    card:[['ศัตรู',foe.th],['AC',String(foe.ac)],['ค่าจ้าง',gp(job.pay)]],opts,
-    resolve:(o,r)=>{
-      if(o.retreat){job.result='retreat';S.fame=(S.fame||0)-1;return;}
-      if(r.ok){job.result=o.skill==='intimidation'?'half':'win';}
-      else{job.result='fail';const D=dice(2+job.ti*2,6);damage(D,`${foe.hz}ของ${foe.th}`,true);job.log.push(`พ่ายต่อ${foe.th} เสียเลือด ${D}`);}
-      job.log.push(`ตอนจบ: ${o.t} — ${rollTh(r)}`);
-    }};
-}
 /* the whole quest, scene by scene, then pay, finds, and the seasons it took */
 function runQuest(job,done){
   job.won=0;job.lost=[];job.log=[];
@@ -3391,7 +3336,12 @@ function runQuest(job,done){
   const next=()=>{
     if(S.hp<=0){finish();return;}
     if(i<job.scenes.length){const k=job.scenes[i];askCope(sceneSit(job,k,i++),next);return;}
-    askCope(bossSit(job),finish);
+    const tier=ENC_TIERS[Math.min(3,job.ti+1)],foe=pick(FOES.filter(x=>x.lv===tier));
+    const F=newFight({title:`${job.th} · ตอนจบ: ${foe.th}`,sub:`ผ่านมา ${job.won} จาก ${job.scenes.length} ฉาก${job.lost.length?' · เสีย'+job.lost.join(', ')+'ไประหว่างทาง':''}`,
+      foes:foeFrom(foe,tier,1),boss:1,ti:job.ti,terrain:job.loud?'ambush':undefined});
+    if(job.won>=Math.ceil(job.scenes.length/2)){F.inspire=1;F.log.push('เตรียมตัวมาดีจากฉากก่อน ๆ ได้เปรียบยกแรก');}
+    runFight(F,true,F=>{job.result=F.end==='win'?'win':F.end==='flee'?'retreat':'fail';if(F.end==='flee')S.fame=(S.fame||0)-1;
+      job.log.push(`ตอนจบ: ${foe.th} — ${fightSummary(F)}`);finish();});
   };
   const finish=()=>{
     S.quests=(S.quests||0)+1;
@@ -4113,6 +4063,269 @@ function marketWorth(d){
 function follow(next){
   if(S.follow&&!S.dead){const d=S.follow;S.follow=null;S.done[d.id]=1;renderLife();if(!opt.auto)noteAsk();openDec(d,()=>follow(next));}
   else next();
+}
+/* ---------------- a fight, round by round ----------------
+   One window holds the whole fight: everyone's blood, the AC each side swings at, what happened
+   last round, and what you can do now with the odds of it. After three rounds (five against a
+   boss) the stance fights on to the end. A fight with no window runs the same rules, summed up. */
+const FOE_ATK={1:[3,1,6,1],3:[4,1,8,2],5:[5,2,6,3],9:[7,2,10,4]};   // attack bonus, damage dice, die, flat
+const FOE_HP=.6;   // the cards are written for a party of four; you come with two at most
+const DARKVISION=['elf','dwarf','halforc','gnome','tiefling','halfelf'];
+const MARTIAL=['fighter','barbarian','ranger'];
+const FEAT={
+ fighter:{t:'ฮึดสู้',s:'ฟื้น 1d10+เลเวล · ปีละครั้ง',n:1},
+ barbarian:{t:'โกรธคลั่ง',s:'ความเสียหายที่ได้รับครึ่งเดียว · ตี +2 อยู่ 3 ยก · ปีละ 2 ครั้ง',n:2},
+ rogue:{t:'แทงลอบ',s:'โจมตี +1d6 ทุก 2 เลเวล · ต้องมีเพื่อนประชิดศัตรู หรือได้เปรียบ',n:99},
+ wizard:{t:'ลูกไฟ',s:'8d6 ใส่ศัตรูทุกตัว · ทอยป้องกัน DEX ผ่านโดนครึ่ง · ใช้ช่องเวท · เลเวล 5 ขึ้นไป',slot:1},
+ cleric:{t:'รักษาด้วยพรเทพ',s:'ฟื้น 1d8+WIS ให้ตัวเองหรือเพื่อนที่เจ็บที่สุด · ใช้ช่องเวท',slot:1},
+ bard:{t:'บทเพลงปลุกใจ',s:'ทุกคนฝั่งคุณได้เปรียบหนึ่งยก · ปีละ 3 ครั้ง',n:3},
+ ranger:{t:'ล่าศัตรูคู่แค้น',s:'โจมตี +1d6 · ได้มากกับสัตว์ร้ายและอันเดด',n:99},
+ druid:{t:'แปลงร่างเป็นหมี',s:'ได้เลือดก้อนที่สอง 10+เลเวล×3 · ปีละ 2 ครั้ง',n:2}
+};
+const SLOTS_BY=lv=>lv>=9?6:lv>=5?4:2;
+const CASTERS=['wizard','cleric','druid','bard'];
+/* the second half of a boss: what it does when it is down to half */
+const PHASE2=[
+ {k:/มังกร/,t:'มังกรบินขึ้นเหนือหัว แล้วพ่นไฟลงมาใส่ทุกคน',breath:[4,10],fly:1},
+ {k:/ไลช์/,t:'ไลช์ยกมือ โครงกระดูกสองร่างลุกขึ้นจากพื้นหิน',summon:{name:'โครงกระดูก',hp:13,ac:13,lv:1,kind:'undead'}},
+ {k:/บีโฮลเดอร์/,t:'บีโฮลเดอร์เปิดตากลาง เวทมนตร์ทั้งห้องดับลงหนึ่งยก',antimagic:1,breath:[3,8]},
+ {k:/โทรลล์/,t:'โทรลล์คำราม บาดแผลเริ่มปิดเองต่อหน้าต่อตา · เวทหยุดมันได้',regen:5},
+ {k:/./,t:'ศัตรูคลั่งขึ้นเมื่อเลือดเหลือครึ่ง โจมตีแรงขึ้น',enrage:2}
+];
+function foeFrom(f,lv,n){
+  const [atk,dn,dd,db]=FOE_ATK[lv]||FOE_ATK[1];
+  n=n||(/สาม|ฝูง/.test(f.th)?3:/ออร์ค|โคบอลด์/.test(f.th)&&lv<=3?2:1);
+  const each=Math.max(4,Math.round(f.hp*FOE_HP/n));
+  return Array.from({length:n},(_,i)=>({name:n>1?`${f.th.split(/ที่|ใน|กลาง|ใต้|บน|ริม/)[0].trim()} ${i+1}`:f.th,
+    hp:each,max:each,ac:f.ac,atk,dmg:[dn,dd,db],lv,hz:f.hz,sv:f.sv,poison:f.poison,kind:f.kind}));
+}
+/* the commoner's adversaries: two robbers, a beast */
+const COMMON_FOES={
+ robbers:()=>Array.from({length:Math.random()<.6?1:2},(_,i,a)=>({name:'โจร'+(i?'คนที่ 2':''),hp:9,max:9,ac:12,atk:3,dmg:[1,4,1],lv:1,subdue:1})),
+ beast:()=>[pick([{name:'หมาป่าหิวโซ',hp:11,max:11,ac:13,atk:3,dmg:[1,6,0],lv:1,kind:'beast'},{name:'หมูป่าตัวผู้',hp:11,max:11,ac:11,atk:3,dmg:[1,6,0],lv:1,kind:'beast'}])]
+};
+const TERRAIN=[{id:'ambush',th:'ถูกซุ่มโจมตี',w:1},{id:'dark',th:'มืด',w:1},{id:'narrow',th:'ทางแคบ',w:.8},{id:'high',th:'คุณอยู่บนที่สูง',w:.6},{id:null,th:'',w:2.5}];
+function newFight(cfg){
+  const lv=S.lvl||0,al=(cfg.commoner?[]:(S.party||[]).filter(p=>p.alive)).map(p=>({ref:p,name:p.name,cls:p.cls,hp:10+5*(cfg.ti||0),max:10+5*(cfg.ti||0)}));
+  const T=cfg.terrain!==undefined?cfg.terrain:wpick(TERRAIN).id;
+  const F={...cfg,lv,allies:al,round:0,log:[],notes:[],terrain:T,maxR:cfg.boss?5:3,startHp:cfg.foes.reduce((a,f)=>a+f.hp,0),
+    defend:0,blind:0,rage:0,inspire:0,form:0,phase:1,anti:0,fly:0,regen:0,enrage:0,end:null,yourDmg:0,tookDmg:0};
+  if(T==='ambush'){const r=check('WIS',12+(cfg.ti||0),{skill:'perception',label:'รู้ตัวก่อนถูกซุ่ม'});F.notes.push(rollTh(r));
+    if(!r.ok){F.log.push('ถูกซุ่มโจมตี ศัตรูได้ลงมือก่อน');foesAct(F);}else F.log.push('ทันเห็นการซุ่มก่อน');}
+  return F;
+}
+const live=F=>F.foes.filter(f=>f.hp>0);
+const darkDis=F=>F.terrain==='dark'&&!DARKVISION.includes(S.race.id)&&!hasGear('lamp');
+function wpnInfo(F){
+  if(F.commoner){const d=hasGear('dagger')||S.own.weapon;return {th:d?'มีดสั้น':'กระบองไม้',ab:bestArm(),dmg:[1,4],plus:d?1:0,prof:!!S.own.weapon};}
+  const w=weapon();return {th:w.th||'มือเปล่า',ab:weaponAb(),dmg:w.dmg,plus:w.plus||0,prof:true};
+}
+function hurtYou(F,n,cause,src){
+  if(src&&src.subdue&&S.hp-n<=0){const g=Math.max(0,Math.floor(S.gold*.6));S.gold-=g;S.hp=1;F.tookDmg+=n;F.end='robbed';F.log.push(`ถูกตีจนล้มแล้วถูกค้นตัว เสีย ${gp(g)}`);return n;}
+  if(F.rage)n=Math.ceil(n/2);
+  if(F.form>0){const a=Math.min(F.form,n);F.form-=a;n-=a;if(F.form<=0)F.log.push('ร่างหมีสลายกลับเป็นคน');}
+  if(n>0){damage(n,cause,true);F.tookDmg+=n;}
+  return n;
+}
+function strikeFoe(F,f,o){
+  const w=wpnInfo(F),spell=o.spell,ab=spell?S.cls.key:w.ab;
+  const r=check(ab,f.ac,{attack:1,prof:spell||w.prof,bonus:(spell?eqSpell():w.plus)+(F.rage?2:0)+(F.terrain==='high'?2:0),
+    adv:o.adv||F.inspire>0,dis:darkDis(F)||(F.fly&&!spell),label:`${spell?'ร่ายเวทใส่':'โจมตี'}${f.name}`});
+  let dealt=0;
+  if(r.ok){
+    const [n,d]=spell?CLS_DMG[S.cls.id]:w.dmg,nd=spell?1+Math.floor((F.lv+1)/6):n;
+    dealt=Math.max(1,dice(nd,d)+mod(S.ab[ab])+(spell?eqSpell():w.plus)+(F.rage?2:0)+(o.extra?dice(o.extra[0],o.extra[1]):0)+(r.d===20?dice(nd,d):0));
+    if(spell)f.burnt=1;
+    f.hp-=dealt;F.yourDmg+=dealt;
+  }
+  F.log.push(`${o.label||'คุณ'}${r.ok?`โดน${f.name} ${dealt}`:`พลาด${f.name}`}${f.hp<=0?' — ล้ม':''}`);
+  F.notes.push(rollTh(r));
+  return r;
+}
+const target=F=>live(F).sort((a,b)=>a.hp-b.hp)[0];
+/* what you can do this round, with the odds of it */
+function fightActs(F){
+  const acts=[],t=target(F),w=wpnInfo(F),oddsOf=(ab,dc,o)=>Math.round(chanceOf(ab,dc,o||{})*100);
+  if(F.commoner){
+    if(F.round===0)acts.push({id:'give',t:'ยอมให้ของ',s:`เสียทองครึ่งหนึ่ง (${gp(Math.max(0,Math.floor(S.gold/2)))}) · รอดแน่`,p:100,st:'kin'});
+    acts.push({id:'shout',t:'ตะโกนเรียกคนช่วย',s:`CHA DC 13${S.r>=60?' · ได้เปรียบ คนแถวนี้รู้จักคุณ':''} · ผ่านแล้วพวกมันหนี`,p:oddsOf('CHA',13,{skill:'intimidation',adv:S.r>=60}),st:'kin'});
+    if(!F.blind)acts.push({id:'sand',t:'ขว้างทรายใส่ตา',s:'DEX DC 12 · ผ่านแล้วพวกมันตีเสียเปรียบ 2 ยก',p:oddsOf('DEX',12,{skill:'sleight'}),st:'wits'});
+    acts.push({id:'charge',t:'พุ่งชนสุดตัว',s:'STR DC 15 · ผ่านแล้วล้มคว่ำทั้งกลุ่ม · ไม่ผ่านโดนตีแรง',p:oddsOf('STR',15,{skill:'athletics'}),st:'grit'});
+  }
+  if(t)acts.push({id:'attack',t:`โจมตี${t.name}`,s:`${w.th} ${w.dmg[0]}d${w.dmg[1]}${w.plus?' +'+w.plus:''} vs AC ${t.ac}${MARTIAL.includes(S.cls&&S.cls.id)&&F.lv>=5?' · 2 ครั้ง':''}`,p:oddsOf(w.ab,t.ac,{attack:1,prof:w.prof,bonus:w.plus,dis:darkDis(F)}),st:'grit'});
+  if(!F.commoner&&S.cls){
+    const c=S.cls.id,ft=FEAT[c],slots=SLOTS_BY(F.lv)-(S.slotsUsed||0),fu=(S.featUsed||0);
+    if(CASTERS.includes(c)&&t&&!F.anti)acts.push({id:'spell',t:CASTER[c].t,s:`${CLS_DMG[c][0]}d${CLS_DMG[c][1]} ×${1+Math.floor((F.lv+1)/6)} vs AC ${t.ac-1}${F.fly?' · ไม่เสียเปรียบแม้ศัตรูบิน':''}`,p:oddsOf(S.cls.key,t.ac-1,{attack:1,prof:1,bonus:eqSpell()}),st:'wits'});
+    const ok=ft.slot?slots>0&&!F.anti&&(c!=='wizard'||F.lv>=5):fu<ft.n;
+    if(ok&&!(c==='barbarian'&&F.rage)&&!(c==='druid'&&F.form>0)&&!(c==='rogue'&&!F.allies.some(a=>a.hp>0))&&t)
+      acts.push({id:'feat',t:ft.t,s:ft.s+(ft.slot?` · เหลือ ${slots} ช่อง`:ft.n<99?` · เหลือ ${ft.n-fu} ครั้งปีนี้`:''),p:null,st:'wits'});
+  }
+  acts.push({id:'defend',t:'ตั้งรับ',s:'ศัตรูโจมตีคุณแบบเสียเปรียบยกนี้',p:null,st:'wits'});
+  const pot=S.bag.find(b=>b.id==='potion');
+  if(pot)acts.push({id:'potion',t:'ดื่มยารักษา',s:'ฟื้น 2d4+2 ทันที',p:null,st:'kin'});
+  if(!F.commoner&&F.round===0&&!F.boss&&live(F).every(f=>f.kind!=='undead'))
+    acts.push({id:'talk',t:live(F)[0]&&live(F)[0].kind==='beast'?'ทำให้มันสงบลง':'เจรจา',s:`DC ${12+Math.ceil((F.ti||0)+1)} · ไม่ผ่านแล้วพวกมันได้ตีก่อน`,p:oddsOf(live(F)[0].kind==='beast'?'WIS':'CHA',13+(F.ti||0),{skill:live(F)[0].kind==='beast'?'animal':'persuasion'}),st:'kin'});
+  acts.push({id:'flee',t:F.commoner?'วิ่งหนี':'ถอย',s:`DEX DC ${12+(F.ti||0)}${hasGear('rope')?' · มีเชือก ได้เปรียบ':''} · ไม่ผ่านโดนตีฟรี`,p:oddsOf('DEX',12+(F.ti||0),{skill:'acrobatics',adv:hasGear('rope')}),st:'wits'});
+  return acts;
+}
+/* one round: your act, your companions, then them */
+function fightRound(F,a){
+  F.round++;F.log=[];
+  const t=target(F),dc=12+(F.ti||0);
+  if(a.id==='give'){const g=Math.max(0,Math.floor(S.gold/2));S.gold-=g;F.end='give';F.log.push(`ยื่นเงิน ${gp(g)} ให้แลกกับชีวิต`);return;}
+  if(a.id==='shout'){const r=check('CHA',13,{skill:'intimidation',adv:S.r>=60,label:'ตะโกนเรียกคนช่วย'});F.notes.push(rollTh(r));
+    if(r.ok){F.end='scared';F.log.push('คนแถวนั้นวิ่งออกมา พวกมันเผ่นหนีไป');return;}F.log.push('ไม่มีใครได้ยิน');}
+  if(a.id==='sand'){const r=check('DEX',12,{skill:'sleight',label:'ขว้างทรายใส่ตา'});F.notes.push(rollTh(r));
+    if(r.ok){F.blind=2;F.log.push('ทรายเข้าตาพวกมันเต็ม ๆ');}else F.log.push('ทรายปลิวไปตามลม');}
+  if(a.id==='charge'){const r=check('STR',15,{skill:'athletics',label:'พุ่งชนสุดตัว'});F.notes.push(rollTh(r));
+    if(r.ok){F.end='scared';F.log.push('พุ่งชนจนล้มคว่ำทั้งกลุ่ม พวกมันลุกขึ้นแล้ววิ่งหนี');return;}F.log.push('พุ่งไปแล้วเสียหลักล้มเอง');F.exposed=1;}
+  if(a.id==='attack'&&t){strikeFoe(F,t,{});if(!F.commoner&&MARTIAL.includes(S.cls.id)&&F.lv>=5&&target(F))strikeFoe(F,target(F),{label:'ครั้งที่สอง '});}
+  if(a.id==='spell'&&t)strikeFoe(F,t,{spell:1});
+  if(a.id==='feat')useFeat(F,t);
+  if(a.id==='defend'){F.defend=1;F.log.push('ยกโล่ตั้งรับ');}
+  if(a.id==='potion'){const b=S.bag.find(x=>x.id==='potion');useGear(b);const h=dice(2,4)+2;S.hp=Math.min(S.hpMax,S.hp+h);F.log.push(`ดื่มยารักษา ฟื้น ${h}`);S.potions=(S.potions||0)+1;}
+  if(a.id==='talk'){const beast=live(F)[0].kind==='beast',r=check(beast?'WIS':'CHA',13+(F.ti||0),{skill:beast?'animal':'persuasion',label:beast?'ทำให้มันสงบลง':'เจรจา'});F.notes.push(rollTh(r));
+    if(r.ok){F.end='talk';F.log.push(beast?'มันค่อย ๆ ถอยกลับเข้าป่า':'ตกลงกันได้โดยไม่ต้องเสียเลือด');return;}F.log.push('พูดไม่เข้าหู');F.exposed=1;}
+  if(a.id==='flee'){const r=check('DEX',dc,{skill:'acrobatics',adv:hasGear('rope'),label:'ถอยหนี'});F.notes.push(rollTh(r));
+    if(r.ok){F.end='flee';F.log.push('หนีพ้น');return;}F.log.push('หนีไม่ทัน');F.exposed=1;}
+  alliesAct(F);
+  if(!live(F).length){F.end='win';return;}
+  /* a band that has lost most of its blood breaks and runs; a boss does not */
+  if(!F.boss&&live(F).reduce((a,f)=>a+f.hp,0)<=F.startHp*(F.commoner?.55:.35)){F.end='win';F.log.push('พวกที่เหลือแตกหนีไป');return;}
+  phaseCheck(F);
+  foesAct(F);
+  if(F.end)return;
+  if(S.hp<=0)F.end='down';
+  F.defend=0;F.exposed=0;if(F.blind)F.blind--;if(F.inspire)F.inspire--;if(F.rage)F.rage--;if(F.anti)F.anti--;if(F.fly)F.fly--;
+}
+function useFeat(F,t){
+  const c=S.cls.id,lv=F.lv;
+  if(FEAT[c].slot)S.slotsUsed=(S.slotsUsed||0)+1;else S.featUsed=(S.featUsed||0)+1;
+  if(c==='fighter'){const h=dice(1,10)+lv;S.hp=Math.min(S.hpMax,S.hp+h);F.log.push(`ฮึดสู้ ฟื้น ${h}`);strikeFoe(F,t,{});}
+  else if(c==='barbarian'){F.rage=3;F.log.push('โกรธคลั่ง');strikeFoe(F,t,{});}
+  else if(c==='rogue')strikeFoe(F,t,{extra:[Math.ceil(lv/2),6],label:'แทงลอบ '});
+  else if(c==='ranger')strikeFoe(F,t,{extra:[t.kind==='beast'||t.kind==='undead'?2:1,6],label:'ล่าคู่แค้น '});
+  else if(c==='wizard'){let tot=0;live(F).forEach(f=>{const sv=npcRoll(`${f.name} ทอยหลบลูกไฟ`,Math.ceil(f.lv/2)+1,8+mod(S.ab.INT)+S.prof);const d=dice(8,6);const got=sv.ok?Math.floor(d/2):d;f.hp-=got;f.burnt=1;tot+=got;});
+    F.yourDmg+=tot;F.log.push(`ลูกไฟระเบิดกลางวง รวม ${tot}`);}
+  else if(c==='cleric'){const ally=F.allies.filter(a=>a.hp>0).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0],h=dice(1,8)+mod(S.ab.WIS);
+    if(ally&&ally.hp/ally.max<S.hp/S.hpMax){ally.hp=Math.min(ally.max,ally.hp+h);F.log.push(`รักษา${ally.name} ${h}`);}else{S.hp=Math.min(S.hpMax,S.hp+h);F.log.push(`รักษาตัวเอง ${h}`);}}
+  else if(c==='bard'){F.inspire=2;F.log.push('บทเพลงปลุกใจทุกคน');strikeFoe(F,t,{spell:1});}
+  else if(c==='druid'){F.form=10+lv*3;F.log.push(`แปลงร่างเป็นหมี (${F.form})`);}
+}
+function alliesAct(F){
+  F.allies.filter(a=>a.hp>0).forEach(a=>{const f=target(F);if(!f)return;
+    const r=npcRoll(`${a.name} โจมตี${f.name}`,4+(F.ti||0)+(F.inspire?2:0),f.ac);
+    if(r.ok){const d=dice(1,8)+2+(F.ti||0);f.hp-=d;F.log.push(`${a.name}โดน${f.name} ${d}${f.hp<=0?' — ล้ม':''}`);}else F.log.push(`${a.name}พลาด`);});
+}
+function phaseCheck(F){
+  if(!F.boss||F.phase>1)return;
+  const b=F.foes[0];if(b.hp>b.max/2)return;
+  F.phase=2;const P=PHASE2.find(p=>p.k.test(b.name));F.log.push('★ '+P.t);F.phaseTh=P.t;
+  if(P.breath){const dc=12+(F.ti||0)*2,[n,d]=P.breath,D=dice(n+(F.ti||0),d);
+    const sv=check('DEX',dc,{save:1,label:'หลบ'+P.t.split(' ')[0]});F.notes.push(rollTh(sv));hurtYou(F,sv.ok?Math.floor(D/2):D,b.hz+'ของ'+b.name);
+    F.allies.forEach(a=>{if(a.hp>0)a.hp-=Math.floor(D*.75);});F.log.push(`เปลวไฟ ${D}${sv.ok?' (หลบได้ครึ่ง)':''}`);}
+  if(P.fly)F.fly=1;
+  if(P.antimagic)F.anti=1;
+  if(P.summon)for(let i=0;i<2;i++)F.foes.push({...P.summon,name:`${P.summon.name} ${i+1}`,max:P.summon.hp,atk:4,dmg:[1,6,2]});
+  if(P.regen)b.regen=P.regen;
+  if(P.enrage)F.foes.forEach(f=>{f.atk+=P.enrage;});
+}
+function foesAct(F){
+  live(F).forEach((f,i)=>{
+    if(F.terrain==='narrow'&&i>0)return;
+    if(f.regen&&!f.burnt){f.hp=Math.min(f.max,f.hp+f.regen);F.log.push(`${f.name}ฟื้นแผล ${f.regen}`);}f.burnt=0;
+    /* every second round the leader uses what makes it dangerous */
+    if(i===0&&f.hz&&F.round%2===0&&!F.commoner){
+      const sv=check(f.sv||'CON',10+Math.ceil(f.lv/2)+1,{save:1,adv:f.poison&&(S.race.id==='dwarf'||hasGear('antitoxin')),label:`ทอยป้องกัน${ABIL_TH[f.sv||'CON']} · ${f.hz}`});F.notes.push(rollTh(sv));
+      const D=Math.round((dice(f.dmg[0],f.dmg[1])+f.dmg[2])*1.25),got=hurtYou(F,sv.ok?Math.floor(D/2):D,`${f.hz}ของ${f.name}`);
+      F.log.push(`${f.name}ใช้${f.hz} ${sv.ok?'หลบได้บางส่วน':''} เสียเลือด ${got}`);return;}
+    const al=F.allies.filter(a=>a.hp>0),onAlly=al.length&&Math.random()<.35;
+    if(onAlly){const a=pick(al),r=npcRoll(`${f.name} โจมตี${a.name}`,f.atk,13);if(r.ok){const d=dice(f.dmg[0],f.dmg[1])+f.dmg[2];a.hp-=d;F.log.push(`${f.name}โดน${a.name} ${d}${a.hp<=0?' — ล้ม':''}`);}return;}
+    const ac=acFor(),dis=F.defend||F.blind>0,adv=F.exposed||F.surprised;
+    const d1=d20(),d2=d20(),d=dis&&!adv?Math.min(d1,d2):adv&&!dis?Math.max(d1,d2):d1;
+    const r={label:`${f.name} โจมตีคุณ`,npc:1,vsAC:1,dc:ac,d,a:d1,b:d2,mode:dis&&!adv?'dis':adv&&!dis?'adv':'',bonus:f.atk,total:d+f.atk,ok:d+f.atk>=ac,age:S.age};pushRoll(r);
+    if(r.ok){const got=hurtYou(F,dice(f.dmg[0],f.dmg[1])+f.dmg[2]+(d===20?dice(f.dmg[0],f.dmg[1]):0),`${f.name}`,f);if(F.end)return;F.log.push(`${f.name}โดนคุณ ${got}`);}
+    else F.log.push(`${f.name}พลาด (AC ${ac})`);
+  });
+}
+/* the stance picks: drink when low, flee when hopeless (not the stubborn), use what the class has, else hit */
+function fightAuto(F){
+  const acts=fightActs(F),st=S.stance||'grit',low=S.hp<=Math.max(2,S.hpMax*.45),find=id=>acts.find(a=>a.id===id);
+  if(low&&find('potion'))return find('potion');
+  if(F.commoner){
+    if(F.round===0&&(st==='kin'||st==='shady'||S.hp<=4&&st!=='grit'))return find('give')||find('flee');
+    if(F.round===0&&st==='wits')return find('sand')||find('flee');
+    if(st==='kin')return find('shout');
+    if(low&&st!=='grit')return find('flee');
+  }else if(low&&st!=='grit'&&live(F).reduce((a,f)=>a+f.hp,0)>F.yourDmg)return find('flee');
+  if(S.hp<=Math.max(1,S.hpMax*.2)&&!find('potion'))return find('flee');
+  const ft=find('feat');
+  if(ft&&(S.cls.id!=='wizard'||live(F).length>=2)&&(S.cls.id!=='cleric'&&S.cls.id!=='fighter'||low))return ft;
+  return find('spell')||find('attack')||find('defend');
+}
+/* run the fight to its end without a window */
+function fightOut(F){
+  let g=0;
+  while(!F.end&&g++<12){fightRound(F,fightAuto(F));}
+  if(!F.end){F.end='draw';F.log.push('ต่างฝ่ายต่างถอยไป');}
+}
+/* after: companions who fell may not get up */
+function fightAfter(F){
+  const lost=[];
+  F.allies.forEach(a=>{if(a.hp<=0&&Math.random()<.35){a.ref.alive=false;lost.push(a.name);S.r=clamp(S.r-6,0,100);S.s=clamp(S.s-8,0,100);}});
+  F.lost=lost;
+  S.fights=(S.fights||0)+1;S.fightRounds=(S.fightRounds||0)+F.round;
+  return lost;
+}
+const FIGHT_END={robbed:'ถูกตีล้มแล้วถูกปล้น',win:'ชนะ',flee:'หนีรอดมาได้',talk:'ตกลงกันได้โดยไม่ต้องสู้',give:'ยอมให้ของแลกกับชีวิต',scared:'พวกมันหนีไป',down:'ล้มลง',draw:'ต่างฝ่ายต่างถอย'};
+/* the window: blood bars, last round, the choices with odds, and the stance button */
+function openFight(F,done){
+  if(typeof document==='undefined'||!document.body){fightOut(F);done();return;}
+  stop();
+  const scrim=ce('div');scrim.className='scrim';const m=ce('div');m.className='modal fight';
+  const finish=()=>{scrim.remove();done();resume();};
+  const bar=(n,max,low)=>{const b=ce('div');b.className='bar';const i=ce('i');i.style.width=clamp(n/max*100,0,100)+'%';if(low)i.style.background='var(--blood)';b.appendChild(i);return b;};
+  const row=(name,hp,max,extra,low)=>{const r=ce('div');r.className='stat'+(low?' low':'');const a=ce('span');a.textContent=name;const v=ce('span');v.className='mono';v.style.textAlign='right';
+    v.textContent=`${Math.max(0,hp)}/${max}${extra?' · '+extra:''}`;r.append(a,bar(Math.max(0,hp),max,low),v);return r;};
+  const draw=()=>{
+    m.textContent='';
+    const eb=ce('p');eb.className='eyebrow';eb.textContent=`การต่อสู้ · ยก ${Math.min(F.round+1,F.maxR)} / ${F.maxR}${F.terrain?' · '+TERRAIN.find(t=>t.id===F.terrain).th:''}`;
+    const h=ce('h2');h.textContent=F.title;m.append(eb,h);
+    if(F.sub){const p=ce('p');p.className='sm muted';p.textContent=F.sub;m.appendChild(p);}
+    const box=ce('div');box.className='plate';box.style.margin='10px 0';
+    F.foes.forEach(f=>box.appendChild(row(f.name,f.hp,f.max,`AC ${f.ac}`,true)));
+    const sep=ce('hr');sep.style.cssText='border:0;border-top:1px solid var(--rule);margin:8px 0';box.appendChild(sep);
+    box.appendChild(row('คุณ',S.hp,S.hpMax,`AC ${acFor()}${F.form>0?' · ร่างหมี '+F.form:''}${F.rage?' · คลั่ง':''}`));
+    F.allies.forEach(a=>box.appendChild(row(a.name,a.hp,a.max,a.hp<=0?'ล้ม':'')));
+    m.appendChild(box);
+    if(F.log.length){const l=ce('div');l.className='lore';l.textContent=(F.round?`ยกที่ ${F.round}: `:'')+F.log.join(' · ');m.appendChild(l);}
+    const wrap=ce('div');wrap.className='choices';
+    if(F.end){
+      const p=ce('p');p.innerHTML='';const b=ce('b');b.textContent=`${FIGHT_END[F.end]} · ${F.round} ยก`;p.appendChild(b);m.appendChild(p);
+      const go=ce('button');go.type='button';const n=ce('span');n.className='n';n.textContent='→';const inner=ce('span');const t=ce('b');t.textContent='ไปต่อ';inner.appendChild(t);go.append(n,inner);
+      go.onclick=finish;wrap.appendChild(go);m.appendChild(wrap);go.focus();return;}
+    if(F.round>=F.maxR){fightOut(F);draw();return;}
+    fightActs(F).forEach((a,i)=>{
+      const b=ce('button');b.type='button';const n=ce('span');n.className='n';n.textContent=String(i+1);
+      const inner=ce('span');const t=ce('b');t.textContent=a.t;inner.appendChild(t);
+      const e=ce('em');e.textContent=a.s;inner.appendChild(e);
+      if(a.p!=null){const od=ce('span');od.className='odds';od.textContent=`โอกาส ${a.p}%`;inner.appendChild(od);}
+      b.append(n,inner);b.onclick=()=>{fightRound(F,a);draw();};wrap.appendChild(b);});
+    m.appendChild(wrap);
+    const foot=ce('div');foot.className='foot';const au=ce('button');au.className='chip';au.type='button';au.textContent=`ให้ท่าที${stanceTh(S.stance)}สู้ต่อจนจบ`;
+    au.onclick=()=>{fightOut(F);draw();};foot.appendChild(au);m.appendChild(foot);
+    m.querySelector('.choices button')?.focus();
+  };
+  draw();scrim.appendChild(m);$('#modalHost').appendChild(scrim);
+}
+/* fight it: in a window when it is a big matter and there is room for one, else by the stance */
+function runFight(F,big,done){
+  const after=()=>{fightAfter(F);done(F);};
+  if(big&&!opt.auto&&canAsk()){noteAsk();S.decCtx=1;noteDecision(false);openFight(F,()=>{S.decCtx=0;after();});return;}
+  noteDecision(true);fightOut(F);after();
+}
+function fightSummary(F){
+  return `${FIGHT_END[F.end]} ใน ${F.round} ยก · ทำความเสียหาย ${F.yourDmg} · เสียเลือด ${F.tookDmg}`+(F.lost&&F.lost.length?` · ${F.lost.join(', ')}ไม่ได้กลับมา`:'')+(F.phaseTh?` · ${F.phaseTh}`:'');
 }
 /* ---------------- the crossroads: every path, what it asks, what you have ----------------
    One screen at maturity in place of the old call and trade questions. A path whose

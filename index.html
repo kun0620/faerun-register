@@ -2260,7 +2260,10 @@ function openSpend(){
     const sug=suggested(),rest=ITEMS.filter(it=>itemAvailable(it)&&!sug.includes(it));
     body.appendChild(itemSection('สิ่งที่น่าทำตอนนี้',sug,rebuild));
     if(S.bag.length<bagMax())body.appendChild(itemSection(`ข้าวของติดตัว · กระเป๋า ${S.bag.length}/${bagMax()}`,
-      Object.entries(GEAR).filter(([k,g])=>!g.gift&&!(hasGear(k)&&!g.uses)).map(([k,g])=>({id:'g_'+k,th:g.th,cost:g.cost,fx:g.d+(g.uses?` · ใช้ได้ ${g.uses} ครั้ง`:''),apply:()=>addGear(k),log:`ซื้อ${g.th}`})),rebuild));
+      Object.entries(GEAR).filter(([k,g])=>!g.gift&&!(hasGear(k)&&!g.uses))
+        .map(([k,g])=>({k,g,r:k===S.recommend?2:g.tags.some(t=>(S.troubleTags||[]).includes(t))?1:0})).sort((a,b)=>b.r-a.r)
+        .map(({k,g,r})=>({id:'g_'+k,th:(r?'★ แนะนำ · ':'')+g.th,cost:g.cost,fx:g.d+(g.uses?` · ใช้ได้ ${g.uses} ครั้ง`:'')+(r===2?' · ช่วยกับเรื่องร้ายที่เพิ่งเจอ':''),
+          apply:()=>{addGear(k);if(k===S.recommend)S.recommend=null;},log:`ซื้อ${g.th}`})),rebuild));
     if(S.adv&&S.eq)body.appendChild(itemSection('อาวุธและเกราะ',
       Object.entries(EQUIP).filter(([k,e])=>eqOk(k)&&!(S.eq[e.slot]&&S.eq[e.slot].id===k)).map(([k,e])=>({id:'e_'+k,th:e.th,cost:e.cost,
         fx:e.ac?`AC ${e.ac}${e.dex?(e.dex>5?' + DEX':' + DEX สูงสุด '+e.dex):''}${e.str?' · ต้องมี STR '+e.str:''}${e.stealth?' · เสียเปรียบลอบเร้น':''}`:e.acb?'AC +2':e.dmg?`${e.dmg[0]}d${e.dmg[1]}${e.fin?' · ใช้ DEX ได้':''}${e.two?' · สองมือ':''}`:'สื่อสำหรับร่ายเวท',
@@ -2679,7 +2682,8 @@ function resolveCope(sit,o,insp,auto){
   if(o.fx)applyFx(o.fx,1);
   if(insp)S.insp=0;
   const r=check(o.ab,o.dc,{skill:o.skill,save:o.save,attack:o.attack,prof:o.prof,bonus:o.bonus,adv:o.adv||insp,dis:o.dis,label:o.t});
-  if(!r.ok)S.troubleTags=sitTags(sit);
+  if(!r.ok){S.troubleTags=sitTags(sit);const sid=shopFor(sit);
+    if(sid){S.recommend=sid;if(auto)toast(`ถ้ามี${GEAR[sid].th} เรื่องนี้คงง่ายกว่า`);}}
   if(o.gear&&r.ok){const gb=o.gear.reduce((a,b)=>a+(GEAR[b.id].bonus||0),0),ga=o.gear.some(b=>GEAR[b.id].adv)&&r.mode==='adv';
     if((ga?Math.min(r.a,r.b):r.d)+r.bonus-gb<o.dc){toast(`${o.gearTh} ช่วยไว้`);S.gearSaves=(S.gearSaves||0)+1;}}
   if(o.al)shiftAlign(o.al[0],o.al[1]);
@@ -2744,6 +2748,14 @@ function openCope(sit,cb){
   const foot=ce('div');foot.className='foot';
   if(S.insp){const ib=ce('button');ib.className='chip';ib.type='button';ib.setAttribute('aria-pressed','false');ib.textContent='ใช้แรงบันดาลใจ · ได้เปรียบ';
     ib.onclick=()=>{insp=!insp;ib.setAttribute('aria-pressed',String(insp));draw();};foot.appendChild(ib);}
+  const sid=shopFor(sit);
+  if(sid&&S.bag.length<bagMax()){const g=GEAR[sid],sb=ce('button');sb.className='chip';sb.type='button';sb.disabled=S.gold<g.cost;
+    sb.textContent=`ซื้อ${g.th}ใช้ครั้งนี้เลย · ${gp(g.cost)}${S.gold<g.cost?' · เงินไม่พอ':''}`;sb.title=g.d;
+    sb.onclick=()=>{if(hasGear(sid)||S.gold<g.cost)return;S.gold-=g.cost;addGear(sid,`ซื้อตอนเจอ${sit.h}`);S.shopBuys=(S.shopBuys||0)+1;
+      const b=S.bag.find(x=>x.id===sid);gearOpts(sit,[b]);
+      sit.opts.forEach(o=>{if(o.gear&&o.gear.includes(b)){const base=(o.s||'').replace(/(^| · )ใช้.*$/,'');o.s=(base?base+' · ':'')+'ใช้'+o.gearTh;}o.p=chanceOf(o.ab,o.dc,o);});
+      sb.disabled=true;sb.textContent=`ซื้อ${g.th}แล้ว`;draw();};
+    foot.appendChild(sb);}
   const au=ce('button');au.className='chip';au.type='button';au.textContent=`ให้ท่าที${stanceTh(S.stance)}ตัดสินใจ`;
   au.onclick=()=>{scrim.remove();const o=autoPick(sit);cb(o,false);resume();};
   foot.appendChild(au);m.appendChild(foot);
@@ -3169,12 +3181,19 @@ function sitTags(sit){
   if(sit.kind==='exam'&&S.path)t.push('exam_'+S.path);
   return t;
 }
+/* the cheapest thing on sale that would help with this kind of trouble, if none in the bag already does */
+function shopFor(sit){
+  const tags=sitTags(sit);
+  if(S.bag.some(b=>GEAR[b.id].tags.some(t=>tags.includes(t))))return null;
+  const ids=Object.keys(GEAR).filter(id=>GEAR[id].cost>0&&!GEAR[id].gift&&id!=='spellbook'&&GEAR[id].tags.some(t=>tags.includes(t)));
+  return ids.sort((a,b)=>GEAR[a].cost-GEAR[b].cost)[0]||null;
+}
 /* fold the bag into each option before its odds are worked out */
-function gearOpts(sit){
+function gearOpts(sit,bag){
   const tags=sitTags(sit);
   sit.opts.forEach(o=>{
     const used=[];
-    S.bag.forEach(b=>{
+    (bag||S.bag).forEach(b=>{
       const g=GEAR[b.id];
       if(g.tags.includes('any')){if(sit.big&&!o.adv&&chanceOf(o.ab,o.dc,o)<.5&&!used.length){o.adv=1;used.push(b);}return;}
       if(!g.tags.some(x=>tags.includes(x)))return;
@@ -3182,7 +3201,7 @@ function gearOpts(sit){
       if(g.adv&&!o.adv){o.adv=1;used.push(b);}
       if(g.bonus){o.bonus=(o.bonus||0)+g.bonus;if(!used.includes(b))used.push(b);}
     });
-    if(used.length){o.gear=used;o.gearTh=[...new Set(used.map(b=>GEAR[b.id].th))].join(', ');}
+    if(used.length){o.gear=(o.gear||[]).concat(used);o.gearTh=[...new Set(o.gear.map(b=>GEAR[b.id].th))].join(', ');}
   });
 }
 

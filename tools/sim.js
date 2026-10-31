@@ -1,11 +1,12 @@
 // Full balance run against the target table in docs/plan-dnd-rework.md
 const {load}=require('./harness');
-const T=load(require('path').join(__dirname,'..','index.html'),'birth,tick,applyChoice,finish,reveal,openDec,openCope,present,raiseOk,perish,autoPick,STANCES');
+const T=load(require('path').join(__dirname,'..','index.html'),'birth,tick,applyChoice,finish,reveal,openDec,openCope,present,raiseOk,perish,autoPick,autoChoice,PATHS,STANCES');
 T.set('reveal',()=>{});
 // a big matter is answered the way a player who reads the odds would: best chance on the table
 T.set('openCope',(sit,cb)=>{const o=T.autoPick(sit,'any');cb(o,!!T.S.insp&&o.p<.5);});
 T.set('openDec',(d,done)=>{const S=T.S;if(d.id)S.done[d.id]=1;if(d.kind!=='reflect'){
-  let c=d.ch[Math.floor(Math.random()*d.ch.length)];if(d.id==='cross')c=d.ch.find(x=>x.adv)||d.ch.find(x=>x.row&&x.row.state==='open')||c;T.applyChoice(d,c);}done();});
+  let c=d.ch[Math.floor(Math.random()*d.ch.length)];/* the crossroads and the party that comes late go the way the dream and the ideal lean, as auto mode would */
+  if(d.kind==='cross'||d.id==='late_call')c=T.autoChoice(d);T.applyChoice(d,c);}done();});
 let deathRec=null;
 const realPerish=T.perish;
 let firstPerish=true;
@@ -21,7 +22,7 @@ const byRace={},hum=[],advAges=[],lv=[];let adv=0,ds=0,dsDeaths=0,faithless=0,fa
   elig=0,paid=0,years=0,yearsNoRoll=0,raised=0,downs=0,oldAge=0,lives=0,dsLives=0,maxDs=0,ages=[];
 const causes={};
 for(let i=0;i<N;i++){
-  firstPerish=true;T.birth();const S=T.S;lives++;S.stance=T.STANCES[i%4].id;
+  firstPerish=true;T.birth();const S=T.S;lives++;S.stance=T.STANCES[i%4].id;if(i%2)S.dream=T.PATHS[(i>>1)%T.PATHS.length].id;   // half the lives set a dream at birth, as a player would
   while(!S.dead){T.tick();if(!S.dead||S.age>0){years++;if(S.yearRolls<1)yearsNoRoll++;}}
   (byRace[S.race.id]=byRace[S.race.id]||[]).push(S.age/S.race.span*72);
   if(S.race.id==='human')hum.push(S.age);

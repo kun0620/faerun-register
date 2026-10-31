@@ -955,7 +955,8 @@ const FOCUS_CHILD=[
  {id:'learn',th:'เรียนหนังสือ',hint:'ฝึก INT · การศึกษา↑',fx:{l:2.6,s:-.4},adv:'INT',train:'INT'},
  {id:'elders',th:'ฟังผู้เฒ่า ช่วยงานวิหาร',hint:'ฝึก WIS · ศรัทธา↑',fx:{r:1,s:.5},adv:'WIS',train:'WIS'},
  {id:'people',th:'คลุกคลีกับผู้คน ช่วยขายของ',hint:'ฝึก CHA · สายสัมพันธ์↑',fx:{r:2,s:1},train:'CHA'},
- {id:'hobby',th:'งานอดิเรก',hint:'จิตใจ↑ ฝีมือ↑',fx:{s:2.2},hob:1}
+ {id:'hobby',th:'งานอดิเรก',hint:'จิตใจ↑ ฝีมือ↑',fx:{s:2.2},hob:1},
+ {id:'spar',th:'ฝึกดาบไม้ ยิงธนู',hint:'ฝึก STR หรือ DEX · ครบ 3 ปีเป็นทางเข้าสมาคมนักผจญภัย',fx:{s:1,b:.2},get train(){return S.ab.STR>=S.ab.DEX?'STR':'DEX';}}
 ];
 const FOCUS_MENTOR={id:'mentor',th:'ฝึกกับอาจารย์',hint:'แต้มฝึก ×2 · ครบสามปีได้ใบรับรอง',fx:{l:1,s:-.3}};
 const FOCUS_ADULT=[
@@ -3057,7 +3058,7 @@ function focusDec(why){
   return {id:'focus_'+S.age,kind:'focus',h:W[0],b:W[1]+(S.grown>=GROW_TOTAL?' · สเตตัสโตครบสามขั้นของวัยเด็กแล้ว':''),ch};
 }
 const FOCUS_TG={work:['might','tradition'],play:['freedom'],help:['people','tradition'],elders:['faith','tradition'],
-  people:['people'],hobby:['freedom','independence'],mentor:['aspiration','knowledge']};
+  people:['people'],hobby:['freedom','independence'],mentor:['aspiration','knowledge'],spar:['might','freedom']};
 /* the master you ask for yourself: everyone you qualify for, with what it costs */
 const ASK_MENTOR={id:'ask_mentor',at:'c',cond:x=>x.age>=x.race.mature*.5&&!x.mentor,h:'ฝากตัวเป็นศิษย์',
   b:x=>{const no=Object.entries(MENTORS).filter(([,m])=>!m.min(x)).map(([,m])=>`${m.th} (ต้องมี ${m.minTh})`);
@@ -4384,14 +4385,20 @@ const CROSS={
  arms:{min:12,roll:{ab:'STR',skill:'athletics',dc:12},tg:['might','tradition'],
   other:x=>({t:'แคว้นมีกองยาม หรือยุคสงคราม',ok:x.region.danger>=1||era().id==='war'})}
 };
+const ADV_FEE=140;   // the guild's dues and a first kit: more than most families keep
 function crossRow(id,x){
   x=x||S;const p=pathOf(id),reqs=[];
   if(id==='adv'){
-    const ab=x.best||'STR';
+    const ab=x.best||'STR',sp=(x.focusYears&&x.focusYears.spar)||0,cert=x.certs.arms?'อัศวิน':x.certs.land?'พราน':null;
     reqs.push({t:`${ab} ${x.ab[ab]} / 13`,ok:x.ab[ab]>=13});
-    reqs.push({t:callRolls()?`มีคนมาชวน${x.callWho}`:'ไม่มีใครมาชวนออกเดินทาง',ok:callRolls()});
+    const way=callRolls()?{t:`มีคนมาชวน${x.callWho}`,ok:true}
+      :cert?{t:`ใบรับรองจาก${cert}`,ok:true}
+      :sp>=3?{t:`ฝึกต่อสู้มา ${sp} ปี`,ok:true}
+      :x.gold>=ADV_FEE?{t:`ค่าเข้าสมาคม ${gp(ADV_FEE)}`,ok:true,cost:ADV_FEE}
+      :{t:`ทางเข้า: คนชวน · ใบรับรองอัศวินหรือพราน · ฝึกต่อสู้ ${sp}/3 ปี · หรือค่าสมาคม ${gp(ADV_FEE)}`,ok:false};
+    reqs.push(way);
     const miss=reqs.filter(q=>!q.ok).length;
-    return {id,p,reqs,state:miss?'shut':'open',roll:null};
+    return {id,p,reqs,cost:way.ok?(way.cost||0):0,state:miss===0?'open':miss===1?'try':'shut',roll:miss?{ab,dc:15,dis:true}:null};
   }
   const C=CROSS[id],ab=pathAb(p,x),cert=!!x.certs[id];
   reqs.push({t:`${ab} ${x.ab[ab]} / ${C.min}`,ok:x.ab[ab]>=C.min});
@@ -4420,15 +4427,16 @@ function crossDec(again){
 }
 function crossResolve(c,notes){
   if(c.stay){addLog(S.age,`เลือกอยู่บน${pathOf(S.path).th}ต่อไป`,null);return;}
-  if(c.adv)return;               // the old adventure branch in applyChoice takes it from here
   const again=!!S.path;
   if(again){S.s=clamp(S.s-10,0,100);}
   if(c.plain){enterPath(c.cross,'ทำงานที่หาได้');S.follow=null;takeJob({takeJob:hireJob(c.cross)});return;}
   const r=c.row;if(r.cost)S.gold-=r.cost;
-  if(!r.roll){enterPath(c.cross);return;}
+  /* the old adventure branch in applyChoice takes a passed adventurer from here */
+  if(!r.roll){if(!c.adv)enterPath(c.cross);return;}
   const k=check(r.roll.ab,r.roll.dc,{skill:r.roll.skill,dis:r.roll.dis,label:`คัดเลือกเข้า${r.p.th}`});
   notes.push(rollTh(k));
-  if(k.ok){enterPath(c.cross,r.roll.dis?'ผ่านทั้งที่ยังไม่ครบ':null);return;}
+  if(k.ok){if(!c.adv)enterPath(c.cross,r.roll.dis?'ผ่านทั้งที่ยังไม่ครบ':null);return;}
+  c.adv=0;
   if(again){addLog(S.age,`คัดเลือกเข้า${r.p.th}ไม่ผ่าน`,'อยู่ทางเดิมต่อไป',false,true);return;}
   S.crossFailed=(S.crossFailed||[]).concat(r.id);
   addLog(S.age,`คัดเลือกเข้า${r.p.th}ไม่ผ่าน`,'เลือกทางใหม่ได้ทันที',false,true);
@@ -4440,6 +4448,17 @@ DECS.splice(DECS.findIndex(d=>d.id==='pause_mid'),0,ASK_MENTOR);
 ['call','trade_farm','trade_city','trade_craft'].forEach(id=>{const i=DECS.findIndex(d=>d.id===id);if(i>=0)DECS.splice(i,1);});
 DECS.splice(1,0,{id:'cross',at:'mature',core:1,make:()=>crossDec(false)},
   {id:'cross2',at:'middle',cond:x=>!!x.path&&x.path!=='adv'&&x.rank<2&&PATHS.some(p=>p.id!=='adv'&&p.id!==x.path&&crossRow(p.id,x).state==='open'),make:()=>crossDec(true)});
+/* rolled once per soul: a party that comes asking in the fifteen human years after the crossroads, for those still low on their ladder */
+function lateCall(x){
+  if(x.lateRoll==null)x.lateRoll=Math.random()<clamp(.16+(x.dream==='adv'?.4:0)+(x.region.danger-1)*.04,.03,.6);
+  return x.lateRoll;
+}
+DECS.splice(DECS.findIndex(d=>d.id==='ideal'),0,{id:'late_call',at:'any',
+  cond:x=>!x.adv&&!x.retired&&x.done.cross&&(x.rank||0)<=2&&x.ab[x.best]>=12&&(x.age-x.race.mature)*yearScale()>=1&&(x.age-x.race.mature)*yearScale()<=15&&lateCall(x),
+  h:'คณะนักผจญภัยขาดคน',
+  b:x=>`คณะนักผจญภัยที่ผ่านมาทาง${x.region.th}เสียคนไปหนึ่งคนในการเดินทางครั้งก่อน หัวหน้าคณะเห็นคุณแล้วถามตรง ๆ ว่าจะไปด้วยกันไหม`,
+  ch:x=>[{t:'ทิ้งทุกอย่างแล้วไปกับเขา',s:`เป็น${(CLASSES.find(c=>c.key===x.best)||{th:'นักผจญภัย'}).th}เลเวล 1${x.job?' · ทิ้งงาน'+x.job.th:''}${x.path?' · ทิ้งสาย'+pathOf(x.path).th:''}`,adv:1,late:1,fx:{s:4},tg:['aspiration','freedom','rash']},
+    {t:'อยู่ที่เดิม',s:'ชีวิตเดิมต่อไป',tg:['tradition','people']}]});
 const BANK_P=.11;
 /* lives seen recently, so the bank leans away from what the last few lives already asked */
 function seenW(id){let n=0;(SEEN||[]).forEach((l,i)=>{if(l.includes(id))n=Math.max(n,i===0?2:1);});return n===2?.35:n===1?.65:1;}
@@ -4563,11 +4582,15 @@ function crossInto(m,d,scrim,done){
   m.appendChild(wrap);
 }
 /* auto mode answers a question the way the ideal would, and at random when the ideal has nothing to say */
+const ADV_PICK=.35;   // auto mode with no dream and no matching ideal still goes out this often when the door is open
 function autoChoice(d){
   if(d.kind==='job'){const cur=S.job?S.job.pay*S.job.mer:0,sc=c=>c.takeJob.pay*c.takeJob.mer*(c.stay?1.2:1)*(c.switchPath?.8:1)*(c.give||c.repair?1.05:1)+Math.random()*.4;
     return d.ch.reduce((a,b)=>sc(b)>sc(a)?b:a);}
+  if(d.kind==='focus'&&S.dream==='adv'){const c=d.ch.find(c=>c.setFocus==='spar');if(c)return c;}
+  if(d.id==='late_call')return d.ch[S.dream==='adv'||tagUp(d.ch[0])||Math.random()<.5?0:1];
   if(d.kind==='cross'){
-    const sc=c=>c.stay?0:c.plain?1:(c.row.state==='open'?100:40)+S.ab[c.row.id==='adv'?S.best:pathAb(c.row.p)]+(c.row.id===S.dream?30:0)+(c.row.id==='adv'?8:0);
+    const lean=c=>tagUp(c)?8:-25,go=Math.random()<ADV_PICK;
+    const sc=c=>c.stay?0:c.plain?1:(c.row.state==='open'?100:40)+S.ab[c.row.id==='adv'?S.best:pathAb(c.row.p)]+(c.row.id===S.dream?30:0)+(c.row.id==='adv'&&S.dream!=='adv'?(go?8:lean(c)):0);
     return d.ch.reduce((a,b)=>sc(b)>sc(a)?b:a);
   }
   const up=d.ch.filter(c=>tagUp(c)&&!tagDown(c));
@@ -4647,6 +4670,7 @@ function applyChoice(d,c){
     addLog(S.age,`ย้ายจาก${old}ไปอยู่${S.region.th}`,null,true);
   }
   if(c.adv){
+    if(c.late){S.job=null;S.advLate=1;}
     becomeAdv();
     addLog(S.age,`ออกจาก${S.region.th}ไปเป็น${S.cls.th}`,['คนที่ออกผจญภัยและรอดมาถึงวัยกลางคนมีไม่มาก แต่คนที่รอดมักไม่ต้องกังวลเรื่องเงินอีกเลย',`${S.cls.th}เลเวล 1 · เลือด ${S.hpMax} · AC ${acFor()} · ชำนาญทอยป้องกัน ${S.saveProf.join(' ')}`],true);
   }
